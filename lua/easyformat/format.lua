@@ -89,15 +89,12 @@ function fmt:new_spawn(buf)
     end)
   end)
 
-  uv.read_start(
-    stdout,
-    function(err, data)
-      assert(not err, err)
-      if data then
-        chunks[#chunks + 1] = data
-      end
+  uv.read_start(stdout, function(err, data)
+    assert(not err, err)
+    if data then
+      chunks[#chunks + 1] = data
     end
-  )
+  end)
 
   uv.read_start(stderr, function(err, _)
     assert(not err, err)

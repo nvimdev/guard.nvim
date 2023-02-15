@@ -12,8 +12,8 @@ local function get_lsp_client()
   for _, client in pairs(clients) do
     local fts = client.config.filetypes
     if
-        client.server_capabilities.documentFormattingProvider
-        and vim.tbl_contains(fts, vim.bo.filetype)
+      client.server_capabilities.documentFormattingProvider
+      and vim.tbl_contains(fts, vim.bo.filetype)
     then
       return client
     end
@@ -29,7 +29,8 @@ local function searcher(match, bufnr)
   if #fname == 0 then
     fname = vim.loop.cwd()
   end
-  local res = vim.fs.find(match, { upward = true, path = fname, stop = vim.env.HOME, type = 'file' })
+  local res =
+    vim.fs.find(match, { upward = true, path = fname, stop = vim.env.HOME, type = 'file' })
   if #res ~= 0 then
     return true
   end
@@ -86,7 +87,7 @@ local function register_event(fts)
       buffer = bufnr,
       callback = function(opt)
         do_fmt(opt.buf)
-      end
+      end,
     })
   end
 
