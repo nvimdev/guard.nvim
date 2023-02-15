@@ -67,7 +67,7 @@ require('easyformat').setup({
   lua = {
     cmd = 'stylua',
     ignore_patterns = { '%pspec', 'neovim/*' },
-    find = '.stylya.toml',
+    find = '.stylua.toml',
     args = { '-' },
     stdin = true,
     lsp = false,
