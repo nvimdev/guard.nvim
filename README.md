@@ -1,6 +1,10 @@
 # easyformat.nvim
 a simply and powerful plugin make format easy in neovim with third party command and lsp format
 
+<center>
+<img src="https://user-images.githubusercontent.com/41671631/218993459-aeaf79fe-c77f-4d4f-a820-57e1a6464af4.gif" width=40% height=40%>
+</center>
+
 ## Features
 
 - async
