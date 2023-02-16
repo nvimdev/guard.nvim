@@ -61,7 +61,7 @@ for stylua and go
     c = {
       cmd = 'clang-format',
       args = { '-style=file', vim.api.nvim_buf_get_name(0) },
-      pattern = { 'neovim/*' },
+      ignore_patterns = { 'neovim/*' },
       find = '.clang-format',
       stdin = false,
       lsp = false,
