@@ -53,7 +53,7 @@ also you can use a command `EasyFormat` to format file.
 
 ## Example configs
 
-for stylua and go
+for c cpp go lua
 
 ```lua
   require('easyformat').setup({
