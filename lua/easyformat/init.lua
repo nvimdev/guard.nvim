@@ -56,7 +56,7 @@ local function do_fmt(buf)
   buf = buf or api.nvim_get_current_buf()
   local conf = ef.config[vim.bo[buf].filetype]
 
-  if conf.ignored_pattern and ignored(buf, conf.ignored_pattern) then
+  if conf.ignored_patterns and ignored(buf, conf.ignored_patterns) then
     return
   end
 
