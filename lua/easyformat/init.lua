@@ -60,6 +60,10 @@ local function do_fmt(buf)
     return
   end
 
+  if #vim.diagnostic.get(buf, { severity = vim.diagnostic.severity.Error }) ~= 0 then
+    return
+  end
+
   if searcher(conf.find, buf) then
     fmt:init(vim.tbl_extend('keep', conf, { bufnr = buf }))
   end
