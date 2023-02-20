@@ -17,7 +17,7 @@ a simply and powerful plugin make format easy in neovim with third party command
 
 ```lua
 require('lazy').setup({
- {'glepnir/easryformat.nvim', ft = {filetypes}, config = function()
+ {'glepnir/easyformat.nvim', ft = {filetypes}, config = function()
     require('easyformat').setup({})
  end},
 })
@@ -27,7 +27,7 @@ require('lazy').setup({
 
 ```lua
 use({
- {'glepnir/easryformat.nvim', ft = {filetypes}, config = function()
+ {'glepnir/easyformat.nvim', ft = {filetypes}, config = function()
     require('easyformat').setup({})
  end},
 })
