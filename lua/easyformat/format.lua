@@ -35,7 +35,7 @@ function fmt:run(chunks, bufnr)
 
   local function write_buffer()
     api.nvim_buf_set_lines(bufnr, 0, -1, false, chunks)
-    vim.cmd('noautocmd write')
+    vim.cmd('noautocmd silent write')
   end
 
   if #old ~= #chunks then
