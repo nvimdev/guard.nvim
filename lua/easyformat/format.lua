@@ -105,7 +105,6 @@ function fmt:new_spawn(buf)
   end)
 
   if self[buf].stdin then
-    print(vim.inspect(self[buf].contents))
     uv.write(stdin, self[buf].contents)
   end
 
