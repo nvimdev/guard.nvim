@@ -27,7 +27,11 @@ function fmt:run(chunks, bufnr)
   if #chunks[#chunks] == 0 then
     table.remove(chunks, #chunks)
   end
+
   local old = vim.split(table.concat(self[bufnr].contents), '\n')
+  if #old[#old] == 0 then
+    old[#old] = nil
+  end
 
   local function write_buffer()
     api.nvim_buf_set_lines(bufnr, 0, -1, false, chunks)
@@ -58,8 +62,8 @@ end
 local function get_buf_contents(bufnr)
   local tbl = api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local res = {}
-  for i, text in pairs(tbl) do
-    res[#res + 1] = text .. (i == #tbl and '' or '\n')
+  for _, text in pairs(tbl) do
+    res[#res + 1] = text .. '\n'
   end
   return res
 end
@@ -101,6 +105,7 @@ function fmt:new_spawn(buf)
   end)
 
   if self[buf].stdin then
+    print(vim.inspect(self[buf].contents))
     uv.write(stdin, self[buf].contents)
   end
 
