@@ -88,6 +88,9 @@ function fmt:new_spawn(buf)
     safe_close(self.handle)
     safe_close(stdout)
     safe_close(stderr)
+    if #chunks == 0 then
+      return
+    end
     vim.schedule(function()
       self:run(chunks, buf)
     end)
