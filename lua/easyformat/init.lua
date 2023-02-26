@@ -60,7 +60,8 @@ local function do_fmt(buf)
     return
   end
 
-  if #vim.diagnostic.get(buf, { severity = vim.diagnostic.severity.Error }) ~= 0 then
+  --ignore when have error diagnostics
+  if #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
     return
   end
 
