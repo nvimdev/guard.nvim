@@ -34,6 +34,15 @@ local function searcher(match, bufnr)
   if #res ~= 0 then
     return true
   end
+
+  -- if the file is opened as a single just return false don't show a notify
+  local clients = vim.lsp.get_active_clients({ bufnr = bufnr })
+  for _, client in pairs(clients or {}) do
+    if not client.config.root_dir then
+      return false
+    end
+  end
+
   vim.notify('[EasyFormat] Does not find ' .. match .. ' in local', vim.log.levels.WARN)
   return false
 end
