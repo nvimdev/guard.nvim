@@ -1,24 +1,6 @@
-local api, lsp, fn = vim.api, vim.lsp, vim.fn
+local api, fn = vim.api, vim.fn
 local ef = {}
 local fmt = require('easyformat.format')
-
-local function get_lsp_client()
-  local current_buf = api.nvim_get_current_buf()
-  local clients = lsp.get_active_clients({ buffer = current_buf })
-  if next(clients) == nil then
-    return nil
-  end
-
-  for _, client in pairs(clients) do
-    local fts = client.config.filetypes
-    if
-      client.server_capabilities.documentFormattingProvider
-      and vim.tbl_contains(fts, vim.bo.filetype)
-    then
-      return client
-    end
-  end
-end
 
 local function searcher(match, bufnr)
   if not match then
@@ -35,15 +17,7 @@ local function searcher(match, bufnr)
     return true
   end
 
-  -- if the file is opened as a single just return false don't show a notify
-  local clients = vim.lsp.get_active_clients({ bufnr = bufnr })
-  for _, client in pairs(clients or {}) do
-    if not client.config.root_dir then
-      return false
-    end
-  end
-
-  vim.notify('[EasyFormat] Does not find ' .. match .. ' in local', vim.log.levels.WARN)
+  print('[EasyFormat] Does not find ' .. match .. ' in local')
   return false
 end
 
@@ -69,6 +43,10 @@ local function do_fmt(buf)
     return
   end
 
+  if conf.before then
+    conf.before()
+  end
+
   --ignore when have error diagnostics
   if #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
     return
@@ -76,14 +54,6 @@ local function do_fmt(buf)
 
   if searcher(conf.find, buf) then
     fmt:init(vim.tbl_extend('keep', conf, { bufnr = buf }))
-  end
-
-  if conf.hook then
-    conf.hook()
-  end
-
-  if conf.lsp and get_lsp_client() then
-    lsp.buf.format({ async = true })
   end
 end
 
@@ -94,7 +64,7 @@ local function register_command()
 end
 
 local function register_event(fts)
-  local group = api.nvim_create_augroup('EasyFormat with lsp and third tools', { clear = true })
+  local group = api.nvim_create_augroup('EasyFormat with third tools', { clear = true })
   local function bufwrite(bufnr)
     api.nvim_create_autocmd('BufWritePre', {
       group = group,

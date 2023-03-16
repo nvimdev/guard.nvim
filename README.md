@@ -44,54 +44,62 @@ filetype = {
     stdin -- boolean type when is true will send the buffer contents to stdin
     ignore_patterns --table type when file name match one of it will ignore format
     find  -- string type search the config file that command used. if not find will not format
-    hook -- function type a hook run after async fmt invoked
-    lsp  -- boolean type if enable it will run vim.lsp.buf.format with async = true
+    before -- function type a hook run before format
 }
 ```
 
-also you can use a command `EasyFormat` to format file.
+Examples you can `clang-format` for c file like this
 
-## Example configs
-
-for c cpp go lua
-
-```lua
-  require('easyformat').setup({
-    fmt_on_save = true,
+```
     c = {
       cmd = 'clang-format',
       args = { '-style=file', vim.api.nvim_buf_get_name(0) },
       ignore_patterns = { 'neovim/*' },
       find = '.clang-format',
       stdin = false,
-      lsp = false,
+      before = function()
+        print('run before format')
+      end
     },
-    cpp = {
-      cmd = 'clang-format',
-      args = { '-style=file', vim.api.nvim_buf_get_name(0) },
-      find = '.clang-format',
-      stdin = false,
-      lsp = false,
-    },
-    go = {
-      cmd = 'golines',
-      args = { '--max-len=80', vim.api.nvim_buf_get_name(0) },
-      stdin = false,
-      hook = function()
-        vim.lsp.buf.code_action({ context = { only = { 'source.organizeImports' } }, apply = true })
-      end,
-      lsp = true,
-    },
-    lua = {
-      cmd = 'stylua',
-      ignore_patterns = { '%pspec', 'neovim/*' },
-      find = '.stylua.toml',
-      args = { '-' },
-      stdin = true,
-      lsp = false,
-    },
-  })
+```
+builtin support filetypes
 
+- c cpp `clang-format`
+- rust  `rustfmt`
+- lua   `stylua`
+- go    `golines`
+- js/ts/react `prettier`
+
+`require('easyformat.config').get_config` is an export function that you can use it go get the
+default configs the param is filetypes can be `string | table`
+
+you can use this code to get the default config then override it
+
+```lua
+local get_config = require('easyformat.config').get_config
+local config = get_config('cpp')
+-- then you can override this tool config and pass it to setup function
+require('easyformat').setup({
+    cpp = config
+})
 ```
 
-## License
+## Command
+
+ use a command `EasyFormat` to format file.
+
+## Example configs
+
+- usage in my [config](https://github.com/glepnir/nvim)
+
+```lua
+  local get_config = require('easyformat.config').get_config
+  local configs =
+    get_config({ 'c', 'cpp', 'lua', 'rust', 'go', 'javascriptreact', 'typescriptreact' })
+  local params = vim.tbl_extend('keep', {
+    fmt_on_save = true,
+  }, configs)
+  require('easyformat').setup(params)
+```
+
+## License MIT
