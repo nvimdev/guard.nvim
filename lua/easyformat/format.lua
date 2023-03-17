@@ -20,9 +20,9 @@ function fmt:run(chunks, bufnr)
 
   local curr_changedtick = api.nvim_buf_get_changedtick(bufnr)
   if curr_changedtick ~= self[bufnr].initial_changedtick then
-    vim.notify("current buffer is changed during the formatting",vim.log.levels.Error)
-    if vim.fn.input("continue formatting? this will override curent buffer, y/n") ~= 'y' then
-      return 
+    vim.notify('current buffer is changed during the formatting', vim.log.levels.Error)
+    if vim.fn.input('continue formatting? this will override curent buffer, y/n') ~= 'y' then
+      return
     end
   end
 
@@ -106,6 +106,8 @@ function fmt:new_spawn(buf)
         uv.fs_close(fd)
         chunks = { data }
         self:run(chunks, buf)
+        -- NOTE: why we just use :edit command here? the edit will cause lsp/treesitter to reload
+        -- if we use noautocmd edit, the lsp/treesitter will no longer work
       end)
     else
       if #chunks == 0 then
