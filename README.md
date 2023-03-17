@@ -51,7 +51,8 @@ configs.filetype = {
     fname -- boolean when it's true it will auto insert current buffername to args
     stdin -- boolean type when is true will send the buffer contents to stdin
     ignore_patterns --table type when file name match one of it will ignore format
-    find  -- string type search the config file that command used. if not find will not format
+    find  -- string type search the config file that command used. if not find will not format set
+          -- to empty to disable it
     before -- function type a hook run before format
 }
 ```

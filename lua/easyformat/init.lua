@@ -3,7 +3,7 @@ local ef = {}
 local fmt = require('easyformat.format')
 
 local function searcher(match, bufnr)
-  if not match then
+  if not match or #match == 0 then
     return true
   end
 
