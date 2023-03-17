@@ -61,7 +61,8 @@ Examples you can `clang-format` for c file like this
 ```
     c = {
       cmd = 'clang-format',
-      args = { '-style=file', vim.api.nvim_buf_get_name(0) },
+      args = { '-style=file'},
+      fname = true,
       ignore_patterns = { 'neovim/*' },
       find = '.clang-format',
       stdin = false,
