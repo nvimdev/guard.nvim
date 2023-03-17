@@ -70,11 +70,19 @@ function bt.__newindex(t, k, v)
     conf = {}
   end
   v = type(v) == 'boolean' and {} or v
-
-  conf = vim.tbl_extend('force', conf, v)
-  if vim.fn.executable(conf.cmd) == 0 then
-    vim.notify('[EasyFormat] ' .. conf.cmd .. ' not executable', vim.log.levels.Error)
-    return
+  if type(v) == 'table' then
+    conf = vim.tbl_extend('force', conf, v)
+    if not conf.cmd then
+      vim.notify('[EasyFormat] cmd is a necessary key', vim.log.levels.Error)
+      return
+    end
+    if vim.fn.executable(conf.cmd) == 0 then
+      vim.notify('[EasyFormat] ' .. conf.cmd .. ' not executable', vim.log.levels.Error)
+      return
+    end
+    rawset(t, k, conf)
+  else
+    rawset(t, k, v)
   end
 end
 
