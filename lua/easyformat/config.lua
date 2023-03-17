@@ -71,7 +71,7 @@ function bt.__newindex(t, k, v)
 
   conf = vim.tbl_extend('force', conf, v)
   if vim.fn.executable(conf.cmd) == 0 then
-    vim.notify('[EasyFormat] ' .. config.cmd .. ' not executable', vim.log.levels.Error)
+    vim.notify('[EasyFormat] ' .. conf.cmd .. ' not executable', vim.log.levels.Error)
     return
   end
   rawset(t, k, conf)
