@@ -43,25 +43,24 @@ function fmt:run(chunks, bufnr)
 
   local function write_buffer()
     api.nvim_buf_set_lines(bufnr, 0, -1, false, chunks)
-    vim.cmd('noautocmd silent write')
+    vim.cmd('noautocmd silent write!')
   end
 
   if #old ~= #chunks then
     write_buffer()
-    return
-  end
-
-  local need_fmt = false
-  for i, v in pairs(chunks) do
-    local res = vim.diff(old[i], v)
-    if #res ~= 0 then
-      need_fmt = true
-      break
+  else
+    local need_fmt = false
+    for i, v in pairs(chunks) do
+      local res = vim.diff(old[i], v)
+      if #res ~= 0 then
+        need_fmt = true
+        break
+      end
     end
-  end
 
-  if need_fmt then
-    write_buffer()
+    if need_fmt then
+      write_buffer()
+    end
   end
 
   self[bufnr] = nil
@@ -96,12 +95,26 @@ function fmt:new_spawn(buf)
     safe_close(handle)
     safe_close(stdout)
     safe_close(stderr)
-    if #chunks == 0 then
-      return
+    if self[buf].do_not_need_stdout then
+      vim.schedule(function()
+        local fd = uv.fs_open(vim.api.nvim_buf_get_name(buf), 'r', 438)
+        if not fd then
+          chunks = { '' }
+        end
+        local stat = uv.fs_fstat(fd)
+        local data = uv.fs_read(fd, stat.size, 0)
+        uv.fs_close(fd)
+        chunks = { data }
+        self:run(chunks, buf)
+      end)
+    else
+      if #chunks == 0 then
+        return
+      end
+      vim.schedule(function()
+        self:run(chunks, buf)
+      end)
     end
-    vim.schedule(function()
-      self:run(chunks, buf)
-    end)
   end)
 
   uv.read_start(stdout, function(err, data)
@@ -146,9 +159,13 @@ function fmt:check_finish(buf)
       safe_close(self[buf].stdout)
       safe_close(self[buf].stderr)
       uv.kill(self[buf].pid, 9)
-      local ft = vim.api.nvim_buf_get_option(buf,'filetype')
+      local ft = vim.api.nvim_buf_get_option(buf, 'filetype')
       vim.notify(
-        string.format('timeout, check your config for %s: %s', ft, vim.inspect(require('easyformat.config')[ft])),
+        string.format(
+          'timeout, check your config for %s: %s',
+          ft,
+          vim.inspect(require('easyformat.config')[ft])
+        ),
         vim.log.levels.Error
       )
       self[buf] = nil
