@@ -95,7 +95,7 @@ function fmt:new_spawn(buf)
     safe_close(handle)
     safe_close(stdout)
     safe_close(stderr)
-    if self[buf].do_not_need_stdout then
+    if self[buf].stdout then
       vim.schedule(function()
         local fd = uv.fs_open(vim.api.nvim_buf_get_name(buf), 'r', 438)
         if not fd then

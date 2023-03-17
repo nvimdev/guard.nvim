@@ -17,6 +17,14 @@ local function get_builtin(ft)
       fname = true,
       stdin = false,
     },
+    {
+      cmd = 'black',
+      args = {},
+      find = false,
+      fname = true,
+      stdin = false,
+      stdout = true,
+    },
     cpp = {
       cmd = 'clang-format',
       args = { '-style=file' },
