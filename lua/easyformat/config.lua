@@ -67,7 +67,6 @@ function bt.__newindex(t, k, v)
   if not conf then
     conf = {}
   end
-  v = type(v) == 'boolean' and {} or v
 
   conf = vim.tbl_extend('force', conf, v)
   if vim.fn.executable(conf.cmd) == 0 then
