@@ -18,6 +18,14 @@ function fmt:run(chunks, bufnr)
     return
   end
 
+  local curr_changedtick = api.nvim_buf_get_changedtick(bufnr)
+  if curr_changedtick ~= self[bufnr].initial_changedtick then
+    vim.notify("current buffer is changed during the formatting",vim.log.levels.Error)
+    if vim.fn.input("continue formatting? this will override curent buffer, y/n") ~= 'y' then
+      return 
+    end
+  end
+
   if not api.nvim_buf_is_valid(bufnr) then
     return
   end
@@ -78,14 +86,14 @@ function fmt:new_spawn(buf)
   local stdin = uv.new_pipe(false)
 
   local chunks = {}
-
-  self.handle, self.pid = uv.spawn(self[buf].cmd, {
+  local handle, pid
+  handle, pid = uv.spawn(self[buf].cmd, {
     args = self[buf].args,
     stdio = { stdin, stdout, stderr },
   }, function(_, _)
     uv.read_stop(stdout)
     uv.read_stop(stderr)
-    safe_close(self.handle)
+    safe_close(handle)
     safe_close(stdout)
     safe_close(stderr)
     if #chunks == 0 then
@@ -114,10 +122,44 @@ function fmt:new_spawn(buf)
   uv.shutdown(stdin, function()
     safe_close(stdin)
   end)
+  self[buf].handle = handle
+  self[buf].pid = pid
+  self[buf].stdout = stdout
+  self[buf].stderr = stderr
+end
+
+function fmt:check_finish(buf)
+  return vim.schedule_wrap(function()
+    if not self[buf] then
+      return
+    end
+
+    local now = vim.loop.hrtime()
+    if self[buf] then
+      if self[buf].timer and not self[buf].timer:is_closing() then
+        self[buf].timer:stop()
+        self[buf].timer:close()
+      end
+      uv.read_stop(self[buf].stdout)
+      uv.read_stop(self[buf].stderr)
+      safe_close(self[buf].handle)
+      safe_close(self[buf].stdout)
+      safe_close(self[buf].stderr)
+      uv.kill(self[buf].pid, 9)
+      local ft = vim.api.nvim_buf_get_option(buf,'filetype')
+      vim.notify(
+        string.format('timeout, check your config for %s: %s', ft, vim.inspect(require('easyformat.config')[ft])),
+        vim.log.levels.Error
+      )
+      self[buf] = nil
+    end
+  end)
 end
 
 function fmt:init(opt)
   local curr_changedtick = api.nvim_buf_get_changedtick(opt.bufnr)
+  local init_time = vim.loop.hrtime()
+  local timer = vim.loop.new_timer()
   if self[opt.bufnr] and self[opt.bufnr].initial_changedtick == curr_changedtick then
     return
   end
@@ -125,8 +167,11 @@ function fmt:init(opt)
   self[opt.bufnr] = vim.tbl_extend('keep', {
     initial_changedtick = curr_changedtick,
     contents = get_buf_contents(opt.bufnr),
+    init_time = init_time,
+    timer = timer,
   }, opt)
 
+  timer:start(require('easyformat.config').timeout, 0, self:check_finish(opt.bufnr))
   self:new_spawn(opt.bufnr)
 end
 
