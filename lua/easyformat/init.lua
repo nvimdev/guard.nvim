@@ -57,7 +57,7 @@ local function do_fmt(buf)
   end
 
   if searcher(conf.find, buf) then
-    if conf.fname then
+    if conf.fname and conf.args[#conf.args] ~= api.nvim_buf_get_name(buf) then
       conf.args[#conf.args + 1] = api.nvim_buf_get_name(buf)
     end
     fmt:init(vim.tbl_extend('keep', conf, { bufnr = buf }))
