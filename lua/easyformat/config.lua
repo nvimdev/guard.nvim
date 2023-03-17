@@ -26,8 +26,8 @@ local function get_builtin(ft)
     },
     rust = {
       cmd = 'rustfmt',
-      args = {},
-      fname = true,
+      args = { '--edition', '2021', '--emit', 'stdout' },
+      fname = false,
       stdin = true,
     },
     go = {
