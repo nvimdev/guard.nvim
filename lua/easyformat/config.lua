@@ -69,7 +69,7 @@ function bt.__newindex(t, k, v)
   end
   v = type(v) == 'boolean' and {} or v
 
-  conf = vim.tbl_extend('keep', conf, v)
+  conf = vim.tbl_extend('force', conf, v)
   if vim.fn.executable(conf.cmd) == 0 then
     vim.notify('[EasyFormat] ' .. config.cmd .. ' not executable', vim.log.levels.Error)
     return
