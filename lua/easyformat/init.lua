@@ -1,4 +1,4 @@
-local api, fn = vim.api, vim.fn
+local api = vim.api
 local ef = {}
 local fmt = require('easyformat.format')
 
@@ -37,7 +37,11 @@ end
 
 local function do_fmt(buf)
   buf = buf or api.nvim_get_current_buf()
-  local conf = ef.config[vim.bo[buf].filetype]
+  local configs = require('easyformat.config')
+  local conf = configs[vim.bo[buf].filetype]
+  if not conf then
+    return
+  end
 
   if conf.ignore_patterns and ignored(buf, conf.ignore_patterns) then
     return
@@ -53,6 +57,9 @@ local function do_fmt(buf)
   end
 
   if searcher(conf.find, buf) then
+    if conf.fname then
+      conf.args[#conf.args + 1] = api.nvim_buf_get_name(buf)
+    end
     fmt:init(vim.tbl_extend('keep', conf, { bufnr = buf }))
   end
 end
@@ -85,30 +92,10 @@ local function register_event(fts)
   })
 end
 
-local function executable_validate(config)
-  local pass = true
-  for key, item in pairs(config) do
-    if key ~= 'fmt_on_save' and fn.executable(item.cmd) == 0 then
-      vim.notify('[EasyFormat] cmd ' .. item.cmd .. ' not executable', vim.log.levels.WARN)
-      pass = false
-      break
-    end
-  end
-  return pass
-end
-
-function ef.setup(config)
-  ef.config = config
-  if not executable_validate(config) then
-    return
-  end
-
-  if config.fmt_on_save then
-    local fts = vim.tbl_keys(config)
-    fts = vim.tbl_filter(function(k)
-      return k ~= 'fmt_on_save'
-    end, fts)
-
+function ef.setup(opt)
+  if opt.fmt_on_save then
+    local configs = require('easyformat.config')
+    local fts = vim.tbl_keys(configs)
     register_event(fts)
   end
 

@@ -33,14 +33,22 @@ use({
 })
 ```
 
-## Config
+## Options
 
 ```lua
 fmt_on_save = true -- default is true when is true it will run format on BufWritePre
---filetype config
-filetype = {
+```
+
+## Format tools config
+
+set a new config for filetype
+
+```lua
+local configs = require('easyformat.config')
+configs.filetype = {
     cmd  -- string type the third party format command.
     args -- table type command arguments.
+    fname -- boolean when it's true it will auto insert current buffername to args
     stdin -- boolean type when is true will send the buffer contents to stdin
     ignore_patterns --table type when file name match one of it will ignore format
     find  -- string type search the config file that command used. if not find will not format
@@ -62,7 +70,9 @@ Examples you can `clang-format` for c file like this
       end
     },
 ```
-builtin support filetypes
+## Use built-in tools config
+
+builtin filetypes config
 
 - c cpp `clang-format`
 - rust  `rustfmt`
@@ -70,19 +80,21 @@ builtin support filetypes
 - go    `golines`
 - js/ts/react `prettier`
 
-`require('easyformat.config').get_config` is an export function that you can use it go get the
-default configs the param is filetypes can be `string | table`
-
-you can use this code to get the default config then override it
+if you want edit some field of default tool config you can do it like this
 
 ```lua
-local get_config = require('easyformat.config').get_config
-local config = get_config('cpp')
--- then you can override this tool config and pass it to setup function
-require('easyformat').setup({
-    cpp = config
-})
+local configs = require('easyformat.config')
+configs.lua = {
+    ignore_patterns = { '%pspec', 'neovim/*' },
+}
 ```
+
+if you want use mulitples default configs you can use the `configs.use_default` function lie
+
+```lua
+configs.use_default({'javascript', 'javascriptreact', 'typescript','typescriptreact'})
+```
+
 
 ## Command
 
@@ -93,13 +105,22 @@ require('easyformat').setup({
 - usage in my [config](https://github.com/glepnir/nvim)
 
 ```lua
-  local get_config = require('easyformat.config').get_config
-  local configs =
-    get_config({ 'c', 'cpp', 'lua', 'rust', 'go', 'javascriptreact', 'typescriptreact' })
-  local params = vim.tbl_extend('keep', {
+  local configs = require('easyformat.config')
+  configs.lua = {
+    ignore_patterns = { '%pspec', 'neovim/*' },
+  }
+  configs.c = {
+    ignore_patterns = { 'neovim/*' },
+  }
+  configs.use_default({
+    'cpp',
+    'go',
+    'rust',
+    'javascriptreact',
+  })
+  require('easyformat').setup({
     fmt_on_save = true,
-  }, configs)
-  require('easyformat').setup(params)
+  })
 ```
 
 ## License MIT
