@@ -8,9 +8,7 @@ local function searcher(match, bufnr)
   end
 
   local fname = api.nvim_buf_get_name(bufnr)
-  if #fname == 0 then
-    fname = vim.loop.cwd()
-  end
+  fname = #fname == 0 and vim.loop.cwd() or fname
   local res =
     vim.fs.find(match, { upward = true, path = fname, stop = vim.env.HOME, type = 'file' })
   if #res ~= 0 then
@@ -58,7 +56,7 @@ local function do_fmt(buf)
 
   if searcher(conf.find, buf) then
     if conf.fname then
-      conf.args[#conf.args + 1] = api.nvim_buf_get_name(buf)
+      conf.args[#conf.args + 1] = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
     end
     fmt:init(vim.tbl_extend('keep', conf, { bufnr = buf }))
   end

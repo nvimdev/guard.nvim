@@ -30,7 +30,7 @@ function fmt:run(chunks, bufnr)
 
   local old = vim.split(table.concat(self[bufnr].contents), '\n')
   if #old[#old] == 0 then
-    old[#old] = nil
+    table.remove(old, #old)
   end
 
   local function write_buffer()
@@ -73,9 +73,12 @@ function fmt:new_spawn(buf)
     return
   end
 
-  local stdout = uv.new_pipe(false)
-  local stderr = uv.new_pipe(false)
-  local stdin = uv.new_pipe(false)
+  local stdout = uv.new_pipe()
+  local stderr = uv.new_pipe()
+  local stdin
+  if self[buf].stdin then
+    stdin = uv.new_pipe()
+  end
 
   local chunks = {}
 
@@ -107,13 +110,12 @@ function fmt:new_spawn(buf)
     assert(not err, err)
   end)
 
-  if self[buf].stdin then
+  if self[buf].stdin and stdin then
     uv.write(stdin, self[buf].contents)
+    uv.shutdown(stdin, function()
+      safe_close(stdin)
+    end)
   end
-
-  uv.shutdown(stdin, function()
-    safe_close(stdin)
-  end)
 end
 
 function fmt:init(opt)
