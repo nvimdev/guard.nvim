@@ -33,8 +33,8 @@ local function get_builtin(ft)
     go = {
       cmd = 'golines',
       args = { '--max-len=80' },
-      fname = true,
-      stdin = false,
+      fname = false,
+      stdin = true,
       before = function()
         vim.lsp.buf.code_action({ context = { only = { 'source.organizeImports' } }, apply = true })
       end,
