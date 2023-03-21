@@ -14,26 +14,22 @@ local function get_builtin(ft)
       cmd = 'clang-format',
       args = { '-style=file' },
       find = '.clang-format',
-      fname = false,
       stdin = true,
     },
     cpp = {
       cmd = 'clang-format',
       args = { '-style=file' },
       find = '.clang-format',
-      fname = false,
       stdin = true,
     },
     rust = {
       cmd = 'rustfmt',
       args = { '--edition', '2021', '--emit', 'stdout' },
-      fname = false,
       stdin = true,
     },
     go = {
       cmd = 'golines',
       args = { '--max-len=80' },
-      fname = false,
       stdin = true,
       before = function()
         vim.lsp.buf.code_action({ context = { only = { 'source.organizeImports' } }, apply = true })
