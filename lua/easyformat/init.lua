@@ -41,6 +41,8 @@ local function do_fmt(buf)
     return
   end
 
+  conf = vim.deepcopy(conf)
+
   if conf.ignore_patterns and ignored(buf, conf.ignore_patterns) then
     return
   end
