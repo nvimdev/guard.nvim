@@ -71,7 +71,7 @@ local function register_command()
 end
 
 local function register_event(fts)
-  local group = api.nvim_create_augroup('EasyFormat with third tools', { clear = true })
+  local group = api.nvim_create_augroup('EasyFormat', { clear = true })
   local function bufwrite(bufnr)
     api.nvim_create_autocmd('BufWritePre', {
       group = group,
