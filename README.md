@@ -53,6 +53,21 @@ register format or tool config by using `fmt` and `append` function.type of them
 - `stylua`
 - `golines`
 
+table format for custom tool 
+
+```
+{
+    cmd      --string tool command
+    args     --table command arugments
+    fname    --string insert filename to args tail
+    stdin    --boolean pass buffer contents into stdin
+    timeout  --integer
+
+    --special
+    fn       --function if fn is set other field will not take effect
+}
+```
+
 #### Linter
 
 - `clang-tidy`

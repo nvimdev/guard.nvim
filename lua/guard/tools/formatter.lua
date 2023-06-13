@@ -15,6 +15,7 @@ M['clang-format'] = {
 M.prettier = {
   cmd = 'prettier',
   args = { '--stdin-filepath' },
+  fname = true,
   stdin = true,
 }
 

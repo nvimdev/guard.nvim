@@ -76,6 +76,7 @@ local function do_fmt(buf)
       if config.ignore_patterns and ignored(buf, configs.ignore_patterns) then
         can_run = false
       end
+
       if config.ignore_error and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
         if can_run then
           can_run = false
@@ -85,7 +86,7 @@ local function do_fmt(buf)
       if can_run then
         config.lines = new_lines and new_lines or prev_lines
         if config.cmd then
-          config.args[#config.args + 1] = fname
+          config.args[#config.args + 1] = config.fname and fname or nil
           new_lines = spawn(config)
         elseif config.fn then
           config.fn()
