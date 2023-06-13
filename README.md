@@ -23,6 +23,8 @@ require('guard').setup({})
 
 - `fmt_on_save`     auto format when save file
 
+command `GuardFmt` for command use, use `GuardDisable` to diable auto format.
+
 ## Usage
 
 an example usage 

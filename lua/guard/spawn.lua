@@ -62,7 +62,7 @@ local function spawn(opt)
         return
       end
     end)
-    print(table.concat(chunks))
+
     coroutine.resume(co, table.concat(chunks))
   end)
 

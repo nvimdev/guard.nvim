@@ -62,6 +62,7 @@ local function do_fmt(buf)
   local fmt_configs = filetype[vim.bo[buf].filetype].format
   local formatter = require('guard.tools.formatter')
   local prev_lines = get_prev_lines(buf)
+  local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
 
   coroutine.resume(coroutine.create(function()
     local new_lines
@@ -84,6 +85,7 @@ local function do_fmt(buf)
       if can_run then
         config.lines = new_lines and new_lines or prev_lines
         if config.cmd then
+          config.args[#config.args + 1] = fname
           new_lines = spawn(config)
         elseif config.fn then
           config.fn()
