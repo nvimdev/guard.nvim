@@ -8,6 +8,7 @@ Table of Contents                               *guard.nvim-table-of-contents*
   - Setup                                                   |guard.nvim-setup|
   - Config Options                                 |guard.nvim-config-options|
   - Usage                                                   |guard.nvim-usage|
+  - Trobule                                               |guard.nvim-trobule|
   - License MIT                                       |guard.nvim-license-mit|
 
 GUARD.NVIM                                             *guard.nvim-guard.nvim*
@@ -77,6 +78,11 @@ FORMATTER
 LINTER
 
 - `clang-tidy`
+
+
+TROBULE                                                   *guard.nvim-trobule*
+
+if guard do nothing when save file run `checkhealth` first.
 
 
 LICENSE MIT                                           *guard.nvim-license-mit*
