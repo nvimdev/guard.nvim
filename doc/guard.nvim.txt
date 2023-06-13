@@ -39,6 +39,8 @@ CONFIG OPTIONS                                     *guard.nvim-config-options*
 
 - `fmt_on_save` auto format when save file
 
+command `GuardFmt` for command use, use `GuardDisable` to diable auto format.
+
 
 USAGE                                                       *guard.nvim-usage*
 
