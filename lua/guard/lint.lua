@@ -2,6 +2,7 @@ local api = vim.api
 local filetype = require('guard.filetype')
 local spawn = require('guard.spawn').spawn
 local ns = api.nvim_create_namespace('Guard')
+local get_prev_lines = require('guard.util').get_prev_lines
 
 local function do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
@@ -9,24 +10,23 @@ local function do_lint(buf)
     return
   end
   local linters = filetype[vim.bo[buf].filetype].linter
-  linters = vim.tbl_map(function(item)
-    local prefix = 'guard.tools.linter.'
-    if type(item) == 'string' and require(prefix .. item) then
-      return require(prefix .. item)
-    else
-      return item
-    end
-  end, linters)
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
+  local prev_lines = get_prev_lines(buf)
+  api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 
   coroutine.resume(coroutine.create(function()
     local results = {}
 
     for _, lint in ipairs(linters) do
-      lint.args[#lint.args + 1] = fname
+      lint = vim.deepcopy(lint)
+      if lint.stdin then
+        lint.lines = prev_lines
+      else
+        lint.args[#lint.args + 1] = fname
+      end
       local result = spawn(lint)
       if #result > 0 then
-        results[#results + 1] = lint.parser(result, buf, ns)
+        results[#results + 1] = lint.output_fmt(result, buf, ns)
       end
     end
 
@@ -41,16 +41,20 @@ local function do_lint(buf)
   end))
 end
 
-local function follow_diangostic_request()
-  api.nvim_create_autocmd('LspRequest', {
+local function register_lint(ft, extra)
+  api.nvim_create_autocmd('FileType', {
+    pattern = ft,
     callback = function(args)
-      local request = args.data.request
-      print(vim.inspect(request))
+      api.nvim_create_autocmd(vim.list_extend({ 'BufEnter' }, extra), {
+        buffer = args.buf,
+        callback = function()
+          do_lint(args.buf)
+        end,
+      })
     end,
   })
 end
 
 return {
-  do_lint = do_lint,
-  follow_diangostic_request = follow_diangostic_request,
+  register_lint = register_lint,
 }

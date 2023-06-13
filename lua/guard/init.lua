@@ -1,16 +1,6 @@
 local api = vim.api
 local group = api.nvim_create_augroup('guard', { clear = true })
 
-local function register_command()
-  api.nvim_create_user_command('GuardFmt', function()
-    require('guard.format').do_fmt()
-  end, {})
-
-  api.nvim_create_user_command('GuardLint', function()
-    require('guard.lint').do_lint()
-  end, {})
-end
-
 local function register_event(fts)
   api.nvim_create_autocmd('FileType', {
     group = group,
@@ -38,7 +28,27 @@ local function setup(opt)
     register_event(vim.tbl_keys(fts_config))
   end
 
-  register_command()
+  if opt.use_lsp_format then
+    require('guard.format').use_lsp_format = true
+  end
+
+  local lint = require('guard.lint')
+  for ft, conf in pairs(fts_config) do
+    if conf.linter then
+      for i, entry in ipairs(conf.linter) do
+        if type(entry) == 'string' then
+          local tool = require('guard.tools.linter.' .. entry)
+          if tool then
+            conf.linter[i] = tool
+          end
+        end
+        lint.register_lint(
+          ft,
+          conf.linter[i].stdin and { 'TextChangd', 'InsertLeave' } or { 'BufWritePost' }
+        )
+      end
+    end
+  end
 end
 
 return {

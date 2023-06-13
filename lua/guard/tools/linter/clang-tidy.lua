@@ -2,7 +2,7 @@ return {
   cmd = 'clang-tidy',
   args = { '--quiet' },
   stdin = false,
-  parser = function(result, buf, ns)
+  output_fmt = function(result, buf, ns)
     local map = {
       'error',
       'warning',
