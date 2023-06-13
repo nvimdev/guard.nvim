@@ -32,6 +32,7 @@ SETUP                                                       *guard.nvim-setup*
 use any plugin manager you like then call setup
 
 >lua
+    --config must before this line
     require('guard').setup({})
 <
 
@@ -54,6 +55,8 @@ an example usage
     c:lint('clang-tidy')
     ft('lua'):fmt('stylua')
     ft('go'):fmt('lsp'):append('golines')
+    --note setup must be last line
+    require('guard').setup()
 <
 
 first import `guard.filetype` module then call it to register filetype,then use
