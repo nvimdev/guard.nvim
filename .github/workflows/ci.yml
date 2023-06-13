@@ -55,7 +55,7 @@ jobs:
       - name: run test
         shell: bash
         run: |
-          wget "https://github.com/JohnnyMorganz/StyLua/releases/download/v0.17.1/stylua-linux-x86_64.zip" -P ./local/bin
+          wget "https://github.com/JohnnyMorganz/StyLua/releases/download/v0.17.1/stylua-linux-x86_64.zip" -P ~/.local/bin
           unzip ~/.local/bin/stylua-linux-x86_64.zip
           luarocks install luacheck
           luarocks install vusted
