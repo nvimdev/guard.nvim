@@ -2,7 +2,7 @@ local api = vim.api
 local equal = assert.equal
 local ft = require('guard.filetype')
 ft('lua'):fmt('stylua')
-require('guard').setup({})
+require('guard').setup()
 
 describe('format module', function()
   local bufnr
@@ -17,7 +17,7 @@ describe('format module', function()
       'local a',
       '          = "test"',
     })
-    vim.cmd('GuardFmt')
+    require('guard.format').do_fmt(bufnr)
     vim.wait(500)
     local line = api.nvim_buf_get_lines(bufnr, 0, -1, false)[1]
     equal([[local a = 'test']], line)
