@@ -50,7 +50,7 @@ local function update_buffer(bufnr, new_lines)
     end
     api.nvim_buf_set_lines(bufnr, s, e, false, replacement)
   end
-  api.nvim_command('noautocmd write!')
+  api.nvim_command('silent! noautocmd write!')
 end
 
 local function do_fmt(buf)
