@@ -46,7 +46,7 @@ describe('filetype module', function()
       lines = { 'test', 'lines' },
     })
     same({
-      lint = {
+      linter = {
         { cmd = 'black', lines = { 'test', 'lines' } },
       },
     }, ft.python)
@@ -63,7 +63,7 @@ describe('filetype module', function()
       timeout = 1000,
     })
     same({
-      lint = {
+      linter = {
         { cmd = 'black', lines = { 'test', 'lines' }, timeout = 1000 },
         { cmd = 'other', lines = { 'test' }, timeout = 1000 },
       },
@@ -80,7 +80,7 @@ describe('filetype module', function()
         { cmd = 'second' },
         { cmd = 'third' },
       },
-      lint = {
+      linter = {
         { cmd = 'first' },
         { cmd = 'second' },
         { cmd = 'third' },

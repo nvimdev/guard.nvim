@@ -26,6 +26,29 @@ local function executable_check()
         health.error('wrong type of ' .. conf)
       end
     end
+
+    for _, conf in ipairs(item.linter or {}) do
+      if type(conf) == 'table' then
+        if fn.executable(conf.cmd) == 1 then
+          health.ok(conf.cmd .. ' found')
+        else
+          health.error(conf.cmd .. ' not found')
+        end
+      elseif type(conf) == 'string' then
+        local entry = require('guard.tools.linter.' .. conf)
+        if entry then
+          if fn.executable(entry.cmd) == 1 then
+            health.ok(entry.cmd .. ' found')
+          else
+            health.error(entry.cmd .. ' found')
+          end
+        else
+          health.error('this executable not exist ' .. conf)
+        end
+      else
+        health.error('wrong type of ' .. conf)
+      end
+    end
   end
 end
 

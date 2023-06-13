@@ -41,6 +41,16 @@ local function do_lint(buf)
   end))
 end
 
+local function follow_diangostic_request()
+  api.nvim_create_autocmd('LspRequest', {
+    callback = function(args)
+      local request = args.data.request
+      print(vim.inspect(request))
+    end,
+  })
+end
+
 return {
   do_lint = do_lint,
+  follow_diangostic_request = follow_diangostic_request,
 }

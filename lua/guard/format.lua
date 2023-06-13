@@ -64,7 +64,7 @@ end
 local function do_fmt(buf)
   buf = buf or api.nvim_get_current_buf()
   if not filetype[vim.bo[buf].filetype] then
-    vim.notify('[Guard] missing config for filetype ' .. vim.bo[buf].fieltype, vim.log.levels.ERROR)
+    vim.notify('[Guard] missing config for filetype ' .. vim.bo[buf].filetype, vim.log.levels.ERROR)
     return
   end
   local fmt_configs = filetype[vim.bo[buf].filetype].format
@@ -76,9 +76,9 @@ local function do_fmt(buf)
       return item
     end
   end, fmt_configs)
+
   -- local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   local prev_lines = get_prev_lines(buf)
-  -- local prev_changedtick = api.nvim_buf_get_changedtick(buf)
 
   coroutine.resume(coroutine.create(function()
     local new_lines
