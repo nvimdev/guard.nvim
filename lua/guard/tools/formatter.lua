@@ -1,5 +1,11 @@
 local M = {}
 
+M.lsp = {
+  fn = function(bufnr)
+    vim.lsp.buf.format({ bufnr = bufnr })
+  end,
+}
+
 M['clang-format'] = {
   cmd = 'clang-format',
   args = { '-style=file' },
@@ -22,9 +28,6 @@ M.golines = {
   cmd = 'golines',
   args = { '--max-len=80' },
   stdin = true,
-  before = function()
-    vim.lsp.buf.code_action({ context = { only = { 'source.organizeImports' } }, apply = true })
-  end,
 }
 
 M.stylua = {

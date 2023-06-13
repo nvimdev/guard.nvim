@@ -2,7 +2,6 @@ local api = vim.api
 local spawn = require('guard.spawn').spawn
 local get_prev_lines = require('guard.util').get_prev_lines
 local filetype = require('guard.filetype')
-local use_lsp_format = false
 
 local function ignored(buf, patterns)
   local fname = api.nvim_buf_get_name(buf)
@@ -62,26 +61,16 @@ local function do_fmt(buf)
   end
   local fmt_configs = filetype[vim.bo[buf].filetype].format
   local formatter = require('guard.tools.formatter')
-  fmt_configs = vim.tbl_map(function(item)
-    if type('item') == 'string' and formatter[item] then
-      item = formatter[item]
-    end
-    if item.before and type(item.before) == 'function' then
-      item.before()
-    end
-    return item
-  end, fmt_configs)
-
   local prev_lines = get_prev_lines(buf)
-
-  if use_lsp_format then
-    vim.lsp.buf.format({ bufnr = buf })
-  end
 
   coroutine.resume(coroutine.create(function()
     local new_lines
     for _, config in ipairs(fmt_configs) do
-      config = vim.deepcopy(config)
+      if type(config) == 'string' and formatter[config] then
+        config = formatter[config]
+      end
+
+      config = config.fn and config or vim.deepcopy(config)
       local can_run = true
       if config.ignore_patterns and ignored(buf, configs.ignore_patterns) then
         can_run = false
@@ -94,7 +83,12 @@ local function do_fmt(buf)
 
       if can_run then
         config.lines = new_lines and new_lines or prev_lines
-        new_lines = spawn(config)
+        if config.cmd then
+          new_lines = spawn(config)
+        elseif config.fn then
+          config.fn()
+          new_lines = get_prev_lines(buf)
+        end
       end
     end
 
@@ -106,5 +100,4 @@ end
 
 return {
   do_fmt = do_fmt,
-  use_lsp_format = use_lsp_format,
 }

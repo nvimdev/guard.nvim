@@ -28,10 +28,6 @@ local function setup(opt)
     register_event(vim.tbl_keys(fts_config))
   end
 
-  if opt.use_lsp_format then
-    require('guard.format').use_lsp_format = true
-  end
-
   local lint = require('guard.lint')
   for ft, conf in pairs(fts_config) do
     if conf.linter then
