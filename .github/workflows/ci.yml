@@ -36,6 +36,7 @@ jobs:
   test:
     name: Run Test
     runs-on: ubuntu-latest
+    container: ubuntu
     steps:
       - uses: actions/checkout@v3
       - uses: rhysd/action-setup-vim@v1
