@@ -55,9 +55,9 @@ jobs:
       - name: run test
         shell: bash
         run: |
-          wget "https://github.com/JohnnyMorganz/StyLua/releases/download/v0.17.1/stylua-linux-x86_64.zip" -P /tmp
-          unzip /tmp/stylua-linux-x86_64.zip
-          export PATH= "$PATH:/tmp"
+          wget "https://github.com/JohnnyMorganz/StyLua/releases/download/v0.17.1/stylua-linux-x86_64.zip" -P ./bin
+          unzip ./stylua-linux-x86_64.zip
+          export PATH= "$PATH:$PWD/bin"
           luarocks install luacheck
           luarocks install vusted
           vusted ./test
