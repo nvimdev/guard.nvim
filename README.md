@@ -57,5 +57,9 @@ register format or tool config by using `fmt` and `append` function.type of them
 
 - `clang-tidy`
 
+## Trobule
+
+if guard do nothing when save file run `checkhealth` first.
+
 
 ## License MIT
