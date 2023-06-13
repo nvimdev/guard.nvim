@@ -59,5 +59,4 @@ jobs:
           unzip ~/.local/bin/stylua-linux-x86_64.zip
           luarocks install luacheck
           luarocks install vusted
-          which stylua
           vusted ./test

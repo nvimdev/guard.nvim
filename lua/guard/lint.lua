@@ -1,6 +1,6 @@
 local api = vim.api
 local filetype = require('guard.filetype')
-local spawn = require('guard.spawn').spawn
+local spawn = require('guard.spawn').try_spawn
 local ns = api.nvim_create_namespace('Guard')
 local get_prev_lines = require('guard.util').get_prev_lines
 

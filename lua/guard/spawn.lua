@@ -92,6 +92,15 @@ local function spawn(opt)
   return (coroutine.yield())
 end
 
+local function try_spawn(opt)
+  local ok, out = pcall(spawn, opt)
+  if not ok then
+    print(out)
+    return
+  end
+  return out
+end
+
 return {
-  spawn = spawn,
+  try_spawn = try_spawn,
 }

@@ -1,5 +1,5 @@
 local api = vim.api
-local spawn = require('guard.spawn').spawn
+local spawn = require('guard.spawn').try_spawn
 local get_prev_lines = require('guard.util').get_prev_lines
 local filetype = require('guard.filetype')
 
