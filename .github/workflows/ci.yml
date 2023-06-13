@@ -36,7 +36,6 @@ jobs:
   test:
     name: Run Test
     runs-on: ubuntu-latest
-    container: ubuntu
     steps:
       - uses: actions/checkout@v3
       - uses: rhysd/action-setup-vim@v1
@@ -56,8 +55,8 @@ jobs:
       - name: run test
         shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install stylua
+          wget "https://github.com/JohnnyMorganz/StyLua/releases/download/v0.17.1/stylua-linux-x86_64.zip" -P /bin
+          export PATH="$PATH:$PWD/bin"
           luarocks install luacheck
           luarocks install vusted
           vusted ./test
