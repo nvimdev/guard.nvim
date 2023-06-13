@@ -58,7 +58,7 @@ jobs:
       - name: run test
         shell: bash
         run: |
-          apt-install stylua
+          sudo apt-get -y install stylua
           luarocks install luacheck
           luarocks install vusted
           vusted ./test
