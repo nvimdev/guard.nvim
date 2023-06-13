@@ -5,21 +5,21 @@ local M = {}
 local function executable_check()
   for _, item in pairs(filetype) do
     for _, conf in ipairs(item.format or {}) do
-      if type(conf) == 'table' then
+      if type(conf) == 'table' and conf.cmd then
         if fn.executable(conf.cmd) == 1 then
           health.ok(conf.cmd .. ' found')
         else
           health.error(conf.cmd .. ' not found')
         end
       elseif type(conf) == 'string' then
-        local builint = require('guard.tools.formatter')
-        if builint[conf] then
-          if fn.executable(builint[conf].cmd) == 1 then
-            health.ok(builint[conf].cmd .. ' found')
+        local entry = require('guard.tools.formatter')
+        if entry[conf] and entry[conf].cmd then
+          if fn.executable(entry[conf].cmd) == 1 then
+            health.ok(entry[conf].cmd .. ' found')
           else
-            health.error(builint[conf].cmd .. ' found')
+            health.error(entry[conf].cmd .. ' found')
           end
-        else
+        elseif not entry[conf].fn then
           health.error('this conf not exist ' .. conf)
         end
       else
