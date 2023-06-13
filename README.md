@@ -16,6 +16,7 @@ get result and send back. Why add a process in the middle, There is a proverb in
 use any plugin manager you like then call setup
 
 ```lua
+--config must before this line
 require('guard').setup({})
 ```
 
@@ -36,6 +37,8 @@ c:fmt('clang-format')
 c:lint('clang-tidy')
 ft('lua'):fmt('stylua')
 ft('go'):fmt('lsp'):append('golines')
+--note setup must be last line
+require('guard').setup()
 ```
 
 first import `guard.filetype` module then call it to register filetype,then use chain call to
