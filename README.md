@@ -2,8 +2,8 @@
 
 Asynchronous formatting and lint checking plug-ins, I personally don't like the way that use fake 
 lsp to client to do formatting and lint checking. Accept lsp request or notify then invoke tool then
-get result and send back. Why add a process in the middle, there is an old saying in China called
-**paint a snake with feet** and don't blindly praise lsp.It's getting bloated and unwieldy.
+get result and send back. Why add a process in the middle, There is a proverb in China called
+**Paint a snake with feet** and don't blindly praise lsp.It's getting bloated and unwieldy.
 
 ## Features
 
