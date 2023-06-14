@@ -7,6 +7,7 @@ get result and send back. Why add a process in the middle, There is a proverb in
 
 ## Features
 
+- Blazing fast
 - Async using coroutine and luv spawn
 - Support config mulitple tools for format or lint on buffer 
 - Light-weight
