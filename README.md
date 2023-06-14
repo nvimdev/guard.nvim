@@ -55,6 +55,7 @@ register format or tool config by using `fmt` and `append` function.type of them
 - `rustfmt`
 - `stylua`
 - `golines`
+- `black`
 
 table format for custom tool 
 
@@ -67,7 +68,6 @@ table format for custom tool
     timeout          --integer
     ignore_pattern   --table ignore run format when pattern match
     ignore_error     --when has lsp error ignore format
-
 
     --special
     fn       --function if fn is set other field will not take effect

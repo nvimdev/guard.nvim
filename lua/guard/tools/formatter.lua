@@ -37,4 +37,10 @@ M.stylua = {
   stdin = true,
 }
 
+M.black = {
+  cmd = 'black',
+  args = { '-' },
+  stdin = true,
+}
+
 return M
