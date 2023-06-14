@@ -22,6 +22,7 @@ feet** and don’t blindly praise lsp.It’s getting bloated and unwieldy.
 
 FEATURES                                                 *guard.nvim-features*
 
+- Blazing fast
 - Async using coroutine and luv spawn
 - Support config mulitple tools for format or lint on buffer
 - Light-weight
