@@ -57,6 +57,7 @@ jobs:
         run: |
           wget "https://github.com/JohnnyMorganz/StyLua/releases/download/v0.17.1/stylua-linux-x86_64.zip" -P ~/.local/bin
           unzip ~/.local/bin/stylua-linux-x86_64.zip
+          which stylua
           luarocks install luacheck
           luarocks install vusted
           vusted ./test
