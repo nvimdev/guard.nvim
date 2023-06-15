@@ -8,7 +8,7 @@ describe('spwan module', function()
     coroutine.resume(coroutine.create(function()
       try_spawn(opt)
     end))
-    --can run into here
+
     assert.is_true(true)
   end)
 end)

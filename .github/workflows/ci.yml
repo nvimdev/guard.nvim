@@ -59,7 +59,6 @@ jobs:
         run: |
           wget "https://github.com/JohnnyMorganz/StyLua/releases/download/v0.18.0/stylua-linux.zip" -P /home/runner/.local/bin
           unzip /home/runner/.local/bin/stylua-linux.zip -d /home/runner/.local/bin
-          ls /home/runner/.local/bin
           chmod +x /home/runner/.local/bin/stylua
           luarocks install luacheck
           luarocks install vusted
