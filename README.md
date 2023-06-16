@@ -1,9 +1,9 @@
 ## guard.nvim
 
-Asynchronous formatting and lint checking plug-ins, I personally don't like the way that use fake 
-lsp to client to do formatting and lint checking. Accept lsp request or notify then invoke tool then
+Asynchronous formatting and lint checking plug-ins, I personally don't like the way that handle lsp
+request then get data from thirty part tool. Accept lsp request or notify then spawn tool then
 get result and send back. Why add a process in the middle, There is a proverb in China called
-**Paint a snake with feet** and don't blindly praise lsp.It's getting bloated and unwieldy.
+**Paint a snake with feet**. and lsp is getting dumber 👿
 
 ## Features
 
