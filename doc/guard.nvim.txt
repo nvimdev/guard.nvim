@@ -51,14 +51,16 @@ an example usage
 
 >lua
     local ft = require('guard.filetype')
-    local c = ft('c')
-    c:fmt('clang-format')
-    c:lint('clang-tidy')
+    ft('c'):fmt('clang-format'):lint('clang-tidy')
     ft('lua'):fmt('stylua')
-    ft('go'):fmt('lsp'):append('golines')
+    ft('go'):fmt('lsp'):append('golines'):lint('golangci')
     --note setup must be last line
     require('guard').setup()
 <
+
+chain call you can use `ft(your-filetype)` with `fmt` `lint` `append` function
+a chain call like
+`ft('c'):fmt('tool-1'):append('tool-2'):lint('lint-tool-1'):append('lint-tool-2')`
 
 first import `guard.filetype` module then call it to register filetype,then use
 chain call to register format or tool config by using `fmt` and `append`
