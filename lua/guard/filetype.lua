@@ -1,16 +1,7 @@
 local M = {}
 
-local function insert()
-  local t = {}
-  t.__index = t
-  function t:append(val)
-    self[#self + 1] = val
-    return self
-  end
-  return t
-end
-
 local function box()
+  local current
   local tbl = {}
   tbl.__index = tbl
 
@@ -18,20 +9,27 @@ local function box()
     vim.validate({
       config = { config, { 't', 's' } },
     })
-    self.format = setmetatable({
+    self.format = {
       vim.deepcopy(config),
-    }, insert())
-    return self.format
+    }
+    current = 'format'
+    return self
+  end
+
+  function tbl:append(val)
+    self[current][#self[current] + 1] = val
+    return self
   end
 
   function tbl:lint(config)
     vim.validate({
       config = { config, { 't', 's' } },
     })
-    self.linter = setmetatable({
+    current = 'lint'
+    self.lint = {
       vim.deepcopy(config),
-    }, insert())
-    return self.linter
+    }
+    return self
   end
 
   return setmetatable({}, tbl)
