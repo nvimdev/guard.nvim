@@ -15,7 +15,7 @@ local function do_lint(buf)
   api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 
   coroutine.resume(coroutine.create(function()
-    local results = {}
+    local results
 
     for _, lint in ipairs(linters) do
       lint = vim.deepcopy(lint)
@@ -24,14 +24,15 @@ local function do_lint(buf)
       else
         lint.args[#lint.args + 1] = fname
       end
-      local result = spawn(lint)
-      if #result > 0 then
-        results[#results + 1] = lint.output_fmt(result, buf, ns)
+      local data = spawn(lint)
+      if #data > 0 then
+        results = lint.output_fmt(data, buf)
       end
     end
 
     vim.schedule(function()
-      for _, item in ipairs(results) do
+      for _, item in ipairs(results or {}) do
+        print(vim.inspect(item))
         api.nvim_buf_set_extmark(buf, ns, item.lnum - 1, 0, {
           virt_text = { { item.message, 'Diagnostic' .. vim.diagnostic.severity[item.severity] } },
           hl_mode = 'combine',
@@ -55,6 +56,21 @@ local function register_lint(ft, extra)
   })
 end
 
+local function diag_fmt(buf, lnum, col, message, severity, source)
+  return {
+    bufnr = buf,
+    col = col,
+    end_col = col,
+    end_lnum = lnum,
+    lnum = lnum,
+    message = message,
+    namespace = ns,
+    severity = severity,
+    source = source,
+  }
+end
+
 return {
   register_lint = register_lint,
+  diag_fmt = diag_fmt,
 }

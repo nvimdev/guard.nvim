@@ -1,8 +1,10 @@
+local diag_fmt = require('guard.lint').diag_fmt
+
 return {
   cmd = 'clang-tidy',
   args = { '--quiet' },
   stdin = false,
-  output_fmt = function(result, buf, ns)
+  output_fmt = function(result, buf)
     local map = {
       'error',
       'warning',
@@ -11,33 +13,30 @@ return {
       'note',
     }
 
-    local text = vim.split(result, '\n')[1]
-    local message
-    local severity
-    for idx, t in ipairs(map) do
-      local _, p = text:find(t)
-      if p then
-        message = text:sub(p + 2, #text)
-        severity = idx
-        break
+    local messages = vim.split(result, '\n')
+    local diags = {}
+    vim.tbl_map(function(mes)
+      local message
+      local severity
+      for idx, t in ipairs(map) do
+        local _, p = mes:find(t)
+        if p then
+          message = mes:sub(p + 2, #mes)
+          severity = idx
+          local pos = mes:match([[(%d+:%d+)]])
+          local lnum, col = unpack(vim.split(pos, ':'))
+          diags[#diags + 1] = diag_fmt(
+            buf,
+            tonumber(lnum),
+            tonumber(col),
+            message,
+            severity > 4 and 4 or severity,
+            'clang-tidy'
+          )
+        end
       end
-    end
-    local pos = text:match([[(%d+:%d+)]])
-    local lnum, col = unpack(vim.split(pos, ':'))
-    ---@diagnostic disable-next-line: cast-local-type
-    lnum = tonumber(lnum)
-    col = tonumber(col)
+    end, messages)
 
-    return {
-      bufnr = buf,
-      col = col,
-      end_col = col,
-      end_lnum = lnum,
-      lnum = lnum,
-      message = message,
-      namespace = ns,
-      severity = severity,
-      source = 'clang-tidy',
-    }
+    return diags
   end,
 }

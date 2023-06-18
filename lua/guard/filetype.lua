@@ -25,8 +25,8 @@ local function box()
     vim.validate({
       config = { config, { 't', 's' } },
     })
-    current = 'lint'
-    self.lint = {
+    current = 'linter'
+    self.linter = {
       vim.deepcopy(config),
     }
     return self
