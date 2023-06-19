@@ -1,51 +1,50 @@
 ## guard.nvim
 
-Asynchronous formatting and lint checking plug-ins, I personally don't like the way that handle lsp
-request then get data from thirty part tool. Accept lsp request or notify then spawn tool then
-get result and send back. Why add a process in the middle, There is a proverb in China called
-**Paint a snake with feet**. and lsp is getting dumber 👿
+Async formatting and linting utility for neovim. I personally don't like the way that third party formatters and linters have to be requested via the lsp interface. Why add another process in the middle. There is a proverb in China called **Paint a snake with feet**. It's making lsp dumber 👿
 
 ## Features
 
-- Blazing fast
+- Blazingly fast
 - Async using coroutine and luv spawn
-- Support config mulitple tools for format or lint on buffer 
+- Builtin support for popular formatters and linters
 - Light-weight
-
-## Setup
-
-use any plugin manager you like then call setup
-
-```lua
---config must before this line
-require('guard').setup({})
-```
-
-## Config Options
-
-- `fmt_on_save`     auto format when save file
-
-command `GuardFmt` for command use, use `GuardDisable` to diable auto format.
 
 ## Usage
 
-an example usage 
+Use any plugin manager you like. Guard is configured in format like this:
+
+```lua
+ft('c'):fmt('tool-1')
+       :append('tool-2')
+       :lint('lint-tool-1')
+       :append('lint-tool-2')
+```
+
+if the tool is not supported, you will have to pass in a table instead of a string, see [here](https://github.com/nvimdev/guard.nvim/tree/main/lua%2Fguard%2Ftools) for some examples, more info below.
 
 ```lua
 local ft = require('guard.filetype')
-ft('c'):fmt('clang-format'):lint('clang-tidy')
+
+-- use clang-format and clang-tidy for c files
+ft('c'):fmt('clang-format')
+       :lint('clang-tidy')
+
+-- use stylua to format lua files and no linter
 ft('lua'):fmt('stylua')
-ft('go'):fmt('lsp'):append('golines'):lint('golangci')
---note setup must be last line
-require('guard').setup()
+
+-- use lsp to format first then use golines to format
+ft('go'):fmt('lsp')
+        :append('golines')
+        :lint('golangci')
+
+-- call setup LAST
+require('guard').setup({
+    -- the only option for the setup function
+    fmt_on_save = true,
+})
 ```
 
-chain call you can use `ft(your-filetype)` with `fmt` `lint` `append` function a chain call like
-`ft('c'):fmt('tool-1'):append('tool-2'):lint('lint-tool-1'):append('lint-tool-2')`
-
-first import `guard.filetype` module then call it to register filetype,then use chain call to
-register format or tool config by using `fmt` and `append` function.type of them is `table` or
-`string` if you want use the builin config just pass string if you want use a custom config pass table.
+Use `GuardFmt` to manually call format, use `GuardDisable` to diable auto format.
 
 ### Builtin tools
 
@@ -59,7 +58,7 @@ register format or tool config by using `fmt` and `append` function.type of them
 - `golines`
 - `black`
 
-table format for custom tool 
+Table format for custom tool:
 
 ```
 {
@@ -80,9 +79,8 @@ table format for custom tool
 
 - `clang-tidy`
 
-## Trobule
+## Trobuleshooting
 
-if guard do nothing when save file run `checkhealth` first.
-
+if guard does not auto format on save, run `checkhealth` first.
 
 ## License MIT
