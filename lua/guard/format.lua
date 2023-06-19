@@ -2,6 +2,7 @@ local api = vim.api
 local spawn = require('guard.spawn').try_spawn
 local get_prev_lines = require('guard.util').get_prev_lines
 local filetype = require('guard.filetype')
+local util = require('guard.util')
 
 local function ignored(buf, patterns)
   local fname = api.nvim_buf_get_name(buf)
@@ -17,12 +18,12 @@ local function ignored(buf, patterns)
   return false
 end
 
-local function update_buffer(bufnr, new_lines)
+local function update_buffer(bufnr, new_lines, srow, erow)
   if not new_lines or #new_lines == 0 or not api.nvim_buf_is_valid(bufnr) then
     return
   end
 
-  local prev_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
+  local prev_lines = vim.api.nvim_buf_get_lines(bufnr, srow, erow, true)
   new_lines = vim.split(new_lines, '\n')
   if new_lines[#new_lines] == 0 then
     new_lines[#new_lines] = nil
@@ -45,12 +46,16 @@ local function update_buffer(bufnr, new_lines)
       s = prev_start
       e = s
     else
-      s = prev_start - 1
+      s = prev_start - 1 + srow
       e = s + prev_count
     end
     api.nvim_buf_set_lines(bufnr, s, e, false, replacement)
   end
   api.nvim_command('silent! noautocmd write!')
+  local mode = api.nvim_get_mode().mode
+  if mode == 'v' or 'V' then
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', true)
+  end
 end
 
 local function do_fmt(buf)
@@ -59,9 +64,17 @@ local function do_fmt(buf)
     vim.notify('[Guard] missing config for filetype ' .. vim.bo[buf].filetype, vim.log.levels.ERROR)
     return
   end
+  local srow = 0
+  local erow = -1
+  local mode = api.nvim_get_mode().mode
+  if mode == 'V' or mode == 'v' then
+    srow = vim.fn.getpos('v')[2] - 1
+    erow = vim.fn.getpos('.')[2]
+  end
+  local prev_lines = util.get_prev_lines(buf, srow, erow)
+
   local fmt_configs = filetype[vim.bo[buf].filetype].format
   local formatter = require('guard.tools.formatter')
-  local prev_lines = get_prev_lines(buf)
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
 
   coroutine.resume(coroutine.create(function()
@@ -90,13 +103,13 @@ local function do_fmt(buf)
           new_lines = spawn(config)
         elseif config.fn then
           config.fn()
-          new_lines = get_prev_lines(buf)
+          new_lines = get_prev_lines(buf, srow, erow)
         end
       end
     end
 
     vim.schedule(function()
-      update_buffer(buf, new_lines)
+      update_buffer(buf, new_lines, srow, erow)
     end)
   end))
 end

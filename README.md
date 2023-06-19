@@ -44,7 +44,12 @@ require('guard').setup({
 })
 ```
 
-Use `GuardFmt` to manually call format, use `GuardDisable` to diable auto format.
+Use `GuardFmt` to manually call format, use `GuardDisable` to diable auto format. and you can create
+a keymap like
+
+```lua
+vim.keymap.set({'n','v'}, '<cmd>GuardFmt<CR>')
+```
 
 ### Builtin tools
 
