@@ -41,6 +41,7 @@ local function setup(opt)
             conf.linter[i] = tool
           end
         end
+
         lint.register_lint(
           ft,
           conf.linter[i].stdin and { 'TextChanged', 'InsertLeave' } or { 'BufWritePost' }

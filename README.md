@@ -83,6 +83,7 @@ Table format for custom tool:
 #### Linter
 
 - `clang-tidy`
+- `Pylint`
 
 ## Trobuleshooting
 

@@ -11,7 +11,7 @@ local function do_lint(buf)
   end
   local linters = filetype[vim.bo[buf].filetype].linter
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
-  local prev_lines = get_prev_lines(buf)
+  local prev_lines = get_prev_lines(buf, 0, -1)
   api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 
   coroutine.resume(coroutine.create(function()
@@ -19,11 +19,8 @@ local function do_lint(buf)
 
     for _, lint in ipairs(linters) do
       lint = vim.deepcopy(lint)
-      if lint.stdin then
-        lint.lines = prev_lines
-      else
-        lint.args[#lint.args + 1] = fname
-      end
+      lint.args[#lint.args + 1] = fname
+      lint.lines = prev_lines
       local data = spawn(lint)
       if #data > 0 then
         results = lint.output_fmt(data, buf)
@@ -31,8 +28,10 @@ local function do_lint(buf)
     end
 
     vim.schedule(function()
+      if not api.nvim_buf_is_valid(buf) then
+        return
+      end
       for _, item in ipairs(results or {}) do
-        print(vim.inspect(item))
         api.nvim_buf_set_extmark(buf, ns, item.lnum - 1, 0, {
           virt_text = { { item.message, 'Diagnostic' .. vim.diagnostic.severity[item.severity] } },
           hl_mode = 'combine',
