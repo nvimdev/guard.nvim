@@ -79,7 +79,7 @@ local function do_fmt(buf)
 
   coroutine.resume(coroutine.create(function()
     local new_lines
-    for _, config in ipairs(fmt_configs) do
+    for i, config in ipairs(fmt_configs) do
       if type(config) == 'string' and formatter[config] then
         config = formatter[config]
       end
@@ -103,7 +103,10 @@ local function do_fmt(buf)
           new_lines = spawn(config)
         elseif config.fn then
           config.fn()
-          new_lines = get_prev_lines(buf, srow, erow)
+          if i == #fmt_configs then
+            return
+          end
+          new_lines = table.concat(get_prev_lines(buf, srow, erow), '')
         end
       end
     end
