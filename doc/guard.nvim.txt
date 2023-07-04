@@ -1,4 +1,4 @@
-*guard.nvim.txt*           For NVIM v0.8.0           Last change: 2023 June 22
+*guard.nvim.txt*           For NVIM v0.8.0           Last change: 2023 July 04
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -11,10 +11,7 @@ Table of Contents                               *guard.nvim-table-of-contents*
 
 GUARD.NVIM                                             *guard.nvim-guard.nvim*
 
-Async formatting and linting utility for neovim. I personally don’t like the
-way that third party formatters and linters have to be requested via the lsp
-interface. Why add another process in the middle. There is a proverb in China
-called **Paint a snake with feet**. It’s making lsp dumber 👿
+Async formatting and linting utility for neovim.
 
 
 FEATURES                                                 *guard.nvim-features*
