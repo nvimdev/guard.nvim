@@ -1,6 +1,6 @@
 ## guard.nvim
 
-Async formatting and linting utility for neovim. I personally don't like the way that third party formatters and linters have to be requested via the lsp interface. Why add another process in the middle. There is a proverb in China called **Paint a snake with feet**. It's making lsp dumber 👿
+Async formatting and linting utility for neovim. 
 
 ## Features
 
