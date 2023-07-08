@@ -1,4 +1,6 @@
 local api = vim.api
+---@diagnostic disable-next-line: deprecated
+local uv = vim.version().minor >= 10 and vim.uv or vim.loop
 local spawn = require('guard.spawn').try_spawn
 local get_prev_lines = require('guard.util').get_prev_lines
 local filetype = require('guard.filetype')
@@ -100,6 +102,7 @@ local function do_fmt(buf)
         config.lines = new_lines and new_lines or prev_lines
         if config.cmd then
           config.args[#config.args + 1] = config.fname and fname or nil
+          config.cwd = util.get_lsp_root() or uv.cwd()
           new_lines = spawn(config)
         elseif config.fn then
           config.fn()
