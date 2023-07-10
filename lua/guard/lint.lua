@@ -3,9 +3,6 @@ local filetype = require('guard.filetype')
 local spawn = require('guard.spawn').try_spawn
 local ns = api.nvim_create_namespace('Guard')
 local get_prev_lines = require('guard.util').get_prev_lines
-local util = require('guard.util')
----@diagnostic disable-next-line: deprecated
-local uv = vim.version().minor >= 10 and vim.uv or vim.loop
 
 local function do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
@@ -23,7 +20,6 @@ local function do_lint(buf)
     for _, lint in ipairs(linters) do
       lint = vim.deepcopy(lint)
       lint.args[#lint.args + 1] = fname
-      lint.cmd = util.get_lsp_root() or uv.cwd()
       lint.lines = prev_lines
       local data = spawn(lint)
       if #data > 0 then
