@@ -10,6 +10,38 @@ describe('filetype module', function()
     end
   end)
 
+  it('can setup filetypes via setup()', function()
+    require('guard').setup({
+      ft = {
+        c = {
+          fmt = {
+            cmd = 'clang-format',
+            lines = { 'test', 'lines' },
+          },
+        },
+        rust = {
+          lint = {
+            {
+              cmd = 'clippy',
+              args = { 'check' },
+              stdin = true,
+            },
+          },
+        },
+      },
+    })
+    same({
+      format = {
+        { cmd = 'clang-format', lines = { 'test', 'lines' } },
+      },
+    }, ft.c)
+    same({
+      lint = {
+        { cmd = 'clippy', args = { 'check' }, stdin = true },
+      },
+    }, ft.rust)
+  end)
+
   it('can register filetype with fmt config', function()
     ft('c'):fmt({
       cmd = 'clang-format',
