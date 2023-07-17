@@ -19,6 +19,13 @@ M.prettier = {
   stdin = true,
 }
 
+M.rubocop = {
+  cmd = 'bundle',
+  args = { 'exec', 'rubocop', '-A', '-f', 'quiet', '--stderr', '--stdin' },
+  stdin = true,
+  fname = true,
+}
+
 M.rustfmt = {
   cmd = 'rustfmt',
   args = { '--edition', '2021', '--emit', 'stdout' },
