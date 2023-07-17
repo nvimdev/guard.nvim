@@ -17,7 +17,6 @@ return {
     local diags = {}
 
     vim.tbl_map(function(mes)
-      print(vim.inspect(mes))
       diags[#diags + 1] = diag_fmt(
         buf,
         tonumber(mes.location.line),
