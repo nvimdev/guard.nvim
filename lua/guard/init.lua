@@ -11,8 +11,16 @@ local function parse_ft_config(config)
   for ft, ft_config in pairs(config.ft) do
     local cfg_handler = require('guard.filetype')(ft)
     for key, cfg in pairs(ft_config) do
-      for _, linter_formatter_cfg in ipairs(as_table(cfg)) do
-        cfg_handler = cfg_handler:register(key, linter_formatter_cfg)
+      if
+        key == 'lint'
+        or key == 'linter'
+        or key == 'formatter'
+        or key == 'format'
+        or key == 'fmt'
+      then
+        for _, linter_formatter_cfg in ipairs(as_table(cfg)) do
+          cfg_handler = cfg_handler:register(key, linter_formatter_cfg)
+        end
       end
     end
   end
