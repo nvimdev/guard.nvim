@@ -3,6 +3,7 @@ local filetype = require('guard.filetype')
 local spawn = require('guard.spawn').try_spawn
 local ns = api.nvim_create_namespace('Guard')
 local get_prev_lines = require('guard.util').get_prev_lines
+local vd = vim.diagnostic
 
 local function do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
@@ -31,12 +32,7 @@ local function do_lint(buf)
       if not api.nvim_buf_is_valid(buf) then
         return
       end
-      for _, item in ipairs(results or {}) do
-        api.nvim_buf_set_extmark(buf, ns, item.lnum - 1, 0, {
-          virt_text = { { item.message, 'Diagnostic' .. vim.diagnostic.severity[item.severity] } },
-          hl_mode = 'combine',
-        })
-      end
+      vd.set(ns, buf, results)
     end)
   end))
 end
