@@ -36,7 +36,7 @@ describe('filetype module', function()
       },
     }, ft.c)
     same({
-      lint = {
+      linter = {
         { cmd = 'clippy', args = { 'check' }, stdin = true },
       },
     }, ft.rust)
