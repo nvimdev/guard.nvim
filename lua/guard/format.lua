@@ -4,6 +4,7 @@ local uv = vim.version().minor >= 10 and vim.uv or vim.loop
 local spawn = require('guard.spawn').try_spawn
 local get_prev_lines = require('guard.util').get_prev_lines
 local filetype = require('guard.filetype')
+local config = require('guard.config')
 local util = require('guard.util')
 
 local function ignored(buf, patterns)
@@ -67,7 +68,7 @@ end
 
 local function do_fmt(buf)
   buf = buf or api.nvim_get_current_buf()
-  if not filetype[vim.bo[buf].filetype] then
+  if not filetype[vim.bo[buf].filetype] and not config.lsp_as_default_formatter then
     vim.notify('[Guard] missing config for filetype ' .. vim.bo[buf].filetype, vim.log.levels.ERROR)
     return
   end
@@ -80,7 +81,7 @@ local function do_fmt(buf)
   end
   local prev_lines = util.get_prev_lines(buf, srow, erow)
 
-  local fmt_configs = filetype[vim.bo[buf].filetype].format
+  local fmt_configs = filetype[vim.bo[buf].filetype] and filetype[vim.bo[buf].filetype].format or { 'lsp' }
   local formatter = require('guard.tools.formatter')
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
 

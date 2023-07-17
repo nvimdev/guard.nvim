@@ -42,8 +42,10 @@ ft('typescript,javascript,typescriptreact'):fmt('prettier')
 
 -- call setup LAST
 require('guard').setup({
-    -- the only option for the setup function
+    -- the only options for the setup function
     fmt_on_save = true,
+    -- Use lsp if no formatter was defined for this filetype
+    lsp_as_default_formatter = false,
 })
 ```
 
@@ -90,7 +92,7 @@ Table format for custom tool:
 - `Pylint`
 - `rubocop`
 
-## Trobuleshooting
+## Troubleshooting
 
 if guard does not auto format on save, run `checkhealth` first.
 

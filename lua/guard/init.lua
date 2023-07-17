@@ -2,6 +2,7 @@ local api = vim.api
 local group = api.nvim_create_augroup('Guard', { clear = true })
 local fts_config = require('guard.filetype')
 local util = require('guard.util')
+local config = require('guard.config')
 
 local function register_event(fts)
   api.nvim_create_autocmd('FileType', {
@@ -56,6 +57,7 @@ end
 local function setup(opt)
   opt = opt or {
     fmt_on_save = true,
+    lsp_as_default_formatter = false,
   }
 
   parse_setup_cfg(opt.ft)
@@ -63,6 +65,10 @@ local function setup(opt)
 
   if opt.fmt_on_save then
     register_event(fts)
+  end
+
+  if opt.lsp_as_default_formatter then
+    config.lsp_as_default_formatter = true
   end
 
   local lint = require('guard.lint')
