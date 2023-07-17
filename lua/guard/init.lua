@@ -1,36 +1,18 @@
 local api = vim.api
 local group = api.nvim_create_augroup('Guard', { clear = true })
 
+local function as_table(t)
+  return vim.tbl_islist(t) and t or { t }
+end
+
 local function parse_ft_config(config)
   config = config or {}
   config.ft = config.ft or {}
   for ft, ft_config in pairs(config.ft) do
     local cfg_handler = require('guard.filetype')(ft)
     for key, cfg in pairs(ft_config) do
-      if key == 'lint' then
-        if vim.tbl_islist(cfg) then
-          for _, linter_cfg in ipairs(cfg) do
-            cfg_handler = cfg_handler:lint(linter_cfg)
-          end
-        else
-          cfg_handler = cfg_handler:lint(cfg)
-        end
-      elseif key == 'fmt' then
-        if vim.tbl_islist(cfg) then
-          for _, formatter_cfg in ipairs(cfg) do
-            cfg_handler = cfg_handler:fmt(formatter_cfg)
-          end
-        else
-          cfg_handler = cfg_handler:fmt(cfg)
-        end
-      elseif key == 'append' then
-        if vim.tbl_islist(cfg) then
-          for _, other_cfg in ipairs(cfg) do
-            cfg_handler = cfg_handler:append(other_cfg)
-          end
-        else
-          cfg_handler = cfg_handler:append(cfg)
-        end
+      for _, linter_formatter_cfg in ipairs(as_table(cfg)) do
+        cfg_handler = cfg_handler:register(key, linter_formatter_cfg)
       end
     end
   end

@@ -32,6 +32,35 @@ local function box()
     return self
   end
 
+  function tbl:register(key, config)
+    vim.validate({
+      key = {
+        key,
+        function(val)
+          return val == 'lint'
+            or val == 'linter'
+            or val == 'fmt'
+            or val == 'format'
+            or val == 'formatter'
+        end,
+      },
+      config = { config, { 't', 's' } },
+    })
+    current = key
+    if key == 'lint' or key == 'linter' then
+      self.linter = {
+        vim.deepcopy(config),
+      }
+    else
+      self.current = 'format'
+      self.format = {
+        vim.deepcopy(config),
+      }
+    end
+
+    return self
+  end
+
   return setmetatable({}, tbl)
 end
 
