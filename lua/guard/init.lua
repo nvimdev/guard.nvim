@@ -3,6 +3,7 @@ local group = api.nvim_create_augroup('Guard', { clear = true })
 
 local function parse_ft_config(config)
   config = config or {}
+  config.ft = config.ft or {}
   for ft, ft_config in pairs(config.ft) do
     local cfg_handler = require('guard.filetype')(ft)
     for key, cfg in pairs(ft_config) do
