@@ -39,6 +39,8 @@ local function update_buffer(bufnr, new_lines, srow, erow)
     return
   end
 
+  vim.diagnostic.hide(nil, bufnr)
+
   -- Apply diffs in reverse order.
   for i = #diffs, 1, -1 do
     local new_start, new_count, prev_start, prev_count = unpack(diffs[i])
