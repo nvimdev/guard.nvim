@@ -62,6 +62,7 @@ vim.keymap.set({'n','v'}, '<cmd>GuardFmt<CR>')
 - `stylua`
 - `golines`
 - `black`
+- `rubocop`
 
 Table format for custom tool:
 
@@ -84,6 +85,7 @@ Table format for custom tool:
 
 - `clang-tidy`
 - `Pylint`
+- `rubocop`
 
 ## Trobuleshooting
 
