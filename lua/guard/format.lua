@@ -81,10 +81,10 @@ local function do_fmt(buf)
   local fmt_configs = filetype[vim.bo[buf].filetype].format
   local formatter = require('guard.tools.formatter')
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
-  local changedtick = api.nvim_buf_get_changedtick(buf)
 
   coroutine.resume(coroutine.create(function()
     local new_lines
+    -- local changedtick = api.nvim_buf_get_changedtick(buf)
     for i, config in ipairs(fmt_configs) do
       if type(config) == 'string' and formatter[config] then
         config = formatter[config]
@@ -119,9 +119,6 @@ local function do_fmt(buf)
     end
 
     vim.schedule(function()
-      if not api.nvim_buf_is_valid(buf) or api.nvim_buf_get_changedtick(buf) ~= changedtick then
-        return
-      end
       update_buffer(buf, new_lines, srow, erow)
     end)
   end))

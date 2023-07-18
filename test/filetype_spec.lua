@@ -137,4 +137,18 @@ describe('filetype module', function()
       },
     }, ft.rust)
   end)
+
+  it('can register a formatter for multiple filetypes simultaneously', function()
+    ft('javascript,javascriptreact'):fmt({
+      cmd = 'prettier',
+      args = { 'some', 'args' },
+    })
+    require('guard').setup({})
+    same({
+      format = { { cmd = 'prettier', args = { 'some', 'args' } } },
+    }, ft.javascript)
+    same({
+      format = { { cmd = 'prettier', args = { 'some', 'args' } } },
+    }, ft.javascriptreact)
+  end)
 end)
