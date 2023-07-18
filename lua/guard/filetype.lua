@@ -73,7 +73,7 @@ local function box_for_group(fts)
   return setmetatable(fts, tbl)
 end
 
-M = setmetatable(M, {
+return setmetatable(M, {
   __call = function(t, ft)
     if type(ft) == "table" then
       return box_for_group(ft)
