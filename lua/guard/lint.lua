@@ -29,7 +29,7 @@ local function do_lint(buf)
     end
 
     vim.schedule(function()
-      if not api.nvim_buf_is_valid(buf) then
+      if not api.nvim_buf_is_valid(buf) or not results or #results == 0 then
         return
       end
       vd.set(ns, buf, results)
