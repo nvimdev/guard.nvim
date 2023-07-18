@@ -27,7 +27,7 @@ return {
           local lnum, col = unpack(vim.split(pos, ':'))
           diags[#diags + 1] = diag_fmt(
             buf,
-            tonumber(lnum),
+            tonumber(lnum) - 1,
             tonumber(col),
             message,
             severity > 4 and 4 or severity,
