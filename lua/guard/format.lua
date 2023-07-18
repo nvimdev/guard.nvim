@@ -35,6 +35,9 @@ local function update_buffer(bufnr, new_lines, srow, erow)
     ctxlen = 0,
     result_type = 'indices',
   })
+  if not diffs or #diffs == 0 then
+    return
+  end
 
   -- Apply diffs in reverse order.
   for i = #diffs, 1, -1 do
