@@ -1,7 +1,7 @@
 local diag_fmt = require('guard.lint').diag_fmt
 return {
   cmd = 'bundle',
-  args = { "exec", "rubocop", "--format", "json", "--force-exclusion", "--stdin" },
+  args = { 'exec', 'rubocop', '--format', 'json', '--force-exclusion', '--stdin' },
   stdin = true,
   output_fmt = function(result, buf)
     local severities = {
@@ -10,7 +10,7 @@ return {
       refactor = 4,
       warning = 2,
       error = 1,
-      fatal = 1
+      fatal = 1,
     }
 
     local offenses = vim.json.decode(result).files[1].offenses
@@ -25,7 +25,7 @@ return {
         buf,
         tonumber(mes.location.line) - 1,
         tonumber(mes.location.column) - 1,
-        mes.message .. " [" .. mes.cop_name .. "]",
+        mes.message .. ' [' .. mes.cop_name .. ']',
         severities[mes.severity] or 4,
         'rubocop'
       )
