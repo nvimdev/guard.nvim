@@ -1,3 +1,5 @@
+---@diagnostic disable-next-line: deprecated
+local get_clients = vim.version().minor >= 10 and vim.lsp.get_clients or vim.lsp.get_active_clients
 local api = vim.api
 local util = {}
 
@@ -12,7 +14,7 @@ end
 
 function util.get_lsp_root()
   local curbuf = api.nvim_get_current_buf()
-  local clients = vim.lsp.get_active_clients({ bufnr = curbuf })
+  local clients = get_clients({ bufnr = curbuf })
   if #clients == 0 then
     return
   end
@@ -21,6 +23,10 @@ function util.get_lsp_root()
       return client.config.root_dir
     end
   end
+end
+
+function util.as_table(t)
+  return vim.tbl_islist(t) and t or { t }
 end
 
 return util

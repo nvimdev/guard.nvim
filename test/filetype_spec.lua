@@ -87,4 +87,54 @@ describe('filetype module', function()
       },
     }, ft.python)
   end)
+
+  it('can setup filetypes via setup()', function()
+    require('guard').setup({
+      ft = {
+        c = {
+          fmt = {
+            cmd = 'clang-format',
+            lines = { 'test', 'lines' },
+          },
+        },
+        python = {
+          fmt = {
+            { cmd = 'tool-1' },
+            { cmd = 'tool-2' },
+          },
+          lint = {
+            cmd = 'lint_tool_1',
+          },
+        },
+        rust = {
+          lint = {
+            {
+              cmd = 'clippy',
+              args = { 'check' },
+              stdin = true,
+            },
+          },
+        },
+      },
+    })
+    same({
+      format = {
+        { cmd = 'clang-format', lines = { 'test', 'lines' } },
+      },
+    }, ft.c)
+    same({
+      format = {
+        { cmd = 'tool-1' },
+        { cmd = 'tool-2' },
+      },
+      linter = {
+        { cmd = 'lint_tool_1' },
+      },
+    }, ft.python)
+    same({
+      linter = {
+        { cmd = 'clippy', args = { 'check' }, stdin = true },
+      },
+    }, ft.rust)
+  end)
 end)

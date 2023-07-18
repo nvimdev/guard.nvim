@@ -32,6 +32,36 @@ local function box()
     return self
   end
 
+  function tbl:key_alias(key)
+    local _t = {
+      ['lint'] = function()
+        self.linter = {}
+        return self.linter
+      end,
+      ['fmt'] = function()
+        self.format = {}
+        return self.format
+      end,
+    }
+    return _t[key]()
+  end
+
+  function tbl:register(key, cfg)
+    vim.validate({
+      key = {
+        key,
+        function(val)
+          local available = { 'lint', 'fmt' }
+          return vim.tbl_contains(available, val)
+        end,
+      },
+    })
+    local target = self:key_alias(key)
+    for _, item in ipairs(cfg) do
+      target[#target + 1] = vim.deepcopy(item)
+    end
+  end
+
   return setmetatable({}, tbl)
 end
 
