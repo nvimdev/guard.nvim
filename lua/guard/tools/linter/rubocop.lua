@@ -16,11 +16,15 @@ return {
     local offenses = vim.json.decode(result).files[1].offenses
     local diags = {}
 
+    if #offenses < 1 then
+      return {}
+    end
+
     vim.tbl_map(function(mes)
       diags[#diags + 1] = diag_fmt(
         buf,
-        tonumber(mes.location.line),
-        tonumber(mes.location.column),
+        tonumber(mes.location.line) - 1,
+        tonumber(mes.location.column) - 1,
         mes.message .. " [" .. mes.cop_name .. "]",
         severities[mes.severity] or 4,
         'rubocop'
