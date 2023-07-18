@@ -37,7 +37,7 @@ end
 
 
 local function box_for_group(fts)
-  for _, ft in pairs(fts) do
+  for _, ft in ipairs(fts) do
     if not rawget(M, ft) then
       rawset(M, ft, box())
     end
@@ -47,7 +47,7 @@ local function box_for_group(fts)
   tbl.__index = tbl
 
   function tbl:fmt(config)
-    for _, ft in pairs(self) do
+    for _, ft in ipairs(self) do
       M[ft]:fmt(config)
     end
     current = 'format'
@@ -55,7 +55,7 @@ local function box_for_group(fts)
   end
 
   function tbl:append(val)
-    for _, ft in pairs(self) do
+    for _, ft in ipairs(self) do
       local opt = M[ft][current]
       opt[#opt + 1] = val
     end
@@ -63,7 +63,7 @@ local function box_for_group(fts)
   end
 
   function tbl:lint(config)
-    for _, ft in pairs(self) do
+    for _, ft in ipairs(self) do
       M[ft]:lint(config)
     end
     current = 'linter'

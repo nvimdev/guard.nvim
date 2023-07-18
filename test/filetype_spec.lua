@@ -87,4 +87,131 @@ describe('filetype module', function()
       },
     }, ft.python)
   end)
+
+  it('can register a formatter for multiple filetypes simultaneously', function()
+    ft({ 'javascript', 'javascriptreact' }):fmt({
+      cmd = 'prettier',
+      args = { 'some', 'args' }
+    })
+    same({
+      format = { cmd = 'prettier', args = { 'some', 'args' } }
+    }, ft.javascript)
+    same({
+      format = { cmd = 'prettier', args = { 'some', 'args' } }
+    }, ft.javascriptreact)
+  end)
+
+  it('can register multiple formatters for multiple filetypes simultaneously', function()
+    ft({ 'javascript', 'javascriptreact' }):fmt({
+      cmd = 'prettier',
+      args = { 'some', 'args' }
+    }):append({
+      cmd = 'prettierd',
+      args = { 'more', 'args' }
+    })
+    same({
+      format = {
+          { cmd = 'prettier', args = { 'some', 'args' } },
+          { cmd = 'prettierd', args = { 'more', 'args' } },
+      }
+    }, ft.javascript)
+    same({
+      format = {
+          { cmd = 'prettier', args = { 'some', 'args' } },
+          { cmd = 'prettierd', args = { 'more', 'args' } },
+      }
+    }, ft.javascriptreact)
+  end)
+
+  it('can register a linter for multiple filetypes simultaneously', function()
+    ft({ 'javascript', 'javascriptreact' }):lint({
+      cmd = 'eslint',
+      args = { 'different', 'args' }
+    })
+    same({
+      linter = { cmd = 'eslint', args = { 'different', 'args' } }
+    }, ft.javascript)
+    same({
+      linter = { cmd = 'eslint', args = { 'different', 'args' } }
+    }, ft.javascriptreact)
+  end)
+
+  it('can register multiple linters for multiple filetypes simultaneously', function()
+    ft({ 'javascript', 'javascriptreact' }):lint({
+      cmd = 'eslint',
+      args = { 'different', 'args' }
+    }):append({
+      cmd = 'otherlinttool',
+      args = { 'important', 'options' },
+    })
+    same({
+      linter = {
+          { cmd = 'eslint', args = { 'different', 'args' } },
+          { cmd = 'otherlinttool', args = { 'important', 'options' } },
+      }
+    }, ft.javascript)
+    same({
+      linter = {
+          { cmd = 'eslint', args = { 'different', 'args' } },
+          { cmd = 'otherlinttool', args = { 'important', 'options' } },
+      }
+    }, ft.javascriptreact)
+  end)
+
+  it('can register multiple linters AND multiple formatters for multiple filetypes simultaneously', function()
+    ft({ 'javascript', 'javascriptreact' }):lint({
+      cmd = 'eslint',
+      args = { 'different', 'args' }
+    }):append({
+      cmd = 'otherlinttool',
+      args = { 'important', 'options' },
+    }):fmt({
+      cmd = 'prettier',
+      args = { 'some', 'args' }
+    }):append({
+      cmd = 'prettierd',
+      args = { 'more', 'args' }
+    })
+    same({
+      format = {
+          { cmd = 'prettier', args = { 'some', 'args' } },
+          { cmd = 'prettierd', args = { 'more', 'args' } },
+      },
+      linter = {
+          { cmd = 'eslint', args = { 'different', 'args' } },
+          { cmd = 'otherlinttool', args = { 'important', 'options' } },
+      }
+    }, ft.javascript)
+    same({
+      format = {
+          { cmd = 'prettier', args = { 'some', 'args' } },
+          { cmd = 'prettierd', args = { 'more', 'args' } },
+      },
+      linter = {
+          { cmd = 'eslint', args = { 'different', 'args' } },
+          { cmd = 'otherlinttool', args = { 'important', 'options' } },
+      }
+    }, ft.javascriptreact)
+  end)
+
+  it('does not blow up when both configuration methods are used on the same filetype', function()
+    ft('javascript'):fmt({
+      cmd = "prettierd",
+      args = { "-foo", "bar" }
+    })
+    ft({'javascript', 'javascriptreact'}):fmt({
+      cmd = "prettier",
+      args = { 'some', 'args' },
+    })
+    same({
+      format = { cmd = 'prettier', args = { 'some', 'args' } }
+    }, ft.javascript)
+    ft('javascript'):fmt({
+      cmd = "prettierd",
+      args = { "-foo", "bar" }
+    })
+    same({
+      format = { cmd = 'prettierd', args = { '-foo', 'bar' } }
+    }, ft.javascript)
+  end)
 end)
