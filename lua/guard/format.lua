@@ -6,6 +6,8 @@ local get_prev_lines = require('guard.util').get_prev_lines
 local filetype = require('guard.filetype')
 local util = require('guard.util')
 
+local is_formatting = false
+
 local function ignored(buf, patterns)
   local fname = api.nvim_buf_get_name(buf)
   if #fname == 0 then
@@ -64,9 +66,12 @@ local function update_buffer(bufnr, new_lines, srow, erow)
 end
 
 local function do_fmt(buf)
+  is_formatting = true
+
   buf = buf or api.nvim_get_current_buf()
   if not filetype[vim.bo[buf].filetype] then
     vim.notify('[Guard] missing config for filetype ' .. vim.bo[buf].filetype, vim.log.levels.ERROR)
+    is_formatting = false
     return
   end
   local srow = 0
@@ -111,6 +116,7 @@ local function do_fmt(buf)
         elseif config.fn then
           config.fn()
           if i == #fmt_configs then
+            is_formatting = false
             return
           end
           new_lines = table.concat(get_prev_lines(buf, srow, erow), '')
@@ -121,13 +127,20 @@ local function do_fmt(buf)
 
     vim.schedule(function()
       if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
+        is_formatting = false
         return
       end
       update_buffer(buf, new_lines, srow, erow)
+      is_formatting = false
     end)
   end))
 end
 
+local function is_formatting_fn()
+  return is_formatting
+end
+
 return {
   do_fmt = do_fmt,
+  is_formatting = is_formatting_fn
 }
