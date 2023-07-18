@@ -21,7 +21,7 @@ local function ignored(buf, patterns)
 end
 
 local function update_buffer(bufnr, new_lines, srow, erow)
-  if not new_lines or #new_lines == 0 or not api.nvim_buf_is_valid(bufnr) then
+  if not new_lines or #new_lines == 0 then
     return
   end
 
@@ -81,6 +81,7 @@ local function do_fmt(buf)
   local fmt_configs = filetype[vim.bo[buf].filetype].format
   local formatter = require('guard.tools.formatter')
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
+  local changedtick = api.nvim_buf_get_changedtick(buf)
 
   coroutine.resume(coroutine.create(function()
     local new_lines
@@ -118,6 +119,9 @@ local function do_fmt(buf)
     end
 
     vim.schedule(function()
+      if not api.nvim_buf_is_valid(buf) or api.nvim_buf_get_changedtick(buf) ~= changedtick then
+        return
+      end
       update_buffer(buf, new_lines, srow, erow)
     end)
   end))
