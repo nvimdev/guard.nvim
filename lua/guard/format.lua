@@ -84,7 +84,7 @@ local function do_fmt(buf)
 
   coroutine.resume(coroutine.create(function()
     local new_lines
-    -- local changedtick = api.nvim_buf_get_changedtick(buf)
+    local changedtick = api.nvim_buf_get_changedtick(buf)
     for i, config in ipairs(fmt_configs) do
       if type(config) == 'string' and formatter[config] then
         config = formatter[config]
@@ -115,10 +115,14 @@ local function do_fmt(buf)
           end
           new_lines = table.concat(get_prev_lines(buf, srow, erow), '')
         end
+        changedtick = vim.b[buf].changedtick
       end
     end
 
     vim.schedule(function()
+      if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
+        return
+      end
       update_buffer(buf, new_lines, srow, erow)
     end)
   end))
