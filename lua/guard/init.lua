@@ -36,15 +36,33 @@ local function parse_setup_cfg(fts_with_cfg)
   end
 end
 
+local function get_fts_keys()
+  local keys = vim.tbl_keys(fts_config)
+  local retval = {}
+  vim.tbl_map(function(key)
+    if key:find(',') then
+      local t = vim.split(key, ',')
+      for _, item in ipairs(t) do
+        fts_config[item] = vim.deepcopy(fts_config[key])
+        retval[#retval + 1] = item
+      end
+    else
+      retval[#retval + 1] = key
+    end
+  end, keys)
+  return retval
+end
+
 local function setup(opt)
   opt = opt or {
     fmt_on_save = true,
   }
 
   parse_setup_cfg(opt.ft)
+  local fts = get_fts_keys()
 
   if opt.fmt_on_save then
-    register_event(vim.tbl_keys(fts_config))
+    register_event(fts)
   end
 
   local lint = require('guard.lint')
