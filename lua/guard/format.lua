@@ -24,6 +24,7 @@ local function update_buffer(bufnr, new_lines, srow, erow)
   if not new_lines or #new_lines == 0 then
     return
   end
+  local view = vim.fn.winsaveview()
 
   local prev_lines = vim.api.nvim_buf_get_lines(bufnr, srow, erow, true)
   new_lines = vim.split(new_lines, '\n')
@@ -61,6 +62,7 @@ local function update_buffer(bufnr, new_lines, srow, erow)
   if mode == 'v' or 'V' then
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', true)
   end
+  vim.fn.winrestview(view)
 end
 
 local function do_fmt(buf)
