@@ -78,7 +78,8 @@ local function setup(opt)
 
         lint.register_lint(
           ft,
-          conf.linter[i].stdin and { 'TextChanged', 'InsertLeave' } or { 'BufWritePost' }
+          conf.linter[i].stdin and { 'TextChanged', 'InsertLeave', 'BufWritePost' }
+            or { 'BufWritePost' }
         )
       end
     end

@@ -26,6 +26,7 @@ local function update_buffer(bufnr, new_lines, srow, erow)
   if not new_lines or #new_lines == 0 then
     return
   end
+  local view = vim.fn.winsaveview()
 
   local prev_lines = vim.api.nvim_buf_get_lines(bufnr, srow, erow, true)
   new_lines = vim.split(new_lines, '\n')
@@ -63,6 +64,7 @@ local function update_buffer(bufnr, new_lines, srow, erow)
   if mode == 'v' or 'V' then
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', true)
   end
+  vim.fn.winrestview(view)
 end
 
 local function do_fmt(buf)
@@ -90,6 +92,8 @@ local function do_fmt(buf)
   coroutine.resume(coroutine.create(function()
     local new_lines
     local changedtick = api.nvim_buf_get_changedtick(buf)
+    local reload = nil
+
     for i, config in ipairs(fmt_configs) do
       if type(config) == 'string' and formatter[config] then
         config = formatter[config]
@@ -112,6 +116,7 @@ local function do_fmt(buf)
         if config.cmd then
           config.args[#config.args + 1] = config.fname and fname or nil
           config.cwd = util.get_lsp_root() or uv.cwd()
+          reload = (not reload and config.stdout == false) and true or false
           new_lines = spawn(config)
         elseif config.fn then
           config.fn()
@@ -126,12 +131,17 @@ local function do_fmt(buf)
     end
 
     vim.schedule(function()
+      is_formatting = false
+
       if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
-        is_formatting = false
         return
       end
+            
       update_buffer(buf, new_lines, srow, erow)
-      is_formatting = false
+            
+      if reload and api.nvim_get_current_buf() == buf then
+        vim.cmd.edit()
+      end
     end)
   end))
 end

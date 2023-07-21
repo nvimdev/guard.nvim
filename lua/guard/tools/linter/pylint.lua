@@ -17,7 +17,7 @@ return {
           local pos = line:match('py:(%d+:%d+)')
           local lnum, col = unpack(vim.split(pos, ':'))
           local mes = line:match('%d:%s(.*)')
-          diags[#diags + 1] = diag_fmt(buf, tonumber(lnum), tonumber(col), mes, i, 'pylint')
+          diags[#diags + 1] = diag_fmt(buf, tonumber(lnum) - 1, tonumber(col), mes, i, 'pylint')
         end
       end
     end
