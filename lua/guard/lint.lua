@@ -13,7 +13,7 @@ local function do_lint(buf)
   local linters = filetype[vim.bo[buf].filetype].linter
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   local prev_lines = get_prev_lines(buf, 0, -1)
-  api.nvim_buf_clear_namespace(buf, ns, 0, -1)
+  vd.reset(ns, buf)
 
   coroutine.resume(coroutine.create(function()
     local results
