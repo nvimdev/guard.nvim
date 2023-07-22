@@ -94,25 +94,28 @@ local function do_fmt(buf)
         config = formatter[config]
       end
 
-      config = config.fn and config or vim.deepcopy(config)
       local can_run = true
       if config.ignore_patterns and ignored(buf, configs.ignore_patterns) then
         can_run = false
       end
 
-      if config.ignore_error and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
-        if can_run then
-          can_run = false
-        end
+      if config.ignore_error and can_run and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
+        can_run = false
       end
 
       if can_run then
-        config.lines = new_lines and new_lines or prev_lines
         if config.cmd then
+          config.lines = new_lines and new_lines or prev_lines
           config.args[#config.args + 1] = config.fname and fname or nil
           config.cwd = util.get_lsp_root() or uv.cwd()
           reload = (not reload and config.stdout == false) and true or false
           new_lines = spawn(config)
+          --restore
+          config.lines = nil
+          config.cwd = nil
+          if config.args[#config.args] == fname then
+            config.args[#config.args] = nil
+          end
         elseif config.fn then
           config.fn()
           if i == #fmt_configs then
