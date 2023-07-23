@@ -1,4 +1,6 @@
 local api = vim.api
+---@diagnostic disable-next-line: deprecated
+local uv = vim.version().minor >= 10 and vim.uv or vim.loop
 local filetype = require('guard.filetype')
 local spawn = require('guard.spawn').try_spawn
 local ns = api.nvim_create_namespace('Guard')
@@ -37,14 +39,27 @@ local function do_lint(buf)
   end))
 end
 
+local debounce_timer = nil
 local function register_lint(ft, extra)
   api.nvim_create_autocmd('FileType', {
     pattern = ft,
     callback = function(args)
       api.nvim_create_autocmd(vim.list_extend({ 'BufEnter' }, extra), {
         buffer = args.buf,
-        callback = function()
-          do_lint(args.buf)
+        callback = function(opt)
+          if debounce_timer then
+            debounce_timer:stop()
+            debounce_timer = nil
+          end
+          debounce_timer = uv.new_timer()
+          debounce_timer:start(500, 0, function()
+            debounce_timer:stop()
+            debounce_timer:close()
+            debounce_timer = nil
+            vim.schedule(function()
+              do_lint(opt.buf)
+            end)
+          end)
         end,
       })
     end,
