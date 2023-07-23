@@ -20,7 +20,7 @@ local function register_event(fts)
   })
 
   api.nvim_create_user_command('GuardDisable', function()
-    api.nvim_del_augroup_by_id(group)
+    pcall(api.nvim_del_augroup_by_id, group)
   end, {})
 end
 
