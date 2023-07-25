@@ -37,6 +37,9 @@ ft('go'):fmt('lsp')
         :append('golines')
         :lint('golangci')
 
+-- multiple files register
+ft('typescript,javascript,typescriptreact'):fmt('prettier')
+
 -- call setup LAST
 require('guard').setup({
     -- the only option for the setup function
