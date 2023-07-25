@@ -1,4 +1,4 @@
-*guard.nvim.txt*           For NVIM v0.8.0           Last change: 2023 July 23
+*guard.nvim.txt*           For NVIM v0.8.0           Last change: 2023 July 25
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -52,6 +52,9 @@ examples, more info below.
     ft('go'):fmt('lsp')
             :append('golines')
             :lint('golangci')
+    
+    -- multiple files register
+    ft('typescript,javascript,typescriptreact'):fmt('prettier')
     
     -- call setup LAST
     require('guard').setup({
