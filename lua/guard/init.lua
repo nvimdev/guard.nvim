@@ -2,7 +2,6 @@ local api = vim.api
 local group = api.nvim_create_augroup('Guard', { clear = true })
 local fts_config = require('guard.filetype')
 local util = require('guard.util')
-local config = require('guard.config')
 
 local function register_event(fts)
   api.nvim_create_autocmd('FileType', {
@@ -68,7 +67,21 @@ local function setup(opt)
   end
 
   if opt.lsp_as_default_formatter then
-    config.lsp_as_default_formatter = true
+      vim.api.nvim_create_autocmd('LspAttach', {
+          callback = function(args)
+              local client = vim.lsp.get_client_by_id(args.data.client_id)
+              if not client:supports_method('textDocument/formatting') then
+                  return
+              end
+              local fthandler = require('guard.filetype')
+              local lsp = require('guard.tools.formatter').lsp
+              if fthandler[vim.bo[args.buf].filetype] and  fthandler[vim.bo[args.buf].filetype].fmt  then
+                  table.insert(fthandler[vim.bo[args.buf]], 1, lsp)
+              else
+                  fthandler(vim.bo[args.buf].filetype):fmt(lsp)
+              end
+          end
+      })
   end
 
   local lint = require('guard.lint')
