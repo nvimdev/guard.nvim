@@ -59,7 +59,7 @@ require('guard').setup({
 ```
 
 - Use `GuardFmt` to manually call format, if you have a visual selection, only the selection would be formatted.
-- `GuardDisable` disables auto-formatting. To disable it for certain buffers, use `GuardDisable {bufnr}` (0 for current buf). You can also use `GuardDisable {filetype}` to disable auto-format for a specific filetype. If you call GuardFmt manually, the buffer would still get formatted.
+- `GuardDisable` disables auto-formatting. To disable it for certain buffers, use `GuardDisable {bufnr}` (0 for current buf). You can also use `GuardDisable {filetype}` to disable auto-format for a specific filetype. If you call `GuardFmt` manually, the buffer would still get formatted.
 - `GuardEnable` re-enables the disabled auto-format, with the same argument as `GuardDisable`.
 
 ### Builtin tools
