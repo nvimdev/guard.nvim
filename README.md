@@ -29,16 +29,13 @@ local ft = require('guard.filetype')
 ft('c'):fmt('clang-format')
        :lint('clang-tidy')
 
--- use stylua to format lua files and no linter
-ft('lua'):fmt('stylua')
+-- use prettier to format jsx and js files with no linter configured
+ft('javascript,javascriptreact'):fmt('prettier')
 
 -- use lsp to format first then use golines to format
 ft('go'):fmt('lsp')
         :append('golines')
         :lint('golangci')
-
--- multiple files register
-ft('typescript,javascript,typescriptreact'):fmt('prettier')
 
 -- call setup LAST
 require('guard').setup({
@@ -47,18 +44,29 @@ require('guard').setup({
 })
 ```
 
-Use `GuardFmt` to manually call format, use `GuardDisable` to diable auto format. and you can create
-a keymap like
+Optionally, you can setup this plugin more verbosely, like so:
 
 ```lua
-vim.keymap.set({'n','v'}, '<cmd>GuardFmt<CR>')
+require('guard').setup({
+  fmt_on_save = true,
+  ft = {
+    go = {
+      fmt = { { cmd = 'gofmt', stdin = true } },
+    },
+    py = { lint = { 'pylint' } },
+  },
+})
 ```
+
+- Use `GuardFmt` to manually call format, if you have a visual selection, only the selection would be formatted.
+- `GuardDisable` disables auto-formatting. To disable it for certain buffers, use `GuardDisable {bufnr}` (0 for current buf). You can also use `GuardDisable {filetype}` to disable auto-format for a specific filetype. If you call GuardFmt manually, the buffer would still get formatted.
+- `GuardEnable` re-enables the disabled auto-format, with the same argument as `GuardDisable`.
 
 ### Builtin tools
 
 #### Formatter
 
-- `lsp` use `vim.lsp.buf.format`
+- `lsp` (which uses `vim.lsp.buf.format`)
 - `clang-format`
 - `prettier`
 - `rustfmt`
@@ -67,20 +75,20 @@ vim.keymap.set({'n','v'}, '<cmd>GuardFmt<CR>')
 - `black`
 - `rubocop`
 
-Table format for custom tool:
+Table format for custom formatter:
 
 ```
 {
-    cmd              --string tool command
-    args             --table command arugments
-    fname            --string insert filename to args tail
-    stdin            --boolean pass buffer contents into stdin
-    timeout          --integer
-    ignore_pattern   --table ignore run format when pattern match
-    ignore_error     --when has lsp error ignore format
+    cmd              -- string: tool command
+    args             -- table: command arugments
+    fname            -- string: insert filename to args tail
+    stdin            -- boolean: pass buffer contents into stdin
+    timeout          -- integer
+    ignore_pattern   -- table: ignore run format when pattern match
+    ignore_error     -- when has lsp error ignore format
 
     --special
-    fn       --function if fn is set other field will not take effect
+    fn       -- function: if fn is set, other field will not take effect
 }
 ```
 
@@ -90,8 +98,8 @@ Table format for custom tool:
 - `Pylint`
 - `rubocop`
 
-## Trobuleshooting
+## Troubleshooting
 
-if guard does not auto format on save, run `checkhealth` first.
+If guard does not auto format on save, run `checkhealth` first.
 
 ## License MIT
