@@ -2,10 +2,6 @@ local api = vim.api
 local group = api.nvim_create_augroup('Guard', { clear = true })
 local fts_config = require('guard.filetype')
 local util = require('guard.util')
-local blacklist = {
-  ft = {},
-  buf = {},
-}
 
 local function parse_setup_cfg(fts_with_cfg)
   for ft, cfg in pairs(fts_with_cfg or {}) do
@@ -35,28 +31,29 @@ local function get_fts_keys()
   end, keys)
   return retval
 end
-local fts = get_fts_keys()
 
-local function register_event()
+local function attach_to(bufnr)
+  api.nvim_create_autocmd('BufWritePre', {
+    group = group,
+    buffer = bufnr,
+    callback = function()
+      require('guard.format').do_fmt(bufnr)
+    end,
+  })
+end
+
+local function register_event(pattern)
   api.nvim_create_autocmd('FileType', {
     group = group,
-    pattern = fts,
+    pattern = pattern,
     callback = function(args)
-      api.nvim_create_autocmd('BufWritePre', {
-        group = group,
-        buffer = args.buf,
-        callback = function()
-          local bufnr = api.nvim_get_current_buf()
-          local ft = vim.bo[bufnr].ft
-          if not (vim.tbl_contains(blacklist.buf, bufnr) or vim.tbl_contains(blacklist.ft, ft)) then
-            require('guard.format').do_fmt(args.buf)
-          end
-        end,
-      })
+      attach_to(args.buf)
     end,
     desc = 'guard',
   })
+end
 
+local function create_cmd()
   api.nvim_create_user_command('GuardDisable', function(opts)
     if #opts.fargs == 0 then
       pcall(api.nvim_del_augroup_by_id, group)
@@ -64,38 +61,44 @@ local function register_event()
     end
     local arg = opts.args
     local _, bufnr = pcall(tonumber, arg)
-    if bufnr and not vim.tbl_contains(blacklist.buf) then
-      if bufnr == 0 then
-        bufnr = api.nvim_get_current_buf()
+    if bufnr then
+      local _, data = pcall(api.nvim_get_autocmds, { group = group, event = 'BufWritePre', buffer = bufnr })
+      if not vim.tbl_isempty(data) then
+        api.nvim_del_autocmd(data[1].id)
       end
-      table.insert(blacklist.buf, bufnr)
     else
-      if not vim.tbl_contains(blacklist.ft, arg) then
-        table.insert(blacklist.ft, arg)
+      local _, listener = pcall(api.nvim_get_autocmds, { group = group, event = 'FileType', pattern = arg })
+      if not vim.tbl_isempty(listener) then
+        api.nvim_del_autocmd(listener[1].id)
+      end
+      local _, aus = pcall(api.nvim_get_autocmds, { group = group, event = 'BufWritePre' })
+      for _, au in ipairs(aus) do
+        if vim.bo[au].ft == arg then
+          api.nvim_del_autocmd(au.id)
+        end
       end
     end
   end, { nargs = '?' })
 
   api.nvim_create_user_command('GuardEnable', function(opts)
     if #opts.fargs == 0 then
-      local au = vim.api.nvim_get_autocmds({ group = group, })
-      if not au or vim.tbl_isempty(au) then
-        register_event()
+      local ok, _ = pcall(vim.api.nvim_get_autocmds, { group = group })
+      if not ok then
+        register_event(get_fts_keys())
       end
       return
     end
     local arg = opts.args
     local _, bufnr = pcall(tonumber, arg)
     if bufnr then
-      if bufnr == 0 then
-        bufnr = api.nvim_get_current_buf()
-      end
-      if vim.tbl_contains(blacklist.buf, bufnr) then
-        blacklist.buf = vim.tbl_filter(function(v) return v ~= bufnr end, blacklist.buf)
+      local _, data = pcall(api.nvim_get_autocmds, { group = group, event = 'BufWritePre', buffer = bufnr })
+      if vim.tbl_isempty(data) then
+        attach_to(bufnr)
       end
     else
-      if vim.tbl_contains(blacklist.ft, arg) then
-        blacklist.ft = vim.tbl_filter(function(v) return v ~= arg end, blacklist.ft)
+      local _, listener = pcall(api.nvim_get_autocmds, { group = group, event = 'FileType', pattern = arg })
+      if vim.tbl_isempty(listener) then
+        register_event(arg)
       end
     end
   end, { nargs = '?' })
@@ -107,9 +110,10 @@ local function setup(opt)
   }
 
   parse_setup_cfg(opt.ft)
+  create_cmd()
 
   if opt.fmt_on_save then
-    register_event()
+    register_event(get_fts_keys())
   end
 
   local lint = require('guard.lint')
