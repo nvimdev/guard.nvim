@@ -91,12 +91,12 @@ local function create_cmd()
     local arg = opts.args
     local _, bufnr = pcall(tonumber, arg)
     if bufnr then
-      local _, data = pcall(api.nvim_get_autocmds, { group = group, event = 'BufWritePre', buffer = bufnr })
+      local data = api.nvim_get_autocmds({ group = group, event = 'BufWritePre', buffer = bufnr })
       if vim.tbl_isempty(data) then
         attach_to(bufnr)
       end
     else
-      local _, listener = pcall(api.nvim_get_autocmds, { group = group, event = 'FileType', pattern = arg })
+      local listener = api.nvim_get_autocmds({ group = group, event = 'FileType', pattern = arg })
       if vim.tbl_isempty(listener) then
         register_event(arg)
       end
