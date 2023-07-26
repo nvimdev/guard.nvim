@@ -75,7 +75,7 @@ require('guard').setup({
 - `black`
 - `rubocop`
 
-Table format for custom formatter:
+Table format for custom tool:
 
 ```
 {
