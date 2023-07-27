@@ -68,6 +68,7 @@ vim.keymap.set({'n','v'}, '<cmd>GuardFmt<CR>')
 - `golines`
 - `black`
 - `rubocop`
+- `mixformat`
 
 Table format for custom tool:
 

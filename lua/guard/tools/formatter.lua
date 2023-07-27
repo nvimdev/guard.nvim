@@ -50,4 +50,11 @@ M.black = {
   stdin = true,
 }
 
+M.mixformat = {
+  cmd = 'mix',
+  args = {'format', '-', '--stdin-filename'},
+  stdin = true,
+  fname = true,
+}
+
 return M
