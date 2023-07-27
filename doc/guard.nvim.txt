@@ -86,6 +86,7 @@ FORMATTER
 - `golines`
 - `black`
 - `rubocop`
+- `mixformat`
 
 Table format for custom tool:
 
