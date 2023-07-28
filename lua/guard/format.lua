@@ -4,6 +4,7 @@ local uv = vim.version().minor >= 10 and vim.uv or vim.loop
 local spawn = require('guard.spawn').try_spawn
 local get_prev_lines = require('guard.util').get_prev_lines
 local filetype = require('guard.filetype')
+local formatter = require('guard.tools.formatter')
 local util = require('guard.util')
 
 local function ignored(buf, patterns)
@@ -65,6 +66,18 @@ local function update_buffer(bufnr, new_lines, srow, erow)
   vim.fn.winrestview(view)
 end
 
+local function find(startpath, patterns, root_dir)
+  patterns = util.as_table(patterns)
+  for _, pattern in ipairs(patterns) do
+    if
+      #vim.fs.find(pattern, { upward = true, stop = root_dir or uv.os_homedir(), path = startpath })
+      > 0
+    then
+      return true
+    end
+  end
+end
+
 local function do_fmt(buf)
   buf = buf or api.nvim_get_current_buf()
   if not filetype[vim.bo[buf].filetype] then
@@ -81,8 +94,10 @@ local function do_fmt(buf)
   local prev_lines = util.get_prev_lines(buf, srow, erow)
 
   local fmt_configs = filetype[vim.bo[buf].filetype].format
-  local formatter = require('guard.tools.formatter')
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
+  local startpath = vim.fn.expand(fname, ':p:h')
+  local root_dir = util.get_lsp_root()
+  local cwd = root_dir or uv.cwd()
 
   coroutine.resume(coroutine.create(function()
     local new_lines
@@ -97,9 +112,9 @@ local function do_fmt(buf)
       local can_run = true
       if config.ignore_patterns and ignored(buf, configs.ignore_patterns) then
         can_run = false
-      end
-
-      if config.ignore_error and can_run and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
+      elseif config.ignore_error and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
+        can_run = false
+      elseif config.find and not find(startpath, config.find, root_dir) then
         can_run = false
       end
 
@@ -107,7 +122,7 @@ local function do_fmt(buf)
         if config.cmd then
           config.lines = new_lines and new_lines or prev_lines
           config.args[#config.args + 1] = config.fname and fname or nil
-          config.cwd = util.get_lsp_root() or uv.cwd()
+          config.cwd = cwd
           reload = (not reload and config.stdout == false) and true or false
           new_lines = spawn(config)
           --restore

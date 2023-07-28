@@ -32,6 +32,16 @@ local function box()
     return self
   end
 
+  function tbl:extra(...)
+    local tool = self[current][#self[current]]
+    if type(tool) == 'string' then
+      tool = current == 'format' and require('guard.tools.formatter')[tool]
+        or require('guard.tools.linter.' .. tool)
+    end
+    tool.args = vim.list_extend({ ... }, tool.args)
+    return self
+  end
+
   function tbl:key_alias(key)
     local _t = {
       ['lint'] = function()

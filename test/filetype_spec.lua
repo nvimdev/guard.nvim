@@ -151,4 +151,18 @@ describe('filetype module', function()
       format = { { cmd = 'prettier', args = { 'some', 'args' } } },
     }, ft.javascriptreact)
   end)
+
+  it('can add extra command arguments', function()
+    ft('c'):fmt('clang-format'):extra('--verbose'):lint('clang-tidy'):extra('--fix')
+    same({
+      cmd = 'clang-format',
+      args = { '--verbose', '-style=file' },
+      stdin = true,
+    }, require('guard.tools.formatter')['clang-format'])
+
+    same({
+      '--fix',
+      '--quiet',
+    }, require('guard.tools.linter.clang-tidy').args)
+  end)
 end)

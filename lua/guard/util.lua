@@ -12,9 +12,9 @@ function util.get_prev_lines(bufnr, srow, erow)
   return res
 end
 
-function util.get_lsp_root()
-  local curbuf = api.nvim_get_current_buf()
-  local clients = get_clients({ bufnr = curbuf })
+function util.get_lsp_root(buf)
+  buf = buf or api.nvim_get_current_buf()
+  local clients = get_clients({ bufnr = buf })
   if #clients == 0 then
     return
   end
