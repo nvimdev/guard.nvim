@@ -126,10 +126,22 @@ local function setup(opt)
           return
         end
         local fthandler = require('guard.filetype')
-        if fthandler[vim.bo[args.buf].filetype] and fthandler[vim.bo[args.buf].filetype].fmt then
-          table.insert(fthandler[vim.bo[args.buf]], 1, 'lsp')
+        if fthandler[vim.bo[args.buf].filetype] and fthandler[vim.bo[args.buf].filetype].format then
+          table.insert(fthandler[vim.bo[args.buf]].format, 1, 'lsp')
         else
           fthandler(vim.bo[args.buf].filetype):fmt('lsp')
+        end
+
+        if
+          opt.fmt_on_save
+          and #api.nvim_get_autocmds({
+              group = 'Guard',
+              event = 'FileType',
+              pattern = vim.bo[args.buf].filetype,
+            })
+            == 0
+        then
+          attach_to(args.buf)
         end
       end,
     })
