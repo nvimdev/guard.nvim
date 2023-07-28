@@ -3,18 +3,22 @@ local group = api.nvim_create_augroup('Guard', { clear = true })
 local fts_config = require('guard.filetype')
 local util = require('guard.util')
 
+local function fmt_event(buf)
+  api.nvim_create_autocmd('BufWritePre', {
+    group = group,
+    buffer = buf,
+    callback = function(opt)
+      require('guard.format').do_fmt(opt.buf)
+    end,
+  })
+end
+
 local function register_event(fts)
   api.nvim_create_autocmd('FileType', {
     group = group,
     pattern = fts,
     callback = function(args)
-      api.nvim_create_autocmd('BufWritePre', {
-        group = group,
-        buffer = args.buf,
-        callback = function()
-          require('guard.format').do_fmt(args.buf)
-        end,
-      })
+      fmt_event(args.buf)
     end,
     desc = 'guard',
   })
@@ -75,10 +79,22 @@ local function setup(opt)
           return
         end
         local fthandler = require('guard.filetype')
-        if fthandler[vim.bo[args.buf].filetype] and fthandler[vim.bo[args.buf].filetype].fmt then
-          table.insert(fthandler[vim.bo[args.buf]], 1, 'lsp')
+        if fthandler[vim.bo[args.buf].filetype] and fthandler[vim.bo[args.buf].filetype].format then
+          table.insert(fthandler[vim.bo[args.buf].filetype].format, 1, 'lsp')
         else
           fthandler(vim.bo[args.buf].filetype):fmt('lsp')
+        end
+
+        if
+          opt.fmt_on_save
+          and #api.nvim_get_autocmds({
+              group = 'Guard',
+              event = 'FileType',
+              pattern = vim.bo[args.buf].filetype,
+            })
+            == 0
+        then
+          fmt_event(args.buf)
         end
       end,
     })
