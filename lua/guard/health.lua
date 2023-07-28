@@ -22,8 +22,8 @@ local function executable_check()
           else
             health_error(entry[conf].cmd .. ' found')
           end
-        elseif not entry[conf].fn then
-          health_error('this conf not exist ' .. conf)
+        elseif not entry[conf] or not entry[conf].fn then
+          health_error('this config not exist ' .. conf)
         end
       else
         health_error('wrong type of ' .. conf)

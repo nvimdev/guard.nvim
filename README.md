@@ -39,8 +39,10 @@ ft('go'):fmt('lsp')
 
 -- call setup LAST
 require('guard').setup({
-    -- the only option for the setup function
+    -- the only options for the setup function
     fmt_on_save = true,
+    -- Use lsp if no formatter was defined for this filetype
+    lsp_as_default_formatter = false,
 })
 ```
 
@@ -74,6 +76,7 @@ require('guard').setup({
 - `golines`
 - `black`
 - `rubocop`
+- `mixformat`
 
 Table format for custom tool:
 

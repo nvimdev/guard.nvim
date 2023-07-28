@@ -97,7 +97,7 @@ end
 local function try_spawn(opt)
   local ok, out = pcall(spawn, opt)
   if not ok then
-    print(out)
+    on_failed('[Guard] err ' .. out)
     return
   end
   return out

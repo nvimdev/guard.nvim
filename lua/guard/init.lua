@@ -107,6 +107,7 @@ end
 local function setup(opt)
   opt = opt or {
     fmt_on_save = true,
+    lsp_as_default_formatter = false,
   }
 
   parse_setup_cfg(opt.ft)
@@ -114,6 +115,24 @@ local function setup(opt)
 
   if opt.fmt_on_save then
     register_event(get_fts_keys())
+  end
+
+  if opt.lsp_as_default_formatter then
+    api.nvim_create_autocmd('LspAttach', {
+      callback = function(args)
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        ---@diagnostic disable-next-line: need-check-nil
+        if not client.supports_method('textDocument/formatting') then
+          return
+        end
+        local fthandler = require('guard.filetype')
+        if fthandler[vim.bo[args.buf].filetype] and fthandler[vim.bo[args.buf].filetype].fmt then
+          table.insert(fthandler[vim.bo[args.buf]], 1, 'lsp')
+        else
+          fthandler(vim.bo[args.buf].filetype):fmt('lsp')
+        end
+      end,
+    })
   end
 
   local lint = require('guard.lint')

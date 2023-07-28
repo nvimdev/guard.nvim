@@ -1,4 +1,4 @@
-*guard.nvim.txt*           For NVIM v0.8.0           Last change: 2023 July 25
+*guard.nvim.txt*           For NVIM v0.8.0           Last change: 2023 July 27
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -6,7 +6,7 @@ Table of Contents                               *guard.nvim-table-of-contents*
   - guard.nvim                                         |guard.nvim-guard.nvim|
   - Features                                             |guard.nvim-features|
   - Usage                                                   |guard.nvim-usage|
-  - Trobuleshooting                               |guard.nvim-trobuleshooting|
+  - Troubleshooting                               |guard.nvim-troubleshooting|
   - License MIT                                       |guard.nvim-license-mit|
 
 GUARD.NVIM                                             *guard.nvim-guard.nvim*
@@ -58,8 +58,10 @@ examples, more info below.
     
     -- call setup LAST
     require('guard').setup({
-        -- the only option for the setup function
+        -- the only options for the setup function
         fmt_on_save = true,
+        -- Use lsp if no formatter was defined for this filetype
+        lsp_as_default_formatter = false,
     })
 <
 
@@ -84,6 +86,7 @@ FORMATTER
 - `golines`
 - `black`
 - `rubocop`
+- `mixformat`
 
 Table format for custom tool:
 
@@ -110,7 +113,7 @@ LINTER
 - `rubocop`
 
 
-TROBULESHOOTING                                   *guard.nvim-trobuleshooting*
+TROUBLESHOOTING                                   *guard.nvim-troubleshooting*
 
 if guard does not auto format on save, run `checkhealth` first.
 
