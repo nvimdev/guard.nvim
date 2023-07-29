@@ -1,28 +1,6 @@
 local api = vim.api
-local group = api.nvim_create_augroup('Guard', { clear = true })
 local ft_handler = require('guard.filetype')
 local util = require('guard.util')
-
-local function attach_to(buf)
-  api.nvim_create_autocmd('BufWritePre', {
-    group = group,
-    buffer = buf,
-    callback = function(opt)
-      require('guard.format').do_fmt(opt.buf)
-    end,
-  })
-end
-
-local function watch_ft(fts)
-  api.nvim_create_autocmd('FileType', {
-    group = group,
-    pattern = fts,
-    callback = function(args)
-      attach_to(args.buf)
-    end,
-    desc = 'guard',
-  })
-end
 
 local function register_cfg_by_table(fts_with_cfg)
   for ft, cfg in pairs(fts_with_cfg or {}) do
@@ -63,39 +41,17 @@ local function setup(opt)
   local parsed = resolve_multi_ft()
 
   if opt.fmt_on_save then
-    watch_ft(parsed)
+    util.watch_ft(parsed)
   end
-
   if opt.lsp_as_default_formatter then
-    api.nvim_create_autocmd('LspAttach', {
-      callback = function(args)
-        local client = vim.lsp.get_client_by_id(args.data.client_id)
-        ---@diagnostic disable-next-line: need-check-nil
-        if not client.supports_method('textDocument/formatting') then
-          return
-        end
-        local fthandler = require('guard.filetype')
-        if fthandler[vim.bo[args.buf].filetype] and fthandler[vim.bo[args.buf].filetype].format then
-          table.insert(fthandler[vim.bo[args.buf].filetype].format, 1, 'lsp')
-        else
-          fthandler(vim.bo[args.buf].filetype):fmt('lsp')
-        end
-
-        local ok, au = pcall(api.nvim_get_autocmds, {
-              group = 'Guard',
-              event = 'FileType',
-              pattern = vim.bo[args.buf].filetype,
-        })
-        if
-          opt.fmt_on_save
-          and ok
-          and #au == 0
-        then
-          attach_to(args.buf)
-        end
-      end,
-    })
+    util.create_lspattach_autocmd(opt.fmt_on_save)
   end
+
+  api.nvim_create_user_command("GuardDisable", util.disable, { nargs = "?" })
+  api.nvim_create_user_command("GuardEnable", util.enable, { nargs = "?" })
+  api.nvim_create_user_command('GuardFmt', function()
+    require('guard.format').do_fmt()
+  end, { nargs = 0 })
 
   local lint = require('guard.lint')
   for ft, conf in pairs(ft_handler) do
