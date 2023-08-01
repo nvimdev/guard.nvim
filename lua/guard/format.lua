@@ -7,6 +7,17 @@ local filetype = require('guard.filetype')
 local formatter = require('guard.tools.formatter')
 local util = require('guard.util')
 
+local function attach_to_buf(buf)
+  api.nvim_create_autocmd('BufWritePre', {
+    group = api.nvim_create_augroup('Guard'),
+    buffer = buf,
+    callback = function(opt)
+      require('guard.format').do_fmt(opt.buf)
+    end,
+  })
+end
+
+
 local function ignored(buf, patterns)
   local fname = api.nvim_buf_get_name(buf)
   if #fname == 0 then
@@ -156,4 +167,5 @@ end
 
 return {
   do_fmt = do_fmt,
+  attach_to_buf = attach_to_buf,
 }
