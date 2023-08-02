@@ -64,6 +64,7 @@ vim.keymap.set({'n','v'}, '<cmd>GuardFmt<CR>')
 - `clang-format`
 - `prettier`
 - `rustfmt`
+- `fnlfmt`
 - `stylua`
 - `golines`
 - `black`
