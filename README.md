@@ -61,6 +61,7 @@ require('guard').setup({
 - `clang-format`
 - `prettier`
 - `rustfmt`
+- `fnlfmt`
 - `stylua`
 - `golines`
 - `black`
