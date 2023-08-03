@@ -1,4 +1,4 @@
-*guard.nvim.txt*           For NVIM v0.8.0           Last change: 2023 July 28
+*guard.nvim.txt*          For NVIM v0.8.0          Last change: 2023 August 03
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -82,6 +82,7 @@ FORMATTER
 - `clang-format`
 - `prettier`
 - `rustfmt`
+- `fnlfmt`
 - `stylua`
 - `golines`
 - `black`
