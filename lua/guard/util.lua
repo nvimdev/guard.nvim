@@ -3,7 +3,6 @@ local get_clients = vim.version().minor >= 10 and vim.lsp.get_clients or vim.lsp
 local api = vim.api
 local group = api.nvim_create_augroup('Guard', { clear = true })
 local ft_handler = require('guard.filetype')
-local attach_to_buf = require('guard.format').attach_to_buf
 local util = {}
 
 function util.get_prev_lines(bufnr, srow, erow)
@@ -37,7 +36,7 @@ function util.watch_ft(fts)
     group = group,
     pattern = fts,
     callback = function(args)
-      attach_to_buf(args.buf)
+      require('guard.format').attach_to_buf(args.buf)
     end,
     desc = 'guard',
   })
@@ -67,7 +66,7 @@ function util.create_lspattach_autocmd(fmt_on_save)
        and ok
        and #au == 0
      then
-       attach_to_buf(args.buf)
+       require('guard.format').attach_to_buf(args.buf)
      end
    end,
  })
@@ -104,6 +103,7 @@ end
 
 function util.enable(opts)
   if #opts.fargs == 0 and not pcall(api.nvim_get_autocmds, { group = group }) then
+    group = api.nvim_create_augroup('Guard', { clear = true })
     util.watch_ft(ft_handler)
     return
   end
@@ -112,7 +112,7 @@ function util.enable(opts)
   if bufnr then
     local bufau = api.nvim_get_autocmds({ group = group, event = 'BufWritePre', buffer = bufnr })
     if #bufau == 0 then
-      attach_to_buf(bufnr)
+      require('guard.format').attach_to_buf(bufnr)
     end
   else
     local listener = api.nvim_get_autocmds({ group = group, event = 'FileType', pattern = arg })

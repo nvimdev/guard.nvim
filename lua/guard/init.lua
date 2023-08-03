@@ -1,4 +1,3 @@
-local api = vim.api
 local ft_handler = require('guard.filetype')
 local util = require('guard.util')
 
@@ -46,12 +45,6 @@ local function setup(opt)
   if opt.lsp_as_default_formatter then
     util.create_lspattach_autocmd(opt.fmt_on_save)
   end
-
-  api.nvim_create_user_command("GuardDisable", util.disable, { nargs = "?" })
-  api.nvim_create_user_command("GuardEnable", util.enable, { nargs = "?" })
-  api.nvim_create_user_command('GuardFmt', function()
-    require('guard.format').do_fmt()
-  end, { nargs = 0 })
 
   local lint = require('guard.lint')
   for ft, conf in pairs(ft_handler) do

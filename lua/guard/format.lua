@@ -9,7 +9,7 @@ local util = require('guard.util')
 
 local function attach_to_buf(buf)
   api.nvim_create_autocmd('BufWritePre', {
-    group = api.nvim_create_augroup('Guard'),
+    group = api.nvim_create_augroup('Guard', {}),
     buffer = buf,
     callback = function(opt)
       require('guard.format').do_fmt(opt.buf)
@@ -121,7 +121,7 @@ local function do_fmt(buf)
       end
 
       local can_run = true
-      if config.ignore_patterns and ignored(buf, configs.ignore_patterns) then
+      if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
         can_run = false
       elseif config.ignore_error and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
         can_run = false
