@@ -1,5 +1,6 @@
-local ft_handler = require('guard.filetype')
 local util = require('guard.util')
+local ft_handler = require('guard.filetype')
+local events = require('guard.events')
 
 local function register_cfg_by_table(fts_with_cfg)
   for ft, cfg in pairs(fts_with_cfg or {}) do
@@ -23,6 +24,7 @@ local function resolve_multi_ft()
         ft_handler[item] = vim.deepcopy(ft_handler[key])
         retval[#retval + 1] = item
       end
+      ft_handler[key] = nil
     else
       retval[#retval + 1] = key
     end
@@ -37,13 +39,12 @@ local function setup(opt)
   }
 
   register_cfg_by_table(opt.ft)
-  local parsed = resolve_multi_ft()
 
   if opt.fmt_on_save then
-    util.watch_ft(parsed)
+    events.watch_ft(resolve_multi_ft())
   end
   if opt.lsp_as_default_formatter then
-    util.create_lspattach_autocmd(opt.fmt_on_save)
+    events.create_lspattach_autocmd(opt.fmt_on_save)
   end
 
   local lint = require('guard.lint')

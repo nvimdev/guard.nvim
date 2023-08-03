@@ -2,21 +2,10 @@ local api = vim.api
 ---@diagnostic disable-next-line: deprecated
 local uv = vim.version().minor >= 10 and vim.uv or vim.loop
 local spawn = require('guard.spawn').try_spawn
-local get_prev_lines = require('guard.util').get_prev_lines
+local util = require('guard.util')
+local get_prev_lines = util.get_prev_lines
 local filetype = require('guard.filetype')
 local formatter = require('guard.tools.formatter')
-local util = require('guard.util')
-
-local function attach_to_buf(buf)
-  api.nvim_create_autocmd('BufWritePre', {
-    group = api.nvim_create_augroup('Guard', {}),
-    buffer = buf,
-    callback = function(opt)
-      require('guard.format').do_fmt(opt.buf)
-    end,
-  })
-end
-
 
 local function ignored(buf, patterns)
   local fname = api.nvim_buf_get_name(buf)
@@ -163,6 +152,16 @@ local function do_fmt(buf)
       end
     end)
   end))
+end
+
+local function attach_to_buf(buf)
+  api.nvim_create_autocmd('BufWritePre', {
+    group = 'Guard',
+    buffer = buf,
+    callback = function(opt)
+      require('guard.format').do_fmt(opt.buf)
+    end,
+  })
 end
 
 return {
