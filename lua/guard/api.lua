@@ -15,7 +15,7 @@ local function disable(opts)
     return
   end
   local arg = opts.args
-  local _, bufnr = pcall(tonumber, arg)
+  local bufnr = tonumber(arg)
   if bufnr then
     local bufau = api.nvim_get_autocmds({ group = 'Guard', event = 'BufWritePre', buffer = bufnr })
     if #bufau ~= 0 then
@@ -47,7 +47,7 @@ local function enable(opts)
     return
   end
   local arg = opts.args
-  local _, bufnr = pcall(tonumber, arg)
+  local bufnr = tonumber(arg)
   if bufnr then
     local bufau = api.nvim_get_autocmds({ group = 'Guard', event = 'BufWritePre', buffer = bufnr })
     if #bufau == 0 then
