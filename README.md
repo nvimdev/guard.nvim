@@ -50,7 +50,7 @@ require('guard').setup({
 ```
 
 - Use `GuardFmt` to manually call format, when there is a visual selection only the selection is formatted.
-- Use `GuardDisable` to disable auto format, you can also disable for certain filetypes or buffers by using `GuardDisable lua` or `GuardDisable 1` (0 for current buffer)
+- Use `GuardDisable` disables auto format for the current buffer, you can also `GuardDisable lua` or `GuardDisable 16` (the buffer number)
 - Use `GuardEnable` to re-enable auto format, usage is the same as `GuardDisable`
 
 ### Builtin tools
