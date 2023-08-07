@@ -4,15 +4,8 @@ local events = require('guard.events')
 local format = require('guard.format')
 
 local function disable(opts)
-  if #opts.fargs == 0 then
-    local current = api.nvim_get_autocmds({ group = 'Guard', event = 'BufWritePre', buffer = api.nvim_get_current_buf() })
-    if #current ~= 0 then
-      api.nvim_del_autocmd(current[1].id)
-    end
-    return
-  end
   local arg = opts.args
-  local bufnr = tonumber(arg)
+  local bufnr = (#opts.fargs == 0) and api.nvim_get_current_buf() or tonumber(arg)
   if bufnr then
     local bufau = api.nvim_get_autocmds({ group = 'Guard', event = 'BufWritePre', buffer = bufnr })
     if #bufau ~= 0 then
@@ -33,16 +26,8 @@ local function disable(opts)
 end
 
 local function enable(opts)
-  if #opts.fargs == 0 then
-    local bufnr = api.nvim_get_current_buf()
-    local current = api.nvim_get_autocmds({ group = 'Guard', event = 'BufWritePre', buffer = bufnr })
-    if #current == 0 then
-      format.attach_to_buf(bufnr)
-    end
-    return
-  end
   local arg = opts.args
-  local bufnr = tonumber(arg)
+  local bufnr = (#opts.fargs == 0) and api.nvim_get_current_buf() or tonumber(arg)
   if bufnr then
     local bufau = api.nvim_get_autocmds({ group = 'Guard', event = 'BufWritePre', buffer = bufnr })
     if #bufau == 0 then
