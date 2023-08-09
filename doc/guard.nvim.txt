@@ -1,5 +1,4 @@
-*guard.nvim.txt*          For NVIM v0.8.0          Last change: 2023 August 08
-
+*guard.nvim.txt*          For NVIM v0.8.0          Last change: 2023 August 09
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -66,12 +65,9 @@ examples, more info below.
     })
 <
 
-Use `GuardFmt` to manually call format, use `GuardDisable` to diable auto
-format. and you can create a keymap like
-
->lua
-    vim.keymap.set({'n','v'}, '<cmd>GuardFmt<CR>')
-<
+- Use `GuardFmt` to manually call format, when there is a visual selection only the selection is formatted.
+- `GuardDisable` disables auto format for the current buffer, you can also `GuardDisable 16` (the buffer number)
+- Use `GuardEnable` to re-enable auto format, usage is the same as `GuardDisable`
 
 
 BUILTIN TOOLS ~
@@ -94,16 +90,17 @@ Table format for custom tool:
 
 >
     {
-        cmd              --string tool command
-        args             --table command arugments
-        fname            --string insert filename to args tail
-        stdin            --boolean pass buffer contents into stdin
-        timeout          --integer
-        ignore_pattern   --table ignore run format when pattern match
-        ignore_error     --when has lsp error ignore format
+        cmd              -- string: tool command
+        args             -- table: command arugments
+        fname            -- string: insert filename to args tail
+        stdin            -- boolean: pass buffer contents into stdin
+        timeout          -- integer
+        ignore_pattern   -- table: ignore run format when pattern match
+        ignore_error     -- boolean: when has lsp error ignore format
+        find             -- string: format if the file is found in the lsp root dir
     
         --special
-        fn       --function if fn is set other field will not take effect
+        fn       -- function: if fn is set other field will not take effect
     }
 <
 
@@ -117,7 +114,7 @@ LINTER
 
 TROUBLESHOOTING                                   *guard.nvim-troubleshooting*
 
-if guard does not auto format on save, run `checkhealth` first.
+If guard does not auto format on save, run `checkhealth` first.
 
 
 LICENSE MIT                                           *guard.nvim-license-mit*
