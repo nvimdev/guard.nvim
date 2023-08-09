@@ -70,7 +70,7 @@ local function find(startpath, patterns, root_dir)
   patterns = util.as_table(patterns)
   for _, pattern in ipairs(patterns) do
     if
-      #vim.fs.find(pattern, { upward = true, stop = root_dir or uv.os_homedir(), path = startpath })
+      #vim.fs.find(pattern, { upward = true, stop = root_dir or vim.env.HOME, path = startpath })
       > 0
     then
       return true
