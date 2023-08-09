@@ -57,4 +57,45 @@ M.mixformat = {
   fname = true,
 }
 
+M.djhtml = {
+  cmd = 'djhtml',
+  args = { '-' },
+  stdin = true
+}
+
+M.cbfmt = {
+  cmd = 'cbfmt',
+  args = { '--best-effort', '--stdin-filepath' },
+  stdin = true,
+  fname = true
+}
+
+M.shfmt = {
+  cmd = 'shfmt',
+  args = { '-filename' },
+  stdin = true,
+  fname = true
+}
+
+M.isort = {
+  cmd = 'isort',
+  args = { '-', '--stdout', '--filename' },
+  stdin = true,
+  fname = true
+}
+
+M.prettierd = {
+  cmd = 'prettierd',
+  args = { '--stdin-filepath' },
+  stdin = true,
+  fname = true
+}
+
+M.sql_formatter = {
+  cmd = 'sql-formatter',
+  args = { '--fix' },
+  fname = true,
+  stdout = false
+}
+
 return M
