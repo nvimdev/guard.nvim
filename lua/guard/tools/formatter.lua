@@ -91,11 +91,9 @@ M.prettierd = {
   fname = true
 }
 
-M.sql_formatter = {
+M['sql-formatter'] = {
   cmd = 'sql-formatter',
-  args = { '--fix' },
-  fname = true,
-  stdout = false
+  stdin = true
 }
 
 return M

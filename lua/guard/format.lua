@@ -121,6 +121,7 @@ local function do_fmt(buf)
       if can_run then
         if config.cmd then
           config.lines = new_lines and new_lines or prev_lines
+          config.args = config.args or {}
           config.args[#config.args + 1] = config.fname and fname or nil
           config.cwd = cwd
           reload = (not reload and config.stdout == false) and true or false
