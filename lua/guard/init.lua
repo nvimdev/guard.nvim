@@ -40,8 +40,9 @@ local function setup(opt)
 
   register_cfg_by_table(opt.ft)
 
+  local all_filetypes = resolve_multi_ft()
   if opt.fmt_on_save then
-    events.watch_ft(resolve_multi_ft())
+    events.watch_ft(all_filetypes)
   end
   if opt.lsp_as_default_formatter then
     events.create_lspattach_autocmd(opt.fmt_on_save)
