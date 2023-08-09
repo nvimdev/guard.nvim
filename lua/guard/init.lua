@@ -1,37 +1,11 @@
-local api = vim.api
-local group = api.nvim_create_augroup('Guard', { clear = true })
-local fts_config = require('guard.filetype')
 local util = require('guard.util')
+local ft_handler = require('guard.filetype')
+local events = require('guard.events')
 
-local function fmt_event(buf)
-  api.nvim_create_autocmd('BufWritePre', {
-    group = group,
-    buffer = buf,
-    callback = function(opt)
-      require('guard.format').do_fmt(opt.buf)
-    end,
-  })
-end
-
-local function register_event(fts)
-  api.nvim_create_autocmd('FileType', {
-    group = group,
-    pattern = fts,
-    callback = function(args)
-      fmt_event(args.buf)
-    end,
-    desc = 'guard',
-  })
-
-  api.nvim_create_user_command('GuardDisable', function()
-    pcall(api.nvim_del_augroup_by_id, group)
-  end, {})
-end
-
-local function parse_setup_cfg(fts_with_cfg)
+local function register_cfg_by_table(fts_with_cfg)
   for ft, cfg in pairs(fts_with_cfg or {}) do
     if not vim.tbl_isempty(cfg) then
-      local handler = fts_config(ft)
+      local handler = ft_handler(ft)
       local keys = vim.tbl_keys(cfg)
       vim.tbl_map(function(key)
         handler:register(key, util.as_table(cfg[key]))
@@ -40,16 +14,17 @@ local function parse_setup_cfg(fts_with_cfg)
   end
 end
 
-local function get_fts_keys()
-  local keys = vim.tbl_keys(fts_config)
+local function resolve_multi_ft()
+  local keys = vim.tbl_keys(ft_handler)
   local retval = {}
   vim.tbl_map(function(key)
     if key:find(',') then
       local t = vim.split(key, ',')
       for _, item in ipairs(t) do
-        fts_config[item] = vim.deepcopy(fts_config[key])
+        ft_handler[item] = vim.deepcopy(ft_handler[key])
         retval[#retval + 1] = item
       end
+      ft_handler[key] = nil
     else
       retval[#retval + 1] = key
     end
@@ -63,45 +38,17 @@ local function setup(opt)
     lsp_as_default_formatter = false,
   }
 
-  parse_setup_cfg(opt.ft)
-  local fts = get_fts_keys()
+  register_cfg_by_table(opt.ft)
 
   if opt.fmt_on_save then
-    register_event(fts)
+    events.watch_ft(resolve_multi_ft())
   end
-
   if opt.lsp_as_default_formatter then
-    api.nvim_create_autocmd('LspAttach', {
-      callback = function(args)
-        local client = vim.lsp.get_client_by_id(args.data.client_id)
-        ---@diagnostic disable-next-line: need-check-nil
-        if not client.supports_method('textDocument/formatting') then
-          return
-        end
-        local fthandler = require('guard.filetype')
-        if fthandler[vim.bo[args.buf].filetype] and fthandler[vim.bo[args.buf].filetype].format then
-          table.insert(fthandler[vim.bo[args.buf].filetype].format, 1, 'lsp')
-        else
-          fthandler(vim.bo[args.buf].filetype):fmt('lsp')
-        end
-
-        if
-          opt.fmt_on_save
-          and #api.nvim_get_autocmds({
-              group = 'Guard',
-              event = 'FileType',
-              pattern = vim.bo[args.buf].filetype,
-            })
-            == 0
-        then
-          fmt_event(args.buf)
-        end
-      end,
-    })
+    events.create_lspattach_autocmd(opt.fmt_on_save)
   end
 
   local lint = require('guard.lint')
-  for ft, conf in pairs(fts_config) do
+  for ft, conf in pairs(ft_handler) do
     if conf.linter then
       for i, entry in ipairs(conf.linter) do
         if type(entry) == 'string' then
