@@ -33,11 +33,18 @@ local function spawn(opt)
     end)
   end
 
+  opt.env = vim.tbl_extend('force', uv.os_environ(), opt.env or {})
+  local env = {}
+  for k, v in pairs(opt.env) do
+    table.insert(env, ('%s=%s'):format(k, tostring(v)))
+  end
+  opt.env = env
+
   handle = uv.spawn(opt.cmd, {
     stdio = { stdin, stdout, stderr },
     args = opt.args,
     cwd = opt.cwd,
-    env = opt.env_flat or nil,
+    env = opt.env,
   }, function(exit_code, signal)
     if timeout then
       timeout:stop()

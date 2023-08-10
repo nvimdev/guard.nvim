@@ -42,6 +42,18 @@ local function box()
     return self
   end
 
+  function tbl:env(...)
+    local tool = self[current][#self[current]]
+    if type(tool) == 'string' then
+      tool = current == 'format' and require('guard.tools.formatter')[tool]
+        or require('guard.tools.linter.' .. tool)
+    end
+    -- TODO: validate?
+    -- TODO: what is ...
+    tool.env = ...
+    return self
+  end
+
   function tbl:key_alias(key)
     local _t = {
       ['lint'] = function()
