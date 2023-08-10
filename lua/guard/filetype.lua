@@ -42,6 +42,20 @@ local function box()
     return self
   end
 
+  function tbl:env(...)
+    local tool = self[current][#self[current]]
+    if type(tool) == 'string' then
+      tool = current == 'format' and require('guard.tools.formatter')[tool]
+        or require('guard.tools.linter.' .. tool)
+    end
+    tool.env = {}
+    local env = vim.tbl_extend('force', vim.uv.os_environ(), ... or {})
+    for k, v in pairs(env) do
+      table.insert(tool.env, ('%s=%s'):format(k, tostring(v)))
+    end
+    return self
+  end
+
   function tbl:key_alias(key)
     local _t = {
       ['lint'] = function()
