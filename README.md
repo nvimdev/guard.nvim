@@ -7,40 +7,22 @@ Async formatting and linting utility for neovim.
 - Blazingly fast
 - Async using coroutine and luv spawn
 - Builtin support for popular formatters and linters
+- Easy configuration for custom tools
 - Light-weight
 
 ## Usage
 
-Use any plugin manager you like. Guard is configured in format like this:
-
-```lua
-ft('c'):fmt('tool-1')
-       :append('tool-2')
-       :lint('lint-tool-1')
-       :append('lint-tool-2')
-```
-
-if the tool is not supported, you will have to pass in a table instead of a string, see [here](https://github.com/nvimdev/guard.nvim/tree/main/lua%2Fguard%2Ftools) for some examples, more info below.
+Use any plugin manager you like. Guard is configured as follows:
 
 ```lua
 local ft = require('guard.filetype')
 
--- use clang-format and clang-tidy for c files
-ft('c'):fmt('clang-format')
-       :lint('clang-tidy')
+ft('lang'):fmt('format-tool-1')
+       :append('format-tool-2')
+       :lint('lint-tool-1')
+       :append('lint-tool-2')
 
--- use stylua to format lua files and no linter
-ft('lua'):fmt('stylua')
-
--- use lsp to format first then use golines to format
-ft('go'):fmt('lsp')
-        :append('golines')
-        :lint('golangci')
-
--- multiple files register
-ft('typescript,javascript,typescriptreact'):fmt('prettier')
-
--- call setup LAST
+-- Call setup() LAST!
 require('guard').setup({
     -- the only options for the setup function
     fmt_on_save = true,
@@ -53,7 +35,60 @@ require('guard').setup({
 - `GuardDisable` disables auto format for the current buffer, you can also `GuardDisable 16` (the buffer number)
 - Use `GuardEnable` to re-enable auto format, usage is the same as `GuardDisable`
 
-### Builtin Tools
+### Example Configuration
+
+Format c files with clang-format and lint with clang-tidy:
+
+```lua
+ft('c'):fmt('clang-format')
+       :lint('clang-tidy')
+```
+
+Or use lsp to format go files first, then format with golines, then lint with golangci:
+
+```lua
+ft('go'):fmt('lsp')
+        :append('golines')
+        :lint('golangci')
+```
+
+Register multiple filetypes to a single linter or formatter:
+
+```lua
+ft('typescript,javascript,typescriptreact'):fmt('prettier')
+```
+
+### Custom Configuration
+
+Easily configure your custom formatter if not in the defaults:
+
+```
+{
+    cmd              -- string: tool command
+    args             -- table: command arugments
+    fname            -- string: insert filename to args tail
+    stdin            -- boolean: pass buffer contents into stdin
+    timeout          -- integer
+    ignore_pattern   -- table: ignore run format when pattern match
+    ignore_error     -- boolean: when has lsp error ignore format
+    find             -- string: format if the file is found in the lsp root dir
+
+    --special
+}
+```
+
+For example, format your assembly with [asmfmt](https://github.com/klauspost/asmfmt):
+
+```lua
+ft('asm'):fmt({
+    cmd = 'asmfmt',
+    stdin = true
+})
+```
+
+Consult the [builtin tools](https://github.com/nvimdev/guard.nvim/tree/main/lua%2Fguard%2Ftools) if needed.
+
+### Supported Tools
 
 #### Formatters
 
@@ -80,25 +115,7 @@ require('guard').setup({
 - [swift-format](https://github.com/apple/swift-format)
 - [sql-formatter](https://github.com/sql-formatter-org/sql-formatter)
 
-Table format for custom tool:
-
-```
-{
-    cmd              -- string: tool command
-    args             -- table: command arugments
-    fname            -- string: insert filename to args tail
-    stdin            -- boolean: pass buffer contents into stdin
-    timeout          -- integer
-    ignore_pattern   -- table: ignore run format when pattern match
-    ignore_error     -- boolean: when has lsp error ignore format
-    find             -- string: format if the file is found in the lsp root dir
-
-    --special
-    fn       -- function: if fn is set other field will not take effect
-}
-```
-
-#### Linter
+#### Linters
 
 - `clang-tidy`
 - `Pylint`
