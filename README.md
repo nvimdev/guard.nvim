@@ -1,6 +1,6 @@
-## guard.nvim
+# guard.nvim
 
-Async formatting and linting utility for neovim. 
+Async formatting and linting utility for neovim.
 
 ## Features
 
@@ -49,16 +49,16 @@ require('guard').setup({
 })
 ```
 
-Use `GuardFmt` to manually call format, use `GuardDisable` to diable auto format. and you can create
-a keymap like
+Use `GuardFmt` to manually call format, use `GuardDisable` to diable auto format.
+Create a keymap like so:
 
 ```lua
-vim.keymap.set({'n','v'}, '<cmd>GuardFmt<CR>')
+vim.keymap.set({'n','v'}, '<cmd>GuardFmt<cr>')
 ```
 
-### Builtin tools
+### Builtin Tools
 
-#### Formatter
+#### Formatters
 
 - `lsp` use `vim.lsp.buf.format`
 - `clang-format`
@@ -95,6 +95,6 @@ Table format for custom tool:
 
 ## Troubleshooting
 
-if guard does not auto format on save, run `checkhealth` first.
+If guard does not auto format on save, run `checkhealth` first.
 
 ## License MIT
