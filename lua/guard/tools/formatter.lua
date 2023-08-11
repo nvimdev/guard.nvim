@@ -35,6 +35,12 @@ M.fish_indent = {
   stdin = true,
 }
 
+M.fnlfmt = {
+  cmd = 'fnlfmt',
+  args = { '-' },
+  stdin = true,
+}
+
 M.gofmt = {
   cmd = 'gofmt',
   stdin = true,
