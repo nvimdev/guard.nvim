@@ -100,9 +100,10 @@ Table format for custom tool:
 
 #### Linter
 
-- `clang-tidy`
-- `Pylint`
-- `rubocop`
+- [clang-tidy](https://clang.llvm.org/extra/clang-tidy/)
+- [pylint](https://github.com/PyCQA/pylint)
+- [rubocop](https://github.com/rubocop/rubocop)
+- [shellcheck](https://github.com/koalaman/shellcheck)
 
 ## Troubleshooting
 
