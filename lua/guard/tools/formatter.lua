@@ -72,16 +72,13 @@ M.cbfmt = {
 
 M.shfmt = {
   cmd = 'shfmt',
-  args = { '-filename' },
   stdin = true,
-  fname = true
 }
 
 M.isort = {
   cmd = 'isort',
-  args = { '-', '--stdout', '--filename' },
-  stdin = true,
-  fname = true
+  args = { '-' },
+  stdin = true
 }
 
 M.prettierd = {
@@ -93,6 +90,27 @@ M.prettierd = {
 
 M['sql-formatter'] = {
   cmd = 'sql-formatter',
+  stdin = true
+}
+
+M.fish_indent = {
+  cmd = 'fish_indent',
+  stdin = true
+}
+
+M.swiftformat = {
+  cmd = 'swiftformat',
+  stdin = true
+}
+
+M.gofmt = {
+  cmd = 'gofmt',
+  stdin = true
+}
+
+M['google-java-format'] = {
+  cmd = 'google-java-format',
+  args = { '-' },
   stdin = true
 }
 
