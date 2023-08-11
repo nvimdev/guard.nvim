@@ -49,12 +49,9 @@ require('guard').setup({
 })
 ```
 
-Use `GuardFmt` to manually call format, use `GuardDisable` to diable auto format.
-Create a keymap like so:
-
-```lua
-vim.keymap.set({'n','v'}, '<cmd>GuardFmt<cr>')
-```
+- Use `GuardFmt` to manually call format, when there is a visual selection only the selection is formatted.
+- `GuardDisable` disables auto format for the current buffer, you can also `GuardDisable 16` (the buffer number)
+- Use `GuardEnable` to re-enable auto format, usage is the same as `GuardDisable`
 
 ### Builtin Tools
 
@@ -87,16 +84,17 @@ Table format for custom tool:
 
 ```
 {
-    cmd              --string tool command
-    args             --table command arugments
-    fname            --string insert filename to args tail
-    stdin            --boolean pass buffer contents into stdin
-    timeout          --integer
-    ignore_pattern   --table ignore run format when pattern match
-    ignore_error     --when has lsp error ignore format
+    cmd              -- string: tool command
+    args             -- table: command arugments
+    fname            -- string: insert filename to args tail
+    stdin            -- boolean: pass buffer contents into stdin
+    timeout          -- integer
+    ignore_pattern   -- table: ignore run format when pattern match
+    ignore_error     -- boolean: when has lsp error ignore format
+    find             -- string: format if the file is found in the lsp root dir
 
     --special
-    fn       --function if fn is set other field will not take effect
+    fn       -- function: if fn is set other field will not take effect
 }
 ```
 
