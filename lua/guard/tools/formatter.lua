@@ -65,6 +65,11 @@ M.mixformat = {
   fname = true,
 }
 
+M.pg_format = {
+  cmd = 'pg_format',
+  stdin = true
+}
+
 M.prettier = {
   cmd = 'prettier',
   args = { '--stdin-filepath' },
@@ -106,6 +111,11 @@ M.stylua = {
 M.swiftformat = {
   cmd = 'swiftformat',
   stdin = true,
+}
+
+M['swift-format'] = {
+  cmd = 'swift-format',
+  stdin = true
 }
 
 M['sql-formatter'] = {
