@@ -61,14 +61,26 @@ vim.keymap.set({'n','v'}, '<cmd>GuardFmt<cr>')
 #### Formatters
 
 - `lsp` use `vim.lsp.buf.format`
-- `clang-format`
-- `prettier`
-- `rustfmt`
-- `stylua`
-- `golines`
-- `black`
-- `rubocop`
-- `mixformat`
+- [black](https://github.com/psf/black)
+- [cbfmt](https://github.com/lukas-reineke/cbfmt)
+- [clang-format](https://www.kernel.org/doc/html/latest/process/clang-format.html)
+- [djhtml](https://github.com/rtts/djhtml)
+- [fish_indent](https://fishshell.com/docs/current/cmds/fish_indent.html)
+- [gofmt](https://pkg.go.dev/cmd/gofmt)
+- [golines](https://pkg.go.dev/github.com/segmentio/golines)
+- [google-java-format](https://github.com/google/google-java-format)
+- [isort](https://github.com/PyCQA/isort)
+- [mixformat](https://github.com/elixir-lang/elixir/)
+- [pg_format](https://github.com/darold/pgFormatter)
+- [prettier](https://github.com/prettier/prettier)
+- [prettierd](https://github.com/fsouza/prettierd)
+- [rubocop](https://github.com/rubocop/rubocop)
+- [rustfmt](https://github.com/rust-lang/rustfmt)
+- [shfmt](https://github.com/mvdan/sh)
+- [stylua](https://github.com/JohnnyMorganz/StyLua)
+- [swiftformat](https://github.com/nicklockwood/SwiftFormat)
+- [swift-format](https://github.com/apple/swift-format)
+- [sql-formatter](https://github.com/sql-formatter-org/sql-formatter)
 
 Table format for custom tool:
 
