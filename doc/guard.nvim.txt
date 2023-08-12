@@ -1,4 +1,4 @@
-*guard.nvim.txt*          For NVIM v0.8.0          Last change: 2023 August 11
+*guard.nvim.txt*          For NVIM v0.8.0          Last change: 2023 August 12
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -120,9 +120,10 @@ Table format for custom tool:
 
 LINTER
 
-- `clang-tidy`
-- `Pylint`
-- `rubocop`
+- clang-tidy <https://clang.llvm.org/extra/clang-tidy/>
+- pylint <https://github.com/PyCQA/pylint>
+- rubocop <https://github.com/rubocop/rubocop>
+- shellcheck <https://github.com/koalaman/shellcheck>
 
 
 TROUBLESHOOTING                        *guard.nvim-guard.nvim-troubleshooting*
