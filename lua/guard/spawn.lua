@@ -37,7 +37,7 @@ local function spawn(opt)
     stdio = { stdin, stdout, stderr },
     args = opt.args,
     cwd = opt.cwd,
-    env = opt.env_flat or nil,
+    env = opt.env,
   }, function(exit_code, signal)
     if timeout then
       timeout:stop()
