@@ -64,9 +64,15 @@ M.isort = {
   stdin = true,
 }
 
+M.latexindent = {
+  cmd = 'latexindent',
+  args = { '-g', '/dev/null' },
+  stdin = true,
+}
+
 M.mixformat = {
   cmd = 'mix',
-  args = {'format', '-', '--stdin-filename'},
+  args = { 'format', '-', '--stdin-filename' },
   stdin = true,
   fname = true,
 }
