@@ -156,17 +156,18 @@ describe('filetype module', function()
     ft('c')
       :fmt({
         cmd = 'clang-format',
-        args = '--style=Mozilla',
+        args = { '--style=Mozilla' },
         stdin = true,
       })
       :extra('--verbose')
       :lint('clang-tidy')
       :extra('--fix')
+
     same({
       cmd = 'clang-format',
-      args = { '--style=Mozilla', '--verbose' },
+      args = { '--verbose', '--style=Mozilla' },
       stdin = true,
-    }, require('guard.tools.formatter')['clang-format'])
+    }, require('guard.filetype').c.format[1])
 
     same({
       '--fix',
