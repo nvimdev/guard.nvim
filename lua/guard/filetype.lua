@@ -38,7 +38,7 @@ local function box()
       tool = current == 'format' and require('guard.tools.formatter')[tool]
         or require('guard.tools.linter.' .. tool)
     end
-    tool.args = vim.list_extend({ ... }, tool.args)
+    tool.args = vim.list_extend({ ... }, tool.args or {})
     return self
   end
 
