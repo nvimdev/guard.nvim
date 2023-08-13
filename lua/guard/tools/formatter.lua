@@ -66,7 +66,6 @@ M.isort = {
 
 M.latexindent = {
   cmd = 'latexindent',
-  args = { '-g', '/dev/null' },
   stdin = true,
 }
 
