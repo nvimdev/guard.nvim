@@ -134,4 +134,10 @@ M['sql-formatter'] = {
   stdin = true,
 }
 
+M.zigfmt = {
+  cmd = 'zig',
+  args = { 'fmt', '--stdin' },
+  stdin = true,
+}
+
 return M
