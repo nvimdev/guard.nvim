@@ -16,7 +16,7 @@ return {
       error = 1,
       warning = 2,
       info = 3,
-      style = 4
+      style = 4,
     }
 
     local diags = {}
@@ -33,5 +33,5 @@ return {
     end, comments)
 
     return diags
-  end
+  end,
 }

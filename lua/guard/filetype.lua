@@ -44,7 +44,7 @@ local function box()
 
   function tbl:env(env)
     vim.validate({
-      env = { env, 'table' }
+      env = { env, 'table' },
     })
     if vim.tbl_count(env) == 0 then
       return self
@@ -57,7 +57,7 @@ local function box()
     tool.env = {}
     env = vim.tbl_extend('force', vim.uv.os_environ(), env or {})
     for k, v in pairs(env) do
-      tool.env[#tool.env + 1 ] = ('%s=%s'):format(k, tostring(v))
+      tool.env[#tool.env + 1] = ('%s=%s'):format(k, tostring(v))
     end
     return self
   end

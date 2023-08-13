@@ -153,10 +153,18 @@ describe('filetype module', function()
   end)
 
   it('can add extra command arguments', function()
-    ft('c'):fmt('clang-format'):extra('--verbose'):lint('clang-tidy'):extra('--fix')
+    ft('c')
+      :fmt({
+        cmd = 'clang-format',
+        args = '--style=Mozilla',
+        stdin = true,
+      })
+      :extra('--verbose')
+      :lint('clang-tidy')
+      :extra('--fix')
     same({
       cmd = 'clang-format',
-      args = { '--verbose' },
+      args = { '--style=Mozilla', '--verbose' },
       stdin = true,
     }, require('guard.tools.formatter')['clang-format'])
 

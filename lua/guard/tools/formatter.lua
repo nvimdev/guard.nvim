@@ -27,7 +27,7 @@ M['clang-format'] = {
 M.djhtml = {
   cmd = 'djhtml',
   args = { '-' },
-  stdin = true
+  stdin = true,
 }
 
 M.fish_indent = {
@@ -78,7 +78,7 @@ M.mixformat = {
 
 M.pg_format = {
   cmd = 'pg_format',
-  stdin = true
+  stdin = true,
 }
 
 M.prettier = {
@@ -126,7 +126,7 @@ M.swiftformat = {
 
 M['swift-format'] = {
   cmd = 'swift-format',
-  stdin = true
+  stdin = true,
 }
 
 M['sql-formatter'] = {
