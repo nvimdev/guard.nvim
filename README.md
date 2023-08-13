@@ -72,6 +72,7 @@ Easily configure your custom formatter if not in the defaults:
     ignore_pattern   -- table: ignore run format when pattern match
     ignore_error     -- boolean: when has lsp error ignore format
     find             -- string: format if the file is found in the lsp root dir
+    env              -- table: environment variables passed to cmd (key value pair)
 
     --special
     fn       -- function: if fn is set other field will not take effect
@@ -105,6 +106,7 @@ Consult the [builtin tools](https://github.com/nvimdev/guard.nvim/tree/main/lua%
 - [google-java-format](https://github.com/google/google-java-format)
 - [isort](https://github.com/PyCQA/isort)
 - [mixformat](https://github.com/elixir-lang/elixir/)
+- [latexindent](https://github.com/cmhughes/latexindent.pl)
 - [pg_format](https://github.com/darold/pgFormatter)
 - [prettier](https://github.com/prettier/prettier)
 - [prettierd](https://github.com/fsouza/prettierd)
