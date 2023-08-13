@@ -156,7 +156,7 @@ describe('filetype module', function()
     ft('c'):fmt('clang-format'):extra('--verbose'):lint('clang-tidy'):extra('--fix')
     same({
       cmd = 'clang-format',
-      args = { '--verbose', '-style=file' },
+      args = { '--verbose' },
       stdin = true,
     }, require('guard.tools.formatter')['clang-format'])
 
