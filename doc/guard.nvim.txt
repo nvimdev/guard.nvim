@@ -1,4 +1,4 @@
-*guard.nvim.txt*          For NVIM v0.8.0          Last change: 2023 August 12
+*guard.nvim.txt*          For NVIM v0.8.0          Last change: 2023 August 13
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -89,6 +89,7 @@ Easily configure your custom formatter if not in the defaults:
         ignore_pattern   -- table: ignore run format when pattern match
         ignore_error     -- boolean: when has lsp error ignore format
         find             -- string: format if the file is found in the lsp root dir
+        env              -- table: environment variables passed to cmd (key value pair)
     
         --special
         fn       -- function: if fn is set other field will not take effect
@@ -127,6 +128,7 @@ FORMATTERS
 - google-java-format <https://github.com/google/google-java-format>
 - isort <https://github.com/PyCQA/isort>
 - mixformat <https://github.com/elixir-lang/elixir/>
+- latexindent <https://github.com/cmhughes/latexindent.pl>
 - pg_format <https://github.com/darold/pgFormatter>
 - prettier <https://github.com/prettier/prettier>
 - prettierd <https://github.com/fsouza/prettierd>
