@@ -46,6 +46,11 @@ M.gofmt = {
   stdin = true,
 }
 
+M.goimports = {
+  cmd = 'goimports',
+  stdin = true,
+}
+
 M.golines = {
   cmd = 'golines',
   args = { '--max-len=80' },
