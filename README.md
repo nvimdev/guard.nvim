@@ -121,6 +121,7 @@ Consult the [builtin tools](https://github.com/nvimdev/guard.nvim/tree/main/lua%
 #### Linters
 
 - [clang-tidy](https://clang.llvm.org/extra/clang-tidy/)
+- [luacheck](https://github.com/lunarmodules/luacheck)
 - [pylint](https://github.com/PyCQA/pylint)
 - [rubocop](https://github.com/rubocop/rubocop)
 - [shellcheck](https://github.com/koalaman/shellcheck)
