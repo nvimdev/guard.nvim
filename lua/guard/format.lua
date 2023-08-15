@@ -13,7 +13,7 @@ local function ignored(buf, patterns)
     return false
   end
 
-  for _, pattern in pairs(patterns) do
+  for _, pattern in pairs(util.as_table(patterns)) do
     if fname:find(pattern) then
       return true
     end
