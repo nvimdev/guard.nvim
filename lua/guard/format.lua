@@ -145,7 +145,7 @@ local function do_fmt(buf)
           --restore
           config.lines = nil
           config.cwd = nil
-          if config.args[#config.args] == fname then
+          if config.fname then
             config.args[#config.args] = nil
           end
         elseif config.fn then

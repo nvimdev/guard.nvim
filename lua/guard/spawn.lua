@@ -13,6 +13,7 @@ local function on_failed(msg)
   end)
 end
 
+--TODO: replace by vim.system when neovim 0.10 released
 local function spawn(opt)
   assert(opt, 'missing opt param')
   local co = assert(coroutine.running())
