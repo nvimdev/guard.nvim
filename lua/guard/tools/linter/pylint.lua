@@ -1,27 +1,21 @@
-local diag_fmt = require('guard.lint').diag_fmt
+local lint = require('guard.lint')
+
 return {
   cmd = 'pylint',
-  args = { '--from-stdin' },
+  args = { '--from-stdin', '--output-format', 'json' },
   stdin = true,
-  output_fmt = function(result, buf)
-    local output = vim.split(result, '\n')
-    local patterns = {
-      'E%d+',
-      'W%d+',
-      'C%d+',
-    }
-    local diags = {}
-    for _, line in ipairs(output) do
-      for i, pattern in ipairs(patterns) do
-        if line:find(pattern) then
-          local pos = line:match('py:(%d+:%d+)')
-          local lnum, col = unpack(vim.split(pos, ':'))
-          local mes = line:match('%d:%s(.*)')
-          diags[#diags + 1] = diag_fmt(buf, tonumber(lnum) - 1, tonumber(col), mes, i, 'pylint')
-        end
-      end
-    end
-
-    return diags
-  end,
+  parse = lint.from_json({
+    attributes = {
+      severity = 'type',
+      code = 'symbol',
+    },
+    severities = {
+      -- https://pylint.readthedocs.io/en/stable/user_guide/usage/output.html
+      convention = lint.severities.info,
+      refactor = lint.severities.info,
+      informational = lint.severities.info,
+      fatal = lint.severities.error,
+    },
+    source = 'pylint',
+  }),
 }
