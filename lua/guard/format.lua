@@ -172,7 +172,7 @@ local function do_fmt(buf)
 end
 
 local function attach_to_buf(buf)
-  api.nvim_create_autocmd('BufWritePre', {
+  api.nvim_create_autocmd('BufWritePost', {
     group = 'Guard',
     buffer = buf,
     callback = function(opt)
