@@ -74,7 +74,7 @@ local function update_buffer(bufnr, new_lines, srow, erow)
     end
     api.nvim_buf_set_lines(bufnr, s, e, false, replacement)
   end
-  api.nvim_command('silent! noautocmd write!')
+  vim.cmd.update()
   local mode = api.nvim_get_mode().mode
   if mode == 'v' or 'V' then
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', true)
