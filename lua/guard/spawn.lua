@@ -13,6 +13,13 @@ local function on_failed(msg)
   end)
 end
 
+local function exit_code_valid(check_exit_code, exit_code)
+  if check_exit_code then
+    return check_exit_code(exit_code)
+  end
+  return exit_code == 0
+end
+
 --TODO: replace by vim.system when neovim 0.10 released
 local function spawn(opt)
   assert(opt, 'missing opt param')
@@ -66,7 +73,12 @@ local function spawn(opt)
       end
     end)
 
-    coroutine.resume(co, table.concat(chunks))
+    if exit_code_valid(opt.check_exit_code, exit_code) then
+      coroutine.resume(co, table.concat(chunks))
+    else -- fail silently
+      coroutine.resume(co)
+      return
+    end
   end)
 
   if not handle then

@@ -90,7 +90,8 @@ Easily configure your custom formatter if not in the defaults:
         ignore_error     -- boolean: when has lsp error ignore format
         find             -- string: format if the file is found in the lsp root dir
         env              -- table: environment variables passed to cmd (key value pair)
-    
+        check_exit_code  -- function: ignore format if return false
+
         --special
         fn       -- function: if fn is set other field will not take effect
     }
