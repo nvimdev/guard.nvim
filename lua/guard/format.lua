@@ -125,16 +125,16 @@ local function do_fmt(buf)
         config = formatter[config]
       end
 
-      local can_run = true
+      local allow = true
       if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
-        can_run = false
+        allow = false
       elseif config.ignore_error and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
-        can_run = false
+        allow = false
       elseif config.find and not find(startpath, config.find, root_dir) then
-        can_run = false
+        allow = false
       end
 
-      if can_run then
+      if allow then
         if config.cmd then
           config.lines = new_lines and new_lines or prev_lines
           config.args = config.args or {}
