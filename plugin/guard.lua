@@ -9,7 +9,7 @@ vim.api.nvim_create_user_command('GuardDisable', function(opts)
   local arg = opts.args
   local bufnr = (#opts.fargs == 0) and api.nvim_get_current_buf() or tonumber(arg)
   if bufnr then
-    local bufau = api.nvim_get_autocmds({ group = 'Guard', event = 'BufWritePost', buffer = bufnr })
+    local bufau = api.nvim_get_autocmds({ group = 'Guard', event = 'BufWritePre', buffer = bufnr })
     if #bufau ~= 0 then
       api.nvim_del_autocmd(bufau[1].id)
     end
@@ -19,7 +19,7 @@ vim.api.nvim_create_user_command('GuardEnable', function(opts)
   local arg = opts.args
   local bufnr = (#opts.fargs == 0) and api.nvim_get_current_buf() or tonumber(arg)
   if bufnr then
-    local bufau = api.nvim_get_autocmds({ group = 'Guard', event = 'BufWritePost', buffer = bufnr })
+    local bufau = api.nvim_get_autocmds({ group = 'Guard', event = 'BufWritePre', buffer = bufnr })
     if #bufau == 0 then
       require('guard.format').attach_to_buf(bufnr)
     end
