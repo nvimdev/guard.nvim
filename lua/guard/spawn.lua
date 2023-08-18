@@ -70,7 +70,7 @@ local function spawn(opt)
   end)
 
   if not handle then
-    print('Failed to spawn process ' .. opt.cmd)
+    on_failed('Failed to spawn process ' .. opt.cmd)
     return
   end
 
