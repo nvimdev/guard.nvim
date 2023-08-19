@@ -102,10 +102,12 @@ local function do_fmt(buf)
   end
   local srow = 0
   local erow = -1
+  local range
   local mode = api.nvim_get_mode().mode
   if mode == 'V' or mode == 'v' then
-    srow = vim.fn.getpos('v')[2] - 1
-    erow = vim.fn.getpos('.')[2]
+    range = util.range_from_selection(buf, mode)
+    srow = range.start.line - 1
+    erow = range['end'].line
   end
   local prev_lines = util.get_prev_lines(buf, srow, erow)
 
@@ -149,7 +151,7 @@ local function do_fmt(buf)
             config.args[#config.args] = nil
           end
         elseif config.fn then
-          config.fn()
+          config.fn(buf, range)
           if i == #fmt_configs then
             return
           end

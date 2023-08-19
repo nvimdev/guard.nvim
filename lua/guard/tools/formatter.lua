@@ -1,8 +1,8 @@
 local M = {}
 
 M.lsp = {
-  fn = function(bufnr)
-    vim.lsp.buf.format({ bufnr = bufnr })
+  fn = function(bufnr, range)
+    vim.lsp.buf.format({ bufnr = bufnr, range = range })
   end,
 }
 
