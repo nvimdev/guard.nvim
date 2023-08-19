@@ -9,7 +9,7 @@ end
 
 local function on_failed(msg)
   vim.schedule(function()
-    vim.notify(msg, vim.log.levels.ERROR)
+    vim.notify('[Guard] ' .. msg, vim.log.levels.ERROR)
   end)
 end
 
@@ -19,6 +19,7 @@ local function spawn(opt)
   local co = assert(coroutine.running())
 
   local chunks = {}
+  local num_stderr_chunks = 0
   local stdin = opt.lines and assert(uv.new_pipe()) or nil
   local stdout = assert(uv.new_pipe())
   local stderr = assert(uv.new_pipe())
@@ -55,7 +56,7 @@ local function spawn(opt)
       check:stop()
       if killed then
         on_failed(
-          ('Process %s was killed because it reached the timeout signal %s code %s'):format(
+          ('process %s was killed because it reached the timeout signal %s code %s'):format(
             opt.cmd,
             signal,
             exit_code
@@ -66,11 +67,17 @@ local function spawn(opt)
       end
     end)
 
-    coroutine.resume(co, table.concat(chunks))
+    if exit_code == 0 and num_stderr_chunks == 0 then
+      coroutine.resume(co, table.concat(chunks))
+    else
+      on_failed(('process %s exited with non-zero exit code %s'):format(opt.cmd, exit_code))
+      coroutine.resume(co)
+      return
+    end
   end)
 
   if not handle then
-    on_failed('Failed to spawn process ' .. opt.cmd)
+    on_failed('failed to spawn process ' .. opt.cmd)
     return
   end
 
@@ -88,8 +95,11 @@ local function spawn(opt)
     end
   end)
 
-  stderr:read_start(function(err)
+  stderr:read_start(function(err, data)
     assert(not err, err)
+    if data then
+      num_stderr_chunks = num_stderr_chunks + 1
+    end
   end)
 
   return (coroutine.yield())
