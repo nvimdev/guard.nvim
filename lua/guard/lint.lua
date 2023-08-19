@@ -123,10 +123,15 @@ local function from_json(opts)
     end
 
     vim.tbl_map(function(mes)
+      local lnum = type(opts.attributes.lnum) == 'function' and opts.attributes.lnum(mes)
+        or mes[opts.attributes.lnum]
+      local col = type(opts.attributes.col) == 'function' and opts.attributes.col(mes)
+        or mes[opts.attributes.col]
+
       diags[#diags + 1] = diag_fmt(
         buf,
-        tonumber(mes[opts.attributes.lnum] - opts.offset),
-        tonumber(mes[opts.attributes.col] - opts.offset),
+        tonumber(lnum) - opts.offset,
+        tonumber(col) - opts.offset,
         ('%s [%s]'):format(mes[opts.attributes.message], mes[opts.attributes.code]),
         opts.severities[mes[opts.attributes.severity]],
         opts.source
