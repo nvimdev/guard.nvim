@@ -106,8 +106,8 @@ local function do_fmt(buf)
   local mode = api.nvim_get_mode().mode
   if mode == 'V' or mode == 'v' then
     range = util.range_from_selection(buf, mode)
-    srow = range.start.line - 1
-    erow = range['end'].line
+    srow = range.start[1] - 1
+    erow = range['end'][1]
   end
   local prev_lines = util.get_prev_lines(buf, srow, erow)
 
