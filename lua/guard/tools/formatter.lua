@@ -2,7 +2,7 @@ local M = {}
 
 M.lsp = {
   fn = function(bufnr, range)
-    vim.lsp.buf.format({ bufnr = bufnr, range = range })
+    vim.lsp.buf.format({ bufnr = bufnr, range = range, async = true })
   end,
 }
 

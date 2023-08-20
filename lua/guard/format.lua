@@ -94,6 +94,25 @@ local function find(startpath, patterns, root_dir)
   end
 end
 
+local function override_lsp(buf)
+  local co = assert(coroutine.running())
+  local original = vim.lsp.util.apply_text_edits
+  local clients = util.get_clients(buf, 'textDocument/formatting')
+  if #clients == 0 then
+    return
+  end
+  local total = #clients
+
+  ---@diagnostic disable-next-line: duplicate-set-field
+  vim.lsp.util.apply_text_edits = function(text_edits, bufnr, offset_encoding)
+    total = total - 1
+    original(text_edits, bufnr, offset_encoding)
+    if total == 0 then
+      coroutine.resume(co)
+    end
+  end
+end
+
 local function do_fmt(buf)
   buf = buf or api.nvim_get_current_buf()
   if not filetype[vim.bo[buf].filetype] then
@@ -151,11 +170,15 @@ local function do_fmt(buf)
             config.args[#config.args] = nil
           end
         elseif config.fn then
-          config.fn(buf, range)
-          if i == #fmt_configs then
-            return
+          if not config.override then
+            override_lsp(buf)
+            config.override = true
           end
-          new_lines = table.concat(get_prev_lines(buf, srow, erow), '')
+          config.fn(buf, range)
+          coroutine.yield()
+          if i ~= #fmt_configs then
+            new_lines = table.concat(get_prev_lines(buf, srow, erow), '')
+          end
         end
         changedtick = vim.b[buf].changedtick
       end
