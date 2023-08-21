@@ -9,7 +9,7 @@ end
 
 local function on_failed(msg)
   vim.schedule(function()
-    vim.notify('[Guard] ' .. msg, vim.log.levels.ERROR)
+    vim.api.nvim_err_write('[Guard] ' .. msg)
   end)
 end
 
