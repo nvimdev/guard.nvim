@@ -67,7 +67,7 @@ function util.get_clients(bufnr, method)
   end
   local clients = vim.lsp.get_active_clients({ bufnr = bufnr })
   return vim.tbl_filter(function(client)
-    return client.supports_method('method')
+    return client.supports_method(method)
   end, clients)
 end
 
