@@ -1,4 +1,4 @@
-*guard.nvim.txt*          For NVIM v0.8.0          Last change: 2023 August 21
+*guard.nvim.txt*          For NVIM v0.8.0          Last change: 2023 August 22
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
