@@ -44,6 +44,7 @@ local function create_lspattach_autocmd(fmt_on_save)
 end
 
 return {
+  group = group,
   watch_ft = watch_ft,
   create_lspattach_autocmd = create_lspattach_autocmd,
 }

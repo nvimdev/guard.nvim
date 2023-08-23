@@ -9,7 +9,7 @@ end
 
 local function on_failed(msg)
   vim.schedule(function()
-    vim.api.nvim_err_write('[Guard] ' .. msg)
+    vim.notify('[Guard] ' .. msg, vim.log.levels.ERROR)
   end)
 end
 
@@ -67,12 +67,12 @@ local function spawn(opt)
       end
     end)
 
-    if exit_code == 0 and num_stderr_chunks == 0 then
-      coroutine.resume(co, table.concat(chunks))
-    else
+    if exit_code ~= 0 and num_stderr_chunks ~= 0 then
       on_failed(('process %s exited with non-zero exit code %s'):format(opt.cmd, exit_code))
       coroutine.resume(co)
       return
+    else
+      coroutine.resume(co, table.concat(chunks))
     end
   end)
 

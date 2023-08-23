@@ -6,6 +6,7 @@ local spawn = require('guard.spawn').try_spawn
 local ns = api.nvim_create_namespace('Guard')
 local get_prev_lines = require('guard.util').get_prev_lines
 local vd = vim.diagnostic
+local group = require('guard.events').group
 
 local function do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
@@ -43,9 +44,11 @@ local debounce_timer = nil
 local function register_lint(ft, extra)
   api.nvim_create_autocmd('FileType', {
     pattern = ft,
+    group = group,
     callback = function(args)
       api.nvim_create_autocmd(vim.list_extend({ 'BufEnter' }, extra), {
         buffer = args.buf,
+        group = group,
         callback = function(opt)
           if debounce_timer then
             debounce_timer:stop()
