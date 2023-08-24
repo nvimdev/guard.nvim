@@ -37,15 +37,13 @@ local function restore_views(views)
   end
 end
 
-local function update_buffer(bufnr, new_lines, srow, erow)
+local function update_buffer(bufnr, prev_lines, new_lines, srow)
   if not new_lines or #new_lines == 0 then
     return
   end
   local views = save_views(bufnr)
-
-  local prev_lines = vim.api.nvim_buf_get_lines(bufnr, srow, erow, true)
   new_lines = vim.split(new_lines, '\n')
-  if new_lines[#new_lines] == 0 then
+  if new_lines[#new_lines] == '' then
     new_lines[#new_lines] = nil
   end
   local diffs = vim.diff(table.concat(new_lines, '\n'), table.concat(prev_lines, '\n'), {
@@ -191,7 +189,7 @@ local function do_fmt(buf)
       if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
         return
       end
-      update_buffer(buf, new_lines, srow, erow)
+      update_buffer(buf, prev_lines, new_lines, srow)
       if reload and api.nvim_get_current_buf() == buf then
         vim.cmd.edit()
       end
