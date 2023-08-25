@@ -46,7 +46,7 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow)
   if new_lines[#new_lines] == '' then
     new_lines[#new_lines] = nil
   end
-  local diffs = vim.diff(table.concat(new_lines, '\n'), table.concat(prev_lines, '\n'), {
+  local diffs = vim.diff(table.concat(new_lines, '\n'), prev_lines, {
     algorithm = 'minimal',
     ctxlen = 0,
     result_type = 'indices',
@@ -129,7 +129,7 @@ local function do_fmt(buf)
     srow = range.start[1] - 1
     erow = range['end'][1]
   end
-  local prev_lines = util.get_prev_lines(buf, srow, erow)
+  local prev_lines = table.concat(util.get_prev_lines(buf, srow, erow), '')
 
   local fmt_configs = filetype[vim.bo[buf].filetype].format
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
