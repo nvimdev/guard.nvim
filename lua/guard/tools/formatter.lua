@@ -8,7 +8,7 @@ M.lsp = {
 
 M.black = {
   cmd = 'black',
-  args = { '-' },
+  args = { '--quiet', '-' },
   stdin = true,
 }
 
