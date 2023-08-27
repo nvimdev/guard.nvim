@@ -1,6 +1,4 @@
 local ft = require('guard.filetype')
----@diagnostic disable-next-line: deprecated
-local uv = vim.version().minor >= 10 and vim.uv or vim.loop
 local same = assert.are.same
 
 describe('filetype module', function()
@@ -160,18 +158,19 @@ describe('filetype module', function()
         stdin = true,
       })
       :extra('--verbose')
-      :lint('clang-tidy')
+      :lint({
+        cmd = 'clang-tidy',
+        args = { '--quiet' },
+        parse = function() end,
+      })
       :extra('--fix')
 
     same({
       cmd = 'clang-format',
       args = { '--verbose', '--style=Mozilla' },
       stdin = true,
-    }, require('guard.filetype').c.format[1])
+    }, ft.c.format[1])
 
-    same({
-      '--fix',
-      '--quiet',
-    }, require('guard.tools.linter.clang-tidy').args)
+    same({ '--fix', '--quiet' }, ft.c.linter[1].args)
   end)
 end)

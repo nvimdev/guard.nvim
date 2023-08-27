@@ -52,13 +52,6 @@ local function setup(opt)
   for ft, conf in pairs(ft_handler) do
     if conf.linter then
       for i, entry in ipairs(conf.linter) do
-        if type(entry) == 'string' then
-          local tool = require('guard.tools.linter.' .. entry)
-          if tool then
-            conf.linter[i] = tool
-          end
-        end
-
         lint.register_lint(
           ft,
           conf.linter[i].stdin and { 'TextChanged', 'InsertLeave', 'BufWritePost' }
