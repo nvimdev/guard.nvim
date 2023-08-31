@@ -37,7 +37,11 @@ local function restore_views(views)
   end
 end
 
-local function update_buffer(bufnr, prev_lines, new_lines, srow)
+local function update_buffer(bufnr, prev_lines, new_lines, srow, save_on_fmt)
+  if save_on_fmt == nil then
+    save_on_fmt = true
+  end
+
   if not new_lines or #new_lines == 0 then
     return
   end
@@ -72,7 +76,9 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow)
     end
     api.nvim_buf_set_lines(bufnr, s, e, false, replacement)
   end
-  api.nvim_command('silent! noautocmd write!')
+  if save_on_fmt then
+    api.nvim_command('silent! noautocmd write!')
+  end
   local mode = api.nvim_get_mode().mode
   if mode == 'v' or 'V' then
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', true)
@@ -114,7 +120,7 @@ local function override_lsp(buf)
   end
 end
 
-local function do_fmt(buf)
+local function do_fmt(buf, save_on_fmt)
   buf = buf or api.nvim_get_current_buf()
   if not filetype[vim.bo[buf].filetype] then
     vim.notify('[Guard] missing config for filetype ' .. vim.bo[buf].filetype, vim.log.levels.ERROR)
@@ -189,7 +195,7 @@ local function do_fmt(buf)
       if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
         return
       end
-      update_buffer(buf, prev_lines, new_lines, srow)
+      update_buffer(buf, prev_lines, new_lines, srow, save_on_fmt)
       if reload and api.nvim_get_current_buf() == buf then
         vim.cmd.edit()
       end
