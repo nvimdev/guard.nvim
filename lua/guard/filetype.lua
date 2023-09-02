@@ -1,16 +1,21 @@
 local M = {}
-local ok = pcall(require, 'guard-collection')
-local function get_tool(tool_type, name)
+
+local function get_tool(tool_type, tool_name)
+  local ok, tbl = pcall(require, 'guard-collection.' .. tool_type)
   if not ok then
-    vim.notify('[Guard]: needs nvimdev/guard-collection to access builtin configuration', 4)
+    vim.notify(
+      ('[Guard]: "%s": needs nvimdev/guard-collection to access builtin configuration'):format(
+        tool_name
+      ),
+      4
+    )
     return
   end
-  local tbl = require('guard-collection.' .. tool_type)[name]
-  if not tbl then
-    vim.notify(('[Guard]: %s %s has no builtin configuration'):format(tool_type, name), 4)
+  if not tbl[tool_name] then
+    vim.notify(('[Guard]: %s %s has no builtin configuration'):format(tool_type, tool_name), 4)
     return
   end
-  return tbl
+  return tbl[tool_name]
 end
 local function try_as(tool_type, config)
   return type(config) == 'table' and config or get_tool(tool_type, config)

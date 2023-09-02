@@ -190,6 +190,7 @@ local function from_regex(opts)
 end
 
 return {
+  do_lint = do_lint,
   register_lint = register_lint,
   diag_fmt = diag_fmt,
   from_json = from_json,
