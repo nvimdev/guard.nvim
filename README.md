@@ -31,7 +31,7 @@ require('guard').setup({
 })
 ```
 
-- Use `GuardFmt` to manually call format, when there is a visual selection only the selection is formatted.
+- Use `GuardFmt` to manually call format, when there is a visual selection only the selection is formatted. **NOTE**: Regional formatting just sends your selection to the formatter, if there's not enough context there may be incoherent formatting (e.g. indent being erased)
 - `GuardDisable` disables auto format for the current buffer, you can also `GuardDisable 16` (the buffer number)
 - Use `GuardEnable` to re-enable auto format, usage is the same as `GuardDisable`
 
