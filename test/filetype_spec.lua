@@ -14,7 +14,7 @@ describe('filetype module', function()
       lines = { 'test', 'lines' },
     })
     same({
-      format = {
+      formatter = {
         { cmd = 'clang-format', lines = { 'test', 'lines' } },
       },
     }, ft.c)
@@ -31,7 +31,7 @@ describe('filetype module', function()
       timeout = 1000,
     })
     same({
-      format = {
+      formatter = {
         { cmd = 'tool1', lines = { 'test' }, timeout = 1000 },
         { cmd = 'tool2', lines = 'test', timeout = 1000 },
       },
@@ -73,7 +73,7 @@ describe('filetype module', function()
     py:fmt({ cmd = 'first', timeout = 1000 }):append({ cmd = 'second' }):append({ cmd = 'third' })
     py:lint({ cmd = 'first' }):append({ cmd = 'second' }):append({ cmd = 'third' })
     same({
-      format = {
+      formatter = {
         { cmd = 'first', timeout = 1000 },
         { cmd = 'second' },
         { cmd = 'third' },
@@ -116,12 +116,12 @@ describe('filetype module', function()
       },
     })
     same({
-      format = {
+      formatter = {
         { cmd = 'clang-format', lines = { 'test', 'lines' } },
       },
     }, ft.c)
     same({
-      format = {
+      formatter = {
         { cmd = 'tool-1' },
         { cmd = 'tool-2' },
       },
@@ -143,10 +143,10 @@ describe('filetype module', function()
     })
     require('guard').setup({})
     same({
-      format = { { cmd = 'prettier', args = { 'some', 'args' } } },
+      formatter = { { cmd = 'prettier', args = { 'some', 'args' } } },
     }, ft.javascript)
     same({
-      format = { { cmd = 'prettier', args = { 'some', 'args' } } },
+      formatter = { { cmd = 'prettier', args = { 'some', 'args' } } },
     }, ft.javascriptreact)
   end)
 
@@ -169,7 +169,7 @@ describe('filetype module', function()
       cmd = 'clang-format',
       args = { '--verbose', '--style=Mozilla' },
       stdin = true,
-    }, ft.c.format[1])
+    }, ft.c.formatter[1])
 
     same({ '--fix', '--quiet' }, ft.c.linter[1].args)
   end)

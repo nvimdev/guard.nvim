@@ -30,8 +30,8 @@ local function box()
     vim.validate({
       config = { config, { 'table', 'string' } },
     })
-    current = 'format'
-    self.format = {
+    current = 'formatter'
+    self.formatter = {
       vim.deepcopy(try_as('formatter', config)),
     }
     return self
@@ -49,8 +49,7 @@ local function box()
   end
 
   function tbl:append(val)
-    local tool_type = current == 'format' and 'formatter' or 'linter'
-    self[current][#self[current] + 1] = vim.deepcopy(try_as(tool_type, val))
+    self[current][#self[current] + 1] = vim.deepcopy(try_as(current, val))
     return self
   end
 
@@ -83,8 +82,8 @@ local function box()
         return self.linter
       end,
       ['fmt'] = function()
-        self.format = {}
-        return self.format
+        self.formatter = {}
+        return self.formatter
       end,
     }
     return _t[key]()

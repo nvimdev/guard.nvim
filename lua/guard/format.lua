@@ -130,7 +130,7 @@ local function do_fmt(buf)
   end
   local prev_lines = table.concat(util.get_prev_lines(buf, srow, erow), '')
 
-  local fmt_configs = filetype[vim.bo[buf].filetype].format
+  local fmt_configs = filetype[vim.bo[buf].filetype].formatter
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   local startpath = vim.fn.expand(fname, ':p:h')
   local root_dir = util.get_lsp_root()
