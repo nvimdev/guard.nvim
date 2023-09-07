@@ -104,10 +104,14 @@ local function override_lsp(buf)
   end
   local total = #clients
 
+  local changed_tick = api.nvim_buf_get_changedtick(buf)
   ---@diagnostic disable-next-line: duplicate-set-field
   vim.lsp.util.apply_text_edits = function(text_edits, bufnr, offset_encoding)
     total = total - 1
     original(text_edits, bufnr, offset_encoding)
+    if api.nvim_buf_get_changedtick(buf) ~= changed_tick then
+      api.nvim_command('silent noautocmd write!')
+    end
     if total == 0 then
       coroutine.resume(co)
     end

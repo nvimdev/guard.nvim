@@ -33,10 +33,10 @@ local function resolve_multi_ft()
 end
 
 local function setup(opt)
-  opt = opt or {
+  opt = vim.tbl_extend('force', {
     fmt_on_save = true,
     lsp_as_default_formatter = false,
-  }
+  }, opt or {})
 
   register_cfg_by_table(opt.ft)
 
