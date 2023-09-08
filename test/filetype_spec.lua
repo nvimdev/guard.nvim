@@ -1,4 +1,6 @@
 local ft = require('guard.filetype')
+---@diagnostic disable-next-line: deprecated
+local uv = vim.version().minor >= 10 and vim.uv or vim.loop
 local same = assert.are.same
 
 describe('filetype module', function()
@@ -14,7 +16,7 @@ describe('filetype module', function()
       lines = { 'test', 'lines' },
     })
     same({
-      formatter = {
+      format = {
         { cmd = 'clang-format', lines = { 'test', 'lines' } },
       },
     }, ft.c)
@@ -31,7 +33,7 @@ describe('filetype module', function()
       timeout = 1000,
     })
     same({
-      formatter = {
+      format = {
         { cmd = 'tool1', lines = { 'test' }, timeout = 1000 },
         { cmd = 'tool2', lines = 'test', timeout = 1000 },
       },
@@ -73,7 +75,7 @@ describe('filetype module', function()
     py:fmt({ cmd = 'first', timeout = 1000 }):append({ cmd = 'second' }):append({ cmd = 'third' })
     py:lint({ cmd = 'first' }):append({ cmd = 'second' }):append({ cmd = 'third' })
     same({
-      formatter = {
+      format = {
         { cmd = 'first', timeout = 1000 },
         { cmd = 'second' },
         { cmd = 'third' },
@@ -116,12 +118,12 @@ describe('filetype module', function()
       },
     })
     same({
-      formatter = {
+      format = {
         { cmd = 'clang-format', lines = { 'test', 'lines' } },
       },
     }, ft.c)
     same({
-      formatter = {
+      format = {
         { cmd = 'tool-1' },
         { cmd = 'tool-2' },
       },
@@ -143,10 +145,10 @@ describe('filetype module', function()
     })
     require('guard').setup({})
     same({
-      formatter = { { cmd = 'prettier', args = { 'some', 'args' } } },
+      format = { { cmd = 'prettier', args = { 'some', 'args' } } },
     }, ft.javascript)
     same({
-      formatter = { { cmd = 'prettier', args = { 'some', 'args' } } },
+      format = { { cmd = 'prettier', args = { 'some', 'args' } } },
     }, ft.javascriptreact)
   end)
 
@@ -158,19 +160,18 @@ describe('filetype module', function()
         stdin = true,
       })
       :extra('--verbose')
-      :lint({
-        cmd = 'clang-tidy',
-        args = { '--quiet' },
-        parse = function() end,
-      })
+      :lint('clang-tidy')
       :extra('--fix')
 
     same({
       cmd = 'clang-format',
       args = { '--verbose', '--style=Mozilla' },
       stdin = true,
-    }, ft.c.formatter[1])
+    }, require('guard.filetype').c.format[1])
 
-    same({ '--fix', '--quiet' }, ft.c.linter[1].args)
+    same({
+      '--fix',
+      '--quiet',
+    }, require('guard.tools.linter.clang-tidy').args)
   end)
 end)

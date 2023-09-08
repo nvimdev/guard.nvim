@@ -1,6 +1,6 @@
 local try_spawn = require('guard.spawn').try_spawn
 
-describe('spawn module', function()
+describe('spwan module', function()
   it('can spawn a process', function()
     local opt = {
       cmd = 'stylua',

@@ -24,7 +24,7 @@ local function create_lspattach_autocmd(fmt_on_save)
         return
       end
       local ft = vim.bo[args.buf].filetype
-      if not (ft_handler[ft] and ft_handler[ft].formatter) then
+      if not (ft_handler[ft] and ft_handler[ft].format) then
         ft_handler(ft):fmt('lsp')
       end
 

@@ -1,26 +1,5 @@
 local M = {}
 
-local function get_tool(tool_type, tool_name)
-  local ok, tbl = pcall(require, 'guard-collection.' .. tool_type)
-  if not ok then
-    vim.notify(
-      ('[Guard]: "%s": needs nvimdev/guard-collection to access builtin configuration'):format(
-        tool_name
-      ),
-      4
-    )
-    return
-  end
-  if not tbl[tool_name] then
-    vim.notify(('[Guard]: %s %s has no builtin configuration'):format(tool_type, tool_name), 4)
-    return
-  end
-  return tbl[tool_name]
-end
-local function try_as(tool_type, config)
-  return type(config) == 'table' and config or get_tool(tool_type, config)
-end
-
 local function box()
   local current
   local tbl = {}
@@ -28,33 +7,37 @@ local function box()
 
   function tbl:fmt(config)
     vim.validate({
-      config = { config, { 'table', 'string' } },
+      config = { config, { 't', 's' } },
     })
-    current = 'formatter'
-    self.formatter = {
-      vim.deepcopy(try_as('formatter', config)),
+    self.format = {
+      vim.deepcopy(config),
     }
+    current = 'format'
+    return self
+  end
+
+  function tbl:append(val)
+    self[current][#self[current] + 1] = val
     return self
   end
 
   function tbl:lint(config)
     vim.validate({
-      config = { config, { 'table', 'string' } },
+      config = { config, { 't', 's' } },
     })
     current = 'linter'
     self.linter = {
-      vim.deepcopy(try_as('linter', config)),
+      vim.deepcopy(config),
     }
-    return self
-  end
-
-  function tbl:append(val)
-    self[current][#self[current] + 1] = vim.deepcopy(try_as(current, val))
     return self
   end
 
   function tbl:extra(...)
     local tool = self[current][#self[current]]
+    if type(tool) == 'string' then
+      tool = current == 'format' and require('guard.tools.formatter')[tool]
+        or require('guard.tools.linter.' .. tool)
+    end
     tool.args = vim.list_extend({ ... }, tool.args or {})
     return self
   end
@@ -67,6 +50,10 @@ local function box()
       return self
     end
     local tool = self[current][#self[current]]
+    if type(tool) == 'string' then
+      tool = current == 'format' and require('guard.tools.formatter')[tool]
+        or require('guard.tools.linter.' .. tool)
+    end
     tool.env = {}
     env = vim.tbl_extend('force', vim.uv.os_environ(), env or {})
     for k, v in pairs(env) do
@@ -82,8 +69,8 @@ local function box()
         return self.linter
       end,
       ['fmt'] = function()
-        self.formatter = {}
-        return self.formatter
+        self.format = {}
+        return self.format
       end,
     }
     return _t[key]()
@@ -100,9 +87,8 @@ local function box()
       },
     })
     local target = self:key_alias(key)
-    local tool_type = key == 'fmt' and 'formatter' or 'linter'
     for _, item in ipairs(cfg) do
-      target[#target + 1] = vim.deepcopy(try_as(tool_type, item))
+      target[#target + 1] = vim.deepcopy(item)
     end
   end
 
