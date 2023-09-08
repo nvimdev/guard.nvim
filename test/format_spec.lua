@@ -1,7 +1,11 @@
 local api = vim.api
 local equal = assert.equal
 local ft = require('guard.filetype')
-ft('lua'):fmt('stylua')
+ft('lua'):fmt({
+  cmd = 'stylua',
+  args = { '-' },
+  stdin = true,
+})
 require('guard').setup()
 
 describe('format module', function()
