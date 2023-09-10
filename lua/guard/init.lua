@@ -16,20 +16,15 @@ end
 
 local function resolve_multi_ft()
   local keys = vim.tbl_keys(ft_handler)
-  local retval = {}
   vim.tbl_map(function(key)
     if key:find(',') then
       local t = vim.split(key, ',')
       for _, item in ipairs(t) do
         ft_handler[item] = vim.deepcopy(ft_handler[key])
-        retval[#retval + 1] = item
       end
       ft_handler[key] = nil
-    else
-      retval[#retval + 1] = key
     end
   end, keys)
-  return retval
 end
 
 local function setup(opt)
@@ -39,17 +34,18 @@ local function setup(opt)
   }, opt or {})
 
   register_cfg_by_table(opt.ft)
+  resolve_multi_ft()
 
-  local all_filetypes = resolve_multi_ft()
-  if opt.fmt_on_save then
-    events.watch_ft(all_filetypes)
-  end
   if opt.lsp_as_default_formatter then
     events.create_lspattach_autocmd(opt.fmt_on_save)
   end
 
   local lint = require('guard.lint')
   for ft, conf in pairs(ft_handler) do
+    if conf.format then
+      events.watch_ft(ft)
+    end
+
     if conf.linter then
       for i, entry in ipairs(conf.linter) do
         if type(entry) == 'string' then
