@@ -42,7 +42,7 @@ local function setup(opt)
 
   local lint = require('guard.lint')
   for ft, conf in pairs(ft_handler) do
-    if conf.format then
+    if conf.format and opt.fmt_on_save then
       events.watch_ft(ft)
     end
 
