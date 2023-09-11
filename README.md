@@ -106,6 +106,7 @@ Consult the [builtin tools](https://github.com/nvimdev/guard.nvim/tree/main/lua%
 - [google-java-format](https://github.com/google/google-java-format)
 - [isort](https://github.com/PyCQA/isort)
 - [mixformat](https://github.com/elixir-lang/elixir/)
+- [nixfmt](https://github.com/serokell/nixfmt)
 - [latexindent](https://github.com/cmhughes/latexindent.pl)
 - [pg_format](https://github.com/darold/pgFormatter)
 - [prettier](https://github.com/prettier/prettier)
