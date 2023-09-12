@@ -76,6 +76,11 @@ M.mixformat = {
   fname = true,
 }
 
+M.nixfmt = {
+  cmd = 'nixfmt',
+  stdin = true,
+}
+
 M.pg_format = {
   cmd = 'pg_format',
   stdin = true,
