@@ -66,7 +66,7 @@ Easily configure your custom formatter if not in the defaults:
 {
     cmd              -- string: tool command
     args             -- table: command arugments
-    fname            -- string: insert filename to args tail
+    fname            -- boolean: insert filename to args tail
     stdin            -- boolean: pass buffer contents into stdin
     timeout          -- integer
     ignore_pattern   -- table: ignore run format when pattern match
