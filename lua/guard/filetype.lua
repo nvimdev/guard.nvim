@@ -55,8 +55,11 @@ local function box()
     return self
   end
 
-  function tbl:append(val)
-    self[current][#self[current] + 1] = vim.deepcopy(try_as(current, val))
+  function tbl:append(config)
+    vim.validate({
+      config = { config, { 'table', 'string' } },
+    })
+    self[current][#self[current] + 1] = try_as(current, config)
     return self
   end
 
