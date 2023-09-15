@@ -58,12 +58,12 @@ ft('c'):fmt('clang-format')
        :lint('clang-tidy')
 ```
 
-Or use lsp to format go files first, then format with golines, then lint with golangci:
+Or use lsp to format lua files first, then format with stylua, then lint with selene:
 
 ```lua
-ft('go'):fmt('lsp')
-        :append('golines')
-        :lint('golangci')
+ft('lua'):fmt('lsp')
+        :append('stylua')
+        :lint('selene')
 ```
 
 Register multiple filetypes to a single linter or formatter:
