@@ -5,7 +5,6 @@ local spawn = require('guard.spawn').try_spawn
 local util = require('guard.util')
 local get_prev_lines = util.get_prev_lines
 local filetype = require('guard.filetype')
-local formatter = require('guard.tools.formatter')
 
 local function ignored(buf, patterns)
   local fname = api.nvim_buf_get_name(buf)
@@ -135,7 +134,7 @@ local function do_fmt(buf)
   end
   local prev_lines = table.concat(util.get_prev_lines(buf, srow, erow), '')
 
-  local fmt_configs = filetype[vim.bo[buf].filetype].format
+  local fmt_configs = filetype[vim.bo[buf].filetype].formatter
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   local startpath = vim.fn.expand(fname, ':p:h')
   local root_dir = util.get_lsp_root()
@@ -147,10 +146,6 @@ local function do_fmt(buf)
     local reload = nil
 
     for i, config in ipairs(fmt_configs) do
-      if type(config) == 'string' and formatter[config] then
-        config = formatter[config]
-      end
-
       local allow = true
       if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
         allow = false
