@@ -9,7 +9,7 @@ local function executable_check()
   local checked = {}
   for _, item in pairs(filetype) do
     for _, conf in ipairs(item.formatter or {}) do
-      if not vim.tbl_contains(checked, conf.cmd) then
+      if conf.cmd and not vim.tbl_contains(checked, conf.cmd) then
         if fn.executable(conf.cmd) == 1 then
           ok(conf.cmd .. ' found')
         else
@@ -20,7 +20,7 @@ local function executable_check()
     end
 
     for _, conf in ipairs(item.linter or {}) do
-      if not vim.tbl_contains(checked, conf.cmd) then
+      if conf.cmd and not vim.tbl_contains(checked, conf.cmd) then
         if fn.executable(conf.cmd) == 1 then
           ok(conf.cmd .. ' found')
         else
