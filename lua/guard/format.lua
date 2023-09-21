@@ -132,7 +132,7 @@ local function do_fmt(buf)
     srow = range.start[1] - 1
     erow = range['end'][1]
   end
-  local prev_lines = table.concat(util.get_prev_lines(buf, srow, erow), '')
+  local prev_lines = table.concat(get_prev_lines(buf, srow, erow), '')
 
   local fmt_configs = filetype[vim.bo[buf].filetype].formatter
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
@@ -156,6 +156,7 @@ local function do_fmt(buf)
       end
 
       if allow then
+        util.doau('GuardFmtPre', config)
         if config.cmd then
           config.lines = new_lines and new_lines or prev_lines
           config.args = config.args or {}
@@ -188,6 +189,7 @@ local function do_fmt(buf)
       if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
         return
       end
+      util.doau('GuardFmtPost')
       update_buffer(buf, prev_lines, new_lines, srow)
       if reload and api.nvim_get_current_buf() == buf then
         vim.cmd.edit()

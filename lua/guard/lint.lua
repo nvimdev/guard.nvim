@@ -7,6 +7,7 @@ local ns = api.nvim_create_namespace('Guard')
 local get_prev_lines = require('guard.util').get_prev_lines
 local vd = vim.diagnostic
 local group = require('guard.events').group
+local doau = require('guard.util').doau
 
 local function do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
@@ -18,6 +19,7 @@ local function do_lint(buf)
   local prev_lines = get_prev_lines(buf, 0, -1)
   vd.reset(ns, buf)
 
+  doau('GuardLintPre', linters)
   coroutine.resume(coroutine.create(function()
     local results
 
@@ -35,36 +37,45 @@ local function do_lint(buf)
       if not api.nvim_buf_is_valid(buf) or not results or #results == 0 then
         return
       end
+      doau('GuardLintPost', results)
       vd.set(ns, buf, results)
     end)
   end))
 end
 
 local debounce_timer = nil
-local function register_lint(ft, extra)
+local function register_lint(ft, events)
   api.nvim_create_autocmd('FileType', {
     pattern = ft,
     group = group,
     callback = function(args)
-      api.nvim_create_autocmd(vim.list_extend({ 'BufEnter' }, extra), {
-        buffer = args.buf,
-        group = group,
-        callback = function(opt)
-          if debounce_timer then
-            debounce_timer:stop()
-            debounce_timer = nil
-          end
-          debounce_timer = uv.new_timer()
-          debounce_timer:start(500, 0, function()
-            debounce_timer:stop()
-            debounce_timer:close()
-            debounce_timer = nil
-            vim.schedule(function()
-              do_lint(opt.buf)
+      for _, e in ipairs(events) do
+        local tmp = e
+        local pattern
+        if e:find('User') then
+          pattern = vim.split(e, '%s')[2]
+        end
+        api.nvim_create_autocmd(tmp, {
+          buffer = args.buf,
+          group = group,
+          pattern = pattern,
+          callback = function(opt)
+            if debounce_timer then
+              debounce_timer:stop()
+              debounce_timer = nil
+            end
+            debounce_timer = uv.new_timer()
+            debounce_timer:start(500, 0, function()
+              debounce_timer:stop()
+              debounce_timer:close()
+              debounce_timer = nil
+              vim.schedule(function()
+                do_lint(opt.buf)
+              end)
             end)
-          end)
-        end,
-      })
+          end,
+        })
+      end
     end,
   })
 end
