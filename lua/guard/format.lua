@@ -156,7 +156,10 @@ local function do_fmt(buf)
       end
 
       if allow then
-        util.doau('GuardFmtPre', config)
+        util.doau('GuardFmt', {
+          status = 'pending',
+          using = config,
+        })
         if config.cmd then
           config.lines = new_lines and new_lines or prev_lines
           config.args = config.args or {}
@@ -189,7 +192,10 @@ local function do_fmt(buf)
       if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
         return
       end
-      util.doau('GuardFmtPost')
+      util.doau('GuardFmt', {
+        status = 'done',
+        results = new_lines,
+      })
       update_buffer(buf, prev_lines, new_lines, srow)
       if reload and api.nvim_get_current_buf() == buf then
         vim.cmd.edit()

@@ -19,7 +19,10 @@ local function do_lint(buf)
   local prev_lines = get_prev_lines(buf, 0, -1)
   vd.reset(ns, buf)
 
-  doau('GuardLintPre', linters)
+  doau('GuardLint', {
+    status = 'pending',
+    using = linters,
+  })
   coroutine.resume(coroutine.create(function()
     local results
 
@@ -37,7 +40,10 @@ local function do_lint(buf)
       if not api.nvim_buf_is_valid(buf) or not results or #results == 0 then
         return
       end
-      doau('GuardLintPost', results)
+      doau('GuardLint', {
+        status = 'done',
+        results = results,
+      })
       vd.set(ns, buf, results)
     end)
   end))

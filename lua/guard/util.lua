@@ -74,7 +74,6 @@ end
 function util.doau(pattern, data)
   api.nvim_exec_autocmds('User', {
     pattern = pattern,
-    modeline = false,
     data = data,
   })
 end
