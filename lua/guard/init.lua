@@ -46,13 +46,14 @@ local function setup(opt)
 
     if conf.formatter and opt.fmt_on_save then
       events.watch_ft(ft)
-      vim.tbl_extend('force', lint_events, { 'User GuardFmt' })
+      table.insert(lint_events, 'User GuardFmt')
     end
 
     if conf.linter then
       for i, _ in ipairs(conf.linter) do
         if conf.linter[i].stdin then
-          vim.tbl_extend('force', lint_events, { 'TextChanged', 'InsertLeave' })
+          table.insert(lint_events, 'TextChanged')
+          table.insert(lint_events, 'InsertLeave')
         end
         lint.register_lint(ft, lint_events)
       end
