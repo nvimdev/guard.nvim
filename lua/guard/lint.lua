@@ -1,7 +1,7 @@
 local api = vim.api
 ---@diagnostic disable-next-line: deprecated
 local uv = vim.version().minor >= 10 and vim.uv or vim.loop
-local filetype = require('guard.filetype')
+local ft_handler = require('guard.filetype')
 local spawn = require('guard.spawn').try_spawn
 local ns = api.nvim_create_namespace('Guard')
 local get_prev_lines = require('guard.util').get_prev_lines
@@ -10,10 +10,10 @@ local group = require('guard.events').group
 
 local function do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
-  if not filetype[vim.bo[buf].filetype] then
+  if not ft_handler[vim.bo[buf].filetype] then
     return
   end
-  local linters = filetype[vim.bo[buf].filetype].linter
+  local linters = ft_handler[vim.bo[buf].filetype].linter
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   local prev_lines = get_prev_lines(buf, 0, -1)
   vd.reset(ns, buf)
@@ -46,32 +46,42 @@ local function register_lint(ft, events)
     pattern = ft,
     group = group,
     callback = function(args)
-      for _, e in ipairs(events) do
-        local tmp = e
-        local pattern
-        if e:find('User') then
-          pattern = vim.split(e, '%s')[2]
+      local cb = function(opt)
+        if debounce_timer then
+          debounce_timer:stop()
+          debounce_timer = nil
         end
-        api.nvim_create_autocmd(tmp, {
-          group = group,
-          pattern = pattern,
-          buffer = (not pattern) and args.buf or nil,
-          callback = function(opt)
-            if debounce_timer then
-              debounce_timer:stop()
-              debounce_timer = nil
-            end
-            debounce_timer = uv.new_timer()
-            debounce_timer:start(500, 0, function()
-              debounce_timer:stop()
-              debounce_timer:close()
-              debounce_timer = nil
-              vim.schedule(function()
-                do_lint(opt.buf)
-              end)
-            end)
-          end,
-        })
+        debounce_timer = uv.new_timer()
+        debounce_timer:start(500, 0, function()
+          debounce_timer:stop()
+          debounce_timer:close()
+          debounce_timer = nil
+          vim.schedule(function()
+            do_lint(opt.buf)
+          end)
+        end)
+      end
+      for _, ev in ipairs(events) do
+        if ev == 'User GuardFmt' then
+          -- only update on GuardFmt if there's a formatter for this filetype
+          if ft_handler[ft].formatter then
+            api.nvim_create_autocmd('User', {
+              group = group,
+              pattern = 'GuardFmt',
+              callback = function(opt)
+                if opt.data.status == 'done' then
+                  cb(opt)
+                end
+              end,
+            })
+          end
+        else
+          api.nvim_create_autocmd(ev, {
+            group = group,
+            buffer = args.buf,
+            callback = cb,
+          })
+        end
       end
     end,
   })
