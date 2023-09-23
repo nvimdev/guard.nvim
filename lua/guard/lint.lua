@@ -53,9 +53,9 @@ local function register_lint(ft, events)
           pattern = vim.split(e, '%s')[2]
         end
         api.nvim_create_autocmd(tmp, {
-          buffer = args.buf,
           group = group,
           pattern = pattern,
+          buffer = (not pattern) and args.buf or nil,
           callback = function(opt)
             if debounce_timer then
               debounce_timer:stop()
