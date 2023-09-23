@@ -140,7 +140,7 @@ local function do_fmt(buf)
   util.doau('GuardFmt', {
     status = 'pending',
     using = fmt_configs,
-    range = srow and { srow, erow } or nil,
+    range = range and { srow, erow },
   })
   local prev_lines = table.concat(get_prev_lines(buf, srow, erow), '')
 
