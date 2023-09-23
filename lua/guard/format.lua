@@ -132,13 +132,17 @@ local function do_fmt(buf)
     srow = range.start[1] - 1
     erow = range['end'][1]
   end
-  local prev_lines = table.concat(get_prev_lines(buf, srow, erow), '')
-
   local fmt_configs = filetype[vim.bo[buf].filetype].formatter
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   local startpath = vim.fn.expand(fname, ':p:h')
   local root_dir = util.get_lsp_root()
   local cwd = root_dir or uv.cwd()
+  util.doau('GuardFmt', {
+    status = 'pending',
+    using = fmt_configs,
+    range = srow and { srow, erow } or nil,
+  })
+  local prev_lines = table.concat(get_prev_lines(buf, srow, erow), '')
 
   coroutine.resume(coroutine.create(function()
     local new_lines
@@ -156,10 +160,6 @@ local function do_fmt(buf)
       end
 
       if allow then
-        util.doau('GuardFmt', {
-          status = 'pending',
-          using = config,
-        })
         if config.cmd then
           config.lines = new_lines and new_lines or prev_lines
           config.args = config.args or {}
@@ -192,14 +192,14 @@ local function do_fmt(buf)
       if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
         return
       end
-      util.doau('GuardFmt', {
-        status = 'done',
-        results = new_lines,
-      })
       update_buffer(buf, prev_lines, new_lines, srow)
       if reload and api.nvim_get_current_buf() == buf then
         vim.cmd.edit()
       end
+      util.doau('GuardFmt', {
+        status = 'done',
+        results = new_lines,
+      })
     end)
   end))
 end
