@@ -63,18 +63,15 @@ local function register_lint(ft, events)
       end
       for _, ev in ipairs(events) do
         if ev == 'User GuardFmt' then
-          -- only update on GuardFmt if there's a formatter for this filetype
-          if ft_handler[ft].formatter then
-            api.nvim_create_autocmd('User', {
-              group = group,
-              pattern = 'GuardFmt',
-              callback = function(opt)
-                if opt.data.status == 'done' then
-                  cb(opt)
-                end
-              end,
-            })
-          end
+          api.nvim_create_autocmd('User', {
+            group = group,
+            pattern = 'GuardFmt',
+            callback = function(opt)
+              if opt.data.status == 'done' then
+                cb(opt)
+              end
+            end,
+          })
         else
           api.nvim_create_autocmd(ev, {
             group = group,

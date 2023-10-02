@@ -46,7 +46,7 @@ local function setup(opt)
 
     if conf.formatter and opt.fmt_on_save then
       events.watch_ft(ft)
-      table.insert(lint_events, 'User GuardFmt')
+      lint_events[1] = 'User GuardFmt'
     end
 
     if conf.linter then

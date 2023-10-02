@@ -71,7 +71,7 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow)
     end
     api.nvim_buf_set_lines(bufnr, s, e, false, replacement)
   end
-  api.nvim_command('silent! noautocmd write!')
+  api.nvim_command('silent noautocmd write!')
   local mode = api.nvim_get_mode().mode
   if mode == 'v' or 'V' then
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', true)
@@ -140,7 +140,6 @@ local function do_fmt(buf)
   util.doau('GuardFmt', {
     status = 'pending',
     using = fmt_configs,
-    range = range and { srow, erow },
   })
   local prev_lines = table.concat(get_prev_lines(buf, srow, erow), '')
 
@@ -190,6 +189,9 @@ local function do_fmt(buf)
 
     vim.schedule(function()
       if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
+        util.doau('GuardFmt', {
+          status = 'failed',
+        })
         return
       end
       update_buffer(buf, prev_lines, new_lines, srow)
