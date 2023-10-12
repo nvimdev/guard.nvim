@@ -18,6 +18,7 @@ data = {
 -- or
 data = {
     status = "failed"   -- type: string, buffer remain unchanged
+    msg = "..."         -- type: string, currently only if buffer became invalid or changed during formatting
 }
 ```
 

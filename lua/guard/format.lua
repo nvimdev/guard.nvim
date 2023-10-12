@@ -191,6 +191,7 @@ local function do_fmt(buf)
       if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
         util.doau('GuardFmt', {
           status = 'failed',
+          msg = 'buffer changed or no longer valid',
         })
         return
       end
