@@ -109,7 +109,7 @@ local function override_lsp(buf)
     total = total - 1
     original(text_edits, bufnr, offset_encoding)
     if api.nvim_buf_get_changedtick(buf) ~= changed_tick then
-      api.nvim_command('silent noautocmd write!')
+      api.nvim_command('silent! noautocmd write!')
     end
     if total == 0 then
       coroutine.resume(co)
@@ -132,13 +132,16 @@ local function do_fmt(buf)
     srow = range.start[1] - 1
     erow = range['end'][1]
   end
-  local prev_lines = table.concat(util.get_prev_lines(buf, srow, erow), '')
-
   local fmt_configs = filetype[vim.bo[buf].filetype].formatter
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   local startpath = vim.fn.expand(fname, ':p:h')
   local root_dir = util.get_lsp_root()
   local cwd = root_dir or uv.cwd()
+  util.doau('GuardFmt', {
+    status = 'pending',
+    using = fmt_configs,
+  })
+  local prev_lines = table.concat(get_prev_lines(buf, srow, erow), '')
 
   coroutine.resume(coroutine.create(function()
     local new_lines
@@ -186,12 +189,20 @@ local function do_fmt(buf)
 
     vim.schedule(function()
       if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
+        util.doau('GuardFmt', {
+          status = 'failed',
+          msg = 'buffer changed or no longer valid',
+        })
         return
       end
       update_buffer(buf, prev_lines, new_lines, srow)
       if reload and api.nvim_get_current_buf() == buf then
         vim.cmd.edit()
       end
+      util.doau('GuardFmt', {
+        status = 'done',
+        results = new_lines,
+      })
     end)
   end))
 end

@@ -42,17 +42,20 @@ local function setup(opt)
 
   local lint = require('guard.lint')
   for ft, conf in pairs(ft_handler) do
+    local lint_events = { 'BufWritePost', 'BufEnter' }
+
     if conf.formatter and opt.fmt_on_save then
       events.watch_ft(ft)
+      lint_events[1] = 'User GuardFmt'
     end
 
     if conf.linter then
-      for i, entry in ipairs(conf.linter) do
-        lint.register_lint(
-          ft,
-          conf.linter[i].stdin and { 'TextChanged', 'InsertLeave', 'BufWritePost' }
-            or { 'BufWritePost' }
-        )
+      for i, _ in ipairs(conf.linter) do
+        if conf.linter[i].stdin then
+          table.insert(lint_events, 'TextChanged')
+          table.insert(lint_events, 'InsertLeave')
+        end
+        lint.register_lint(ft, lint_events)
       end
     end
   end
