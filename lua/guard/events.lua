@@ -14,7 +14,7 @@ local function watch_ft(fts)
   })
 end
 
-local function create_lspattach_autocmd(fmt_on_save)
+local function create_lspattach_autocmd()
   api.nvim_create_autocmd('LspAttach', {
     group = group,
     callback = function(args)
@@ -26,18 +26,6 @@ local function create_lspattach_autocmd(fmt_on_save)
       local ft = vim.bo[args.buf].filetype
       if not (ft_handler[ft] and ft_handler[ft].formatter) then
         ft_handler(ft):fmt('lsp')
-      end
-
-      if
-        fmt_on_save
-        and #api.nvim_get_autocmds({
-            group = group,
-            event = 'FileType',
-            pattern = ft,
-          })
-          == 0
-      then
-        format.attach_to_buf(args.buf)
       end
     end,
   })
