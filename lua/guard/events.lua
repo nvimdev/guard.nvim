@@ -8,7 +8,15 @@ local function watch_ft(fts)
     group = group,
     pattern = fts,
     callback = function(args)
-      format.attach_to_buf(args.buf)
+      if
+        #api.nvim_get_autocmds({
+          group = group,
+          event = 'BufWritePre',
+          buffer = args.buf,
+        }) == 0
+      then
+        format.attach_to_buf(args.buf)
+      end
     end,
     desc = 'guard',
   })

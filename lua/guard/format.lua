@@ -1,10 +1,10 @@
 local api = vim.api
 ---@diagnostic disable-next-line: deprecated
 local uv = vim.version().minor >= 10 and vim.uv or vim.loop
+local spawn = require('guard.spawn').try_spawn
 local util = require('guard.util')
 local get_prev_lines = util.get_prev_lines
 local filetype = require('guard.filetype')
-local guard_api = require('guard.api')
 
 local function ignored(buf, patterns)
   local fname = api.nvim_buf_get_name(buf)
@@ -123,7 +123,9 @@ local function do_fmt(buf)
     vim.notify('[Guard] missing config for filetype ' .. vim.bo[buf].filetype, vim.log.levels.ERROR)
     return
   end
-  local range, srow, erow = nil, 0, -1
+  local srow = 0
+  local erow = -1
+  local range
   local mode = api.nvim_get_mode().mode
   if mode == 'V' or mode == 'v' then
     range = util.range_from_selection(buf, mode)
@@ -142,10 +144,11 @@ local function do_fmt(buf)
   local prev_lines = table.concat(get_prev_lines(buf, srow, erow), '')
 
   coroutine.resume(coroutine.create(function()
-    local result
+    local new_lines
     local changedtick = api.nvim_buf_get_changedtick(buf)
+    local reload = nil
 
-    for _, config in ipairs(fmt_configs) do
+    for i, config in ipairs(fmt_configs) do
       local allow = true
       if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
         allow = false
@@ -156,35 +159,31 @@ local function do_fmt(buf)
       end
 
       if allow then
-        if config.fn and not config.override then
-          override_lsp(buf)
-          config.override = true
+        if config.cmd then
+          config.lines = new_lines and new_lines or prev_lines
+          config.args = config.args or {}
+          config.args[#config.args + 1] = config.fname and fname or nil
+          config.cwd = cwd
+          reload = (not reload and config.stdout == false) and true or false
+          new_lines = spawn(config)
+          --restore
+          config.lines = nil
+          config.cwd = nil
+          if config.fname then
+            config.args[#config.args] = nil
+          end
+        elseif config.fn then
+          if not config.override then
+            override_lsp(buf)
+            config.override = true
+          end
+          config.fn(buf, range)
+          coroutine.yield()
+          if i ~= #fmt_configs then
+            new_lines = table.concat(get_prev_lines(buf, srow, erow), '')
+          end
         end
-        config.args = config.args or {}
-        config.args[#config.args + 1] = config.fname and fname or nil
-        config.cwd = cwd
-        local opts = {
-          buf = buf,
-          range = range,
-        }
-        -- apply previous format result for non-stdin formatters to read
-        if result and (config.cmd and not config.stdin) or (config.fn and not config.reload) then
-          update_buffer(buf, prev_lines, result, srow)
-          prev_lines = result
-        end
-        local out = guard_api.fmt_with(config, opts)
-        ---@diagnostic disable-next-line: need-check-nil
-        local stderr, exit_code = out[2], out[3]
-        if not (stderr ~= '' or exit_code ~= 0) then
-          ---@diagnostic disable-next-line: need-check-nil
-          result = out[1]
-        end
-        -- restore
-        config.cwd = nil
-        if config.fname then
-          config.args[#config.args] = nil
-        end
-        changedtick = vim.bo[buf].changedtick
+        changedtick = vim.b[buf].changedtick
       end
     end
 
@@ -196,10 +195,13 @@ local function do_fmt(buf)
         })
         return
       end
-      update_buffer(buf, prev_lines, result, srow)
+      update_buffer(buf, prev_lines, new_lines, srow)
+      if reload and api.nvim_get_current_buf() == buf then
+        vim.cmd.edit()
+      end
       util.doau('GuardFmt', {
         status = 'done',
-        results = result,
+        results = new_lines,
       })
     end)
   end))
