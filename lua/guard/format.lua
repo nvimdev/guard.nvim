@@ -211,11 +211,11 @@ local function attach_to_buf(buf)
   api.nvim_create_autocmd('BufWritePre', {
     group = require('guard.events').group,
     buffer = buf,
-    callback = function()
-      if not vim.bo[buf].modified then
+    callback = function(opt)
+      if not vim.bo[opt.buf].modified then
         return
       end
-      require('guard.format').do_fmt(buf)
+      require('guard.format').do_fmt(opt.buf)
     end,
   })
 end
