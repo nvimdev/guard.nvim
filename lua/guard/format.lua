@@ -36,7 +36,7 @@ local function restore_views(views)
   end
 end
 
-local function update_buffer(bufnr, prev_lines, new_lines, srow)
+local function update_buffer(bufnr, prev_lines, new_lines)
   if not new_lines or #new_lines == 0 then
     return
   end
@@ -45,6 +45,16 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow)
   if new_lines[#new_lines] == '' then
     new_lines[#new_lines] = nil
   end
+
+  if #new_lines ~= #prev_lines then
+    api.nvim_buf_set_lines(bufnr, 0, -1, false, new_lines)
+    api.nvim_command('silent! noautocmd write!')
+    restore_views(views)
+    return
+  end
+
+  --TODO(glpnir): before use diff update minimal area has bug line flush
+  --not correct so retrun to update whole buffer.
   local diffs = vim.diff(table.concat(new_lines, '\n'), prev_lines, {
     algorithm = 'minimal',
     ctxlen = 0,
@@ -54,28 +64,8 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow)
     return
   end
 
-  -- Apply diffs in reverse order.
-  for i = #diffs, 1, -1 do
-    local new_start, new_count, prev_start, prev_count = unpack(diffs[i])
-    local replacement = {}
-    for j = new_start, new_start + new_count - 1, 1 do
-      replacement[#replacement + 1] = new_lines[j]
-    end
-    local s, e
-    if prev_count == 0 then
-      s = prev_start
-      e = s
-    else
-      s = prev_start - 1 + srow
-      e = s + prev_count
-    end
-    api.nvim_buf_set_lines(bufnr, s, e, false, replacement)
-  end
+  api.nvim_buf_set_lines(bufnr, 0, -1, false, new_lines)
   api.nvim_command('silent! noautocmd write!')
-  local mode = api.nvim_get_mode().mode
-  if mode == 'v' or 'V' then
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', true)
-  end
   restore_views(views)
 end
 
@@ -195,7 +185,7 @@ local function do_fmt(buf)
         })
         return
       end
-      update_buffer(buf, prev_lines, new_lines, srow)
+      update_buffer(buf, prev_lines, new_lines)
       if reload and api.nvim_get_current_buf() == buf then
         vim.cmd.edit()
       end

@@ -37,7 +37,7 @@ local function setup(opt)
   resolve_multi_ft()
 
   if opt.lsp_as_default_formatter then
-    events.create_lspattach_autocmd(opt.fmt_on_save)
+    events.create_lspattach_autocmd()
   end
 
   local lint = require('guard.lint')
