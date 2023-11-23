@@ -198,7 +198,6 @@ local function do_fmt(buf)
       })
     end)
   end))
-
 end
 
 local function attach_to_buf(buf)
