@@ -168,6 +168,9 @@ local function do_fmt(buf)
             config.override = true
           end
           config.fn(buf, range)
+          util.doau('GuardFmt', {
+            status = 'done',
+          })
           coroutine.yield()
           if i ~= #fmt_configs then
             new_lines = table.concat(get_prev_lines(buf, srow, erow), '')
@@ -195,6 +198,7 @@ local function do_fmt(buf)
       })
     end)
   end))
+
 end
 
 local function attach_to_buf(buf)
