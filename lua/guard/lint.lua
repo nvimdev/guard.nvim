@@ -91,10 +91,10 @@ local function diag_fmt(buf, lnum, col, message, severity, source)
     end_col = col,
     end_lnum = lnum,
     lnum = lnum,
-    message = message,
+    message = message or '',
     namespace = ns,
-    severity = severity,
-    source = source,
+    severity = severity or vim.diagnostic.severity.HINT,
+    source = source or 'Guard',
   }
 end
 
