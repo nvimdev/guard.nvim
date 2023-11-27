@@ -22,7 +22,7 @@ local function watch_ft(fts)
   })
 end
 
-local function create_lspattach_autocmd()
+local function create_lspattach_autocmd(fmt_on_save)
   api.nvim_create_autocmd('LspAttach', {
     group = group,
     callback = function(args)
