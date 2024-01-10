@@ -35,7 +35,8 @@ local function spawn(opt)
     end)
   end
 
-  handle = uv.spawn(opt.cmd, {
+  local cmd = vim.fn.exepath(opt.cmd)
+  handle = uv.spawn(cmd, {
     stdio = { stdin, stdout, stderr },
     args = opt.args,
     cwd = opt.cwd,
