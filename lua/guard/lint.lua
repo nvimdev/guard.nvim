@@ -85,14 +85,14 @@ local function register_lint(ft, events)
   })
 end
 
-local function diag_fmt(buf, lnum, col, msg, code, severity, source)
+local function diag_fmt(buf, lnum, col, message, severity, source)
   return {
     bufnr = buf,
     col = col,
     end_col = col,
     end_lnum = lnum,
     lnum = lnum,
-    message = message or '' .. (code and '[' .. code .. ']' or ''),
+    message = message or '',
     namespace = ns,
     severity = severity or vim.diagnostic.severity.HINT,
     source = source or 'Guard',
@@ -126,6 +126,10 @@ local json_opts = {
   lines = nil,
 }
 
+local attr_value = function(attribute)
+  return type(attribute) == 'function' and attribute(mes) or mes[attribute]
+end
+
 local function from_json(opts)
   opts = vim.tbl_deep_extend('force', from_opts, opts or {})
   opts = vim.tbl_deep_extend('force', json_opts, opts)
@@ -142,15 +146,13 @@ local function from_json(opts)
     end
 
     vim.tbl_map(function(mes)
-      local attr_value = function(attribute)
-        return type(attribute) == 'function' and attribute(mes) or mes[attribute]
-      end
-
+      local message, code = attr_value(opts.attributes.message), attr_value(opts.attributes.code)
+      local msg = (message or '') .. (code and ('[%s]'):format(code) or '')
       diags[#diags + 1] = diag_fmt(
         buf,
         tonumber(attr_value(opts.attributes.lnum)) - opts.offset,
         tonumber(attr_value(opts.attributes.col)) - opts.offset,
-        ('%s [%s]'):format(attr_value(opts.attributes.message), attr_value(opts.attributes.code)),
+        msg,
         opts.severities[attr_value(opts.attributes.severity)],
         opts.source
       )
@@ -190,12 +192,12 @@ local function from_regex(opts)
     end
 
     vim.tbl_map(function(mes)
+      local msg = (mes.message or '') .. (mes.code and ('[%s]'):format(mes.code) or '')
       diags[#diags + 1] = diag_fmt(
         buf,
         tonumber(mes.lnum) - opts.offset,
         tonumber(mes.col) - opts.offset,
-        mes.message,
-        mes.code,
+        msg,
         opts.severities[mes.severity],
         opts.source
       )
