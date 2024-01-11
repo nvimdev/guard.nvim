@@ -23,6 +23,7 @@ local function do_lint(buf)
 
     for _, lint in ipairs(linters) do
       lint = vim.deepcopy(lint)
+      lint.args = lint.args or {}
       lint.args[#lint.args + 1] = fname
       lint.lines = prev_lines
       local data = spawn(lint)
@@ -84,14 +85,14 @@ local function register_lint(ft, events)
   })
 end
 
-local function diag_fmt(buf, lnum, col, message, severity, source)
+local function diag_fmt(buf, lnum, col, msg, code, severity, source)
   return {
     bufnr = buf,
     col = col,
     end_col = col,
     end_lnum = lnum,
     lnum = lnum,
-    message = message or '',
+    message = message or '' .. (code and '[' .. code .. ']' or ''),
     namespace = ns,
     severity = severity or vim.diagnostic.severity.HINT,
     source = source or 'Guard',
@@ -193,7 +194,8 @@ local function from_regex(opts)
         buf,
         tonumber(mes.lnum) - opts.offset,
         tonumber(mes.col) - opts.offset,
-        ('%s [%s]'):format(mes.message, mes.code),
+        mes.message,
+        mes.code,
         opts.severities[mes.severity],
         opts.source
       )
