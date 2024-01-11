@@ -23,6 +23,7 @@ local function do_lint(buf)
 
     for _, lint in ipairs(linters) do
       lint = vim.deepcopy(lint)
+      lint.args = lint.args or {}
       lint.args[#lint.args + 1] = fname
       lint.lines = prev_lines
       local data = spawn(lint)
@@ -125,6 +126,10 @@ local json_opts = {
   lines = nil,
 }
 
+local function formulate_msg(msg, code)
+  return (message or '') .. (code and ('[%s]'):format(code) or '')
+end
+
 local function from_json(opts)
   opts = vim.tbl_deep_extend('force', from_opts, opts or {})
   opts = vim.tbl_deep_extend('force', json_opts, opts)
@@ -141,15 +146,15 @@ local function from_json(opts)
     end
 
     vim.tbl_map(function(mes)
-      local attr_value = function(attribute)
+      local function attr_value(attribute)
         return type(attribute) == 'function' and attribute(mes) or mes[attribute]
       end
-
+      local message, code = attr_value(opts.attributes.message), attr_value(opts.attributes.code)
       diags[#diags + 1] = diag_fmt(
         buf,
         tonumber(attr_value(opts.attributes.lnum)) - opts.offset,
         tonumber(attr_value(opts.attributes.col)) - opts.offset,
-        ('%s [%s]'):format(attr_value(opts.attributes.message), attr_value(opts.attributes.code)),
+        formulate_msg(message, code),
         opts.severities[attr_value(opts.attributes.severity)],
         opts.source
       )
@@ -193,7 +198,7 @@ local function from_regex(opts)
         buf,
         tonumber(mes.lnum) - opts.offset,
         tonumber(mes.col) - opts.offset,
-        ('%s [%s]'):format(mes.message, mes.code),
+        formulate_msg(mes.message, mes.code),
         opts.severities[mes.severity],
         opts.source
       )
