@@ -126,10 +126,6 @@ local json_opts = {
   lines = nil,
 }
 
-local function attr_value(attribute)
-  return type(attribute) == 'function' and attribute(mes) or mes[attribute]
-end
-
 local function formulate_msg(msg, code)
   return (message or '') .. (code and ('[%s]'):format(code) or '')
 end
@@ -150,6 +146,9 @@ local function from_json(opts)
     end
 
     vim.tbl_map(function(mes)
+      local function attr_value(attribute)
+        return type(attribute) == 'function' and attribute(mes) or mes[attribute]
+      end
       local message, code = attr_value(opts.attributes.message), attr_value(opts.attributes.code)
       diags[#diags + 1] = diag_fmt(
         buf,
