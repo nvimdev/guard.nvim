@@ -126,8 +126,12 @@ local json_opts = {
   lines = nil,
 }
 
-local attr_value = function(attribute)
+local function attr_value(attribute)
   return type(attribute) == 'function' and attribute(mes) or mes[attribute]
+end
+
+local function formulate_msg(msg, code)
+  return (message or '') .. (code and ('[%s]'):format(code) or '')
 end
 
 local function from_json(opts)
@@ -147,12 +151,11 @@ local function from_json(opts)
 
     vim.tbl_map(function(mes)
       local message, code = attr_value(opts.attributes.message), attr_value(opts.attributes.code)
-      local msg = (message or '') .. (code and ('[%s]'):format(code) or '')
       diags[#diags + 1] = diag_fmt(
         buf,
         tonumber(attr_value(opts.attributes.lnum)) - opts.offset,
         tonumber(attr_value(opts.attributes.col)) - opts.offset,
-        msg,
+        formulate_msg(message, code),
         opts.severities[attr_value(opts.attributes.severity)],
         opts.source
       )
@@ -192,12 +195,11 @@ local function from_regex(opts)
     end
 
     vim.tbl_map(function(mes)
-      local msg = (mes.message or '') .. (mes.code and ('[%s]'):format(mes.code) or '')
       diags[#diags + 1] = diag_fmt(
         buf,
         tonumber(mes.lnum) - opts.offset,
         tonumber(mes.col) - opts.offset,
-        msg,
+        formulate_msg(mes.message, mes.code),
         opts.severities[mes.severity],
         opts.source
       )
