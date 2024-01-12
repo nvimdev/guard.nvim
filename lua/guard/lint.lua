@@ -10,10 +10,11 @@ local group = require('guard.events').group
 
 local function do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
-  if not ft_handler[vim.bo[buf].filetype] then
+  local buf_config = ft_handler[vim.bo[buf].filetype] or ft_handler['*']
+  if not buf_config then
     return
   end
-  local linters = ft_handler[vim.bo[buf].filetype].linter
+  local linters = buf_config.linter
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   local prev_lines = get_prev_lines(buf, 0, -1)
   vd.reset(ns, buf)
