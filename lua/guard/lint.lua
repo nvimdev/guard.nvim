@@ -127,7 +127,7 @@ local json_opts = {
 }
 
 local function formulate_msg(msg, code)
-  return (message or '') .. (code and ('[%s]'):format(code) or '')
+  return (msg or '') .. (code and ('[%s]'):format(code) or '')
 end
 
 local function from_json(opts)
