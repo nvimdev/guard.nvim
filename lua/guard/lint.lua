@@ -10,17 +10,31 @@ local group = require('guard.events').group
 
 local function do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
-  local buf_config = ft_handler[vim.bo[buf].filetype] or ft_handler['*']
-  if not buf_config then
-    return
+  local linters, generic_linters
+
+  local generic_config = ft_handler['*']
+  local buf_config = ft_handler[vim.bo[buf].filetype]
+
+  if generic_config and generic_config.linter then
+    generic_linters = generic_config.linter
   end
-  local linters = buf_config.linter
+
+  if not buf_config or not buf_config.linter then
+    -- pre: do_lint only triggers inside autocmds, which ensures generic_config and buf_config are not *both* nil
+    linters = generic_linters
+  else
+    -- buf_config exists, we want both
+    linters = vim.deepcopy(buf_config.linter)
+    if generic_linters then
+      vim.list_extend(linters, generic_linters)
+    end
+  end
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   local prev_lines = get_prev_lines(buf, 0, -1)
   vd.reset(ns, buf)
 
   coroutine.resume(coroutine.create(function()
-    local results
+    local results = {}
 
     for _, lint in ipairs(linters) do
       lint = vim.deepcopy(lint)
@@ -29,7 +43,7 @@ local function do_lint(buf)
       lint.lines = prev_lines
       local data = spawn(lint)
       if #data > 0 then
-        results = lint.parse(data, buf)
+        vim.list_extend(results, lint.parse(data, buf))
       end
     end
 
