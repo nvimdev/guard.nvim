@@ -72,6 +72,13 @@ Register multiple filetypes to a single linter or formatter:
 ft('typescript,javascript,typescriptreact'):fmt('prettier')
 ```
 
+Lint all your files with `codespell`
+
+```lua
+-- NB: this does not work with formatters
+ft('*'):lint('codespell')
+```
+
 ### Custom Configuration
 
 Easily setup your custom tool if not in the defaults or you do not want guard-collection bundled:
