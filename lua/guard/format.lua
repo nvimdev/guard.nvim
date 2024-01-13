@@ -41,7 +41,8 @@ local function update_buffer(bufnr, prev_lines, new_lines)
     return
   end
   local views = save_views(bufnr)
-  new_lines = vim.split(new_lines, '\n')
+  -- \r\n for windows compatibility
+  new_lines = vim.split(new_lines, '\r?\n')
   if new_lines[#new_lines] == '' then
     new_lines[#new_lines] = nil
   end

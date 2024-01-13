@@ -139,9 +139,10 @@ local function from_json(opts)
     local diags, offences = {}, {}
 
     if opts.lines then
+      -- \r\n for windows compatibility
       vim.tbl_map(function(line)
         offences[#offences + 1] = opts.get_diagnostics(line)
-      end, vim.split(result, '\n', { trimempty = true }))
+      end, vim.split(result, '\r?\n', { trimempty = true }))
     else
       offences = opts.get_diagnostics(result)
     end
@@ -176,8 +177,8 @@ local function from_regex(opts)
 
   return function(result, buf)
     local diags, offences = {}, {}
-
-    local lines = vim.split(result, '\n', { trimempty = true })
+    -- \r\n for windows compatibility
+    local lines = vim.split(result, '\r?\n', { trimempty = true })
 
     for _, line in ipairs(lines) do
       local offence = {}
