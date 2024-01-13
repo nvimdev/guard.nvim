@@ -86,6 +86,13 @@ Register multiple filetypes to a single linter or formatter:
     ft('typescript,javascript,typescriptreact'):fmt('prettier')
 <
 
+Lint all your files with `codespell`
+
+>lua
+    -- NB: this does not work with formatters
+    ft('*'):lint('codespell')
+<
+
 
 CUSTOM CONFIGURATION ~
 
