@@ -1,4 +1,5 @@
 # guard.nvim
+[![LuaRocks](https://img.shields.io/luarocks/v/nvimdev/guard.nvim?logo=lua&color=green)](https://luarocks.org/modules/nvimdev/guard.nvim)
 
 Async formatting and linting utility for neovim.
 
