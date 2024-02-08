@@ -36,11 +36,7 @@ local function restore_views(views)
   end
 end
 
-local function update_buffer(bufnr, prev_lines, new_lines, save_on_fmt)
-  if save_on_fmt == nil then
-    save_on_fmt = true
-  end
-
+local function update_buffer(bufnr, prev_lines, new_lines)
   if not new_lines or #new_lines == 0 then
     return
   end
@@ -70,7 +66,9 @@ local function update_buffer(bufnr, prev_lines, new_lines, save_on_fmt)
   end
 
   api.nvim_buf_set_lines(bufnr, 0, -1, false, new_lines)
-  api.nvim_command('silent! noautocmd write!')
+  if require("guard").configuration.save_on_fmt then
+    api.nvim_command('silent! noautocmd write!')
+  end
   restore_views(views)
 end
 
@@ -112,7 +110,7 @@ local function override_lsp(buf)
   end
 end
 
-local function do_fmt(buf, save_on_fmt)
+local function do_fmt(buf)
   buf = buf or api.nvim_get_current_buf()
   if not filetype[vim.bo[buf].filetype] then
     vim.notify('[Guard] missing config for filetype ' .. vim.bo[buf].filetype, vim.log.levels.ERROR)
@@ -193,7 +191,7 @@ local function do_fmt(buf, save_on_fmt)
         })
         return
       end
-      update_buffer(buf, prev_lines, new_lines, save_on_fmt)
+      update_buffer(buf, prev_lines, new_lines)
       if reload and api.nvim_get_current_buf() == buf then
         vim.cmd.edit()
       end
