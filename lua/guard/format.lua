@@ -5,7 +5,6 @@ local spawn = require('guard.spawn').try_spawn
 local util = require('guard.util')
 local get_prev_lines = util.get_prev_lines
 local filetype = require('guard.filetype')
-local formatter = require('guard.tools.formatter')
 
 local function ignored(buf, patterns)
   local fname = api.nvim_buf_get_name(buf)
@@ -37,7 +36,7 @@ local function restore_views(views)
   end
 end
 
-local function update_buffer(bufnr, prev_lines, new_lines, srow, save_on_fmt)
+local function update_buffer(bufnr, prev_lines, new_lines, save_on_fmt)
   if save_on_fmt == nil then
     save_on_fmt = true
   end
@@ -46,10 +45,21 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow, save_on_fmt)
     return
   end
   local views = save_views(bufnr)
-  new_lines = vim.split(new_lines, '\n')
+  -- \r\n for windows compatibility
+  new_lines = vim.split(new_lines, '\r?\n')
   if new_lines[#new_lines] == '' then
     new_lines[#new_lines] = nil
   end
+
+  if #new_lines ~= #prev_lines then
+    api.nvim_buf_set_lines(bufnr, 0, -1, false, new_lines)
+    api.nvim_command('silent! noautocmd write!')
+    restore_views(views)
+    return
+  end
+
+  --TODO(glpnir): before use diff update minimal area has bug line flush
+  --not correct so retrun to update whole buffer.
   local diffs = vim.diff(table.concat(new_lines, '\n'), prev_lines, {
     algorithm = 'minimal',
     ctxlen = 0,
@@ -59,30 +69,8 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow, save_on_fmt)
     return
   end
 
-  -- Apply diffs in reverse order.
-  for i = #diffs, 1, -1 do
-    local new_start, new_count, prev_start, prev_count = unpack(diffs[i])
-    local replacement = {}
-    for j = new_start, new_start + new_count - 1, 1 do
-      replacement[#replacement + 1] = new_lines[j]
-    end
-    local s, e
-    if prev_count == 0 then
-      s = prev_start
-      e = s
-    else
-      s = prev_start - 1 + srow
-      e = s + prev_count
-    end
-    api.nvim_buf_set_lines(bufnr, s, e, false, replacement)
-  end
-  if save_on_fmt then
-    api.nvim_command('silent! noautocmd write!')
-  end
-  local mode = api.nvim_get_mode().mode
-  if mode == 'v' or 'V' then
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', true)
-  end
+  api.nvim_buf_set_lines(bufnr, 0, -1, false, new_lines)
+  api.nvim_command('silent! noautocmd write!')
   restore_views(views)
 end
 
@@ -110,10 +98,14 @@ local function override_lsp(buf)
   end
   local total = #clients
 
+  local changed_tick = api.nvim_buf_get_changedtick(buf)
   ---@diagnostic disable-next-line: duplicate-set-field
   vim.lsp.util.apply_text_edits = function(text_edits, bufnr, offset_encoding)
     total = total - 1
     original(text_edits, bufnr, offset_encoding)
+    if api.nvim_buf_get_changedtick(buf) ~= changed_tick then
+      api.nvim_command('silent! noautocmd write!')
+    end
     if total == 0 then
       coroutine.resume(co)
     end
@@ -135,13 +127,16 @@ local function do_fmt(buf, save_on_fmt)
     srow = range.start[1] - 1
     erow = range['end'][1]
   end
-  local prev_lines = table.concat(util.get_prev_lines(buf, srow, erow), '')
-
-  local fmt_configs = filetype[vim.bo[buf].filetype].format
+  local fmt_configs = filetype[vim.bo[buf].filetype].formatter
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   local startpath = vim.fn.expand(fname, ':p:h')
   local root_dir = util.get_lsp_root()
   local cwd = root_dir or uv.cwd()
+  util.doau('GuardFmt', {
+    status = 'pending',
+    using = fmt_configs,
+  })
+  local prev_lines = table.concat(get_prev_lines(buf, srow, erow), '')
 
   coroutine.resume(coroutine.create(function()
     local new_lines
@@ -149,10 +144,6 @@ local function do_fmt(buf, save_on_fmt)
     local reload = nil
 
     for i, config in ipairs(fmt_configs) do
-      if type(config) == 'string' and formatter[config] then
-        config = formatter[config]
-      end
-
       local allow = true
       if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
         allow = false
@@ -182,6 +173,9 @@ local function do_fmt(buf, save_on_fmt)
             config.override = true
           end
           config.fn(buf, range)
+          util.doau('GuardFmt', {
+            status = 'done',
+          })
           coroutine.yield()
           if i ~= #fmt_configs then
             new_lines = table.concat(get_prev_lines(buf, srow, erow), '')
@@ -193,12 +187,20 @@ local function do_fmt(buf, save_on_fmt)
 
     vim.schedule(function()
       if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
+        util.doau('GuardFmt', {
+          status = 'failed',
+          msg = 'buffer changed or no longer valid',
+        })
         return
       end
-      update_buffer(buf, prev_lines, new_lines, srow, save_on_fmt)
+      update_buffer(buf, prev_lines, new_lines, save_on_fmt)
       if reload and api.nvim_get_current_buf() == buf then
         vim.cmd.edit()
       end
+      util.doau('GuardFmt', {
+        status = 'done',
+        results = new_lines,
+      })
     end)
   end))
 end

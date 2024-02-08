@@ -1,7 +1,7 @@
 local api = vim.api
 ---@diagnostic disable-next-line: deprecated
 local uv = vim.version().minor >= 10 and vim.uv or vim.loop
-local filetype = require('guard.filetype')
+local ft_handler = require('guard.filetype')
 local spawn = require('guard.spawn').try_spawn
 local ns = api.nvim_create_namespace('Guard')
 local get_prev_lines = require('guard.util').get_prev_lines
@@ -10,24 +10,40 @@ local group = require('guard.events').group
 
 local function do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
-  if not filetype[vim.bo[buf].filetype] then
-    return
+  local linters, generic_linters
+
+  local generic_config = ft_handler['*']
+  local buf_config = ft_handler[vim.bo[buf].filetype]
+
+  if generic_config and generic_config.linter then
+    generic_linters = generic_config.linter
   end
-  local linters = filetype[vim.bo[buf].filetype].linter
+
+  if not buf_config or not buf_config.linter then
+    -- pre: do_lint only triggers inside autocmds, which ensures generic_config and buf_config are not *both* nil
+    linters = generic_linters
+  else
+    -- buf_config exists, we want both
+    linters = vim.deepcopy(buf_config.linter)
+    if generic_linters then
+      vim.list_extend(linters, generic_linters)
+    end
+  end
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   local prev_lines = get_prev_lines(buf, 0, -1)
   vd.reset(ns, buf)
 
   coroutine.resume(coroutine.create(function()
-    local results
+    local results = {}
 
     for _, lint in ipairs(linters) do
       lint = vim.deepcopy(lint)
+      lint.args = lint.args or {}
       lint.args[#lint.args + 1] = fname
       lint.lines = prev_lines
       local data = spawn(lint)
       if #data > 0 then
-        results = lint.parse(data, buf)
+        vim.list_extend(results, lint.parse(data, buf))
       end
     end
 
@@ -41,30 +57,45 @@ local function do_lint(buf)
 end
 
 local debounce_timer = nil
-local function register_lint(ft, extra)
+local function register_lint(ft, events)
   api.nvim_create_autocmd('FileType', {
     pattern = ft,
     group = group,
     callback = function(args)
-      api.nvim_create_autocmd(vim.list_extend({ 'BufEnter' }, extra), {
-        buffer = args.buf,
-        group = group,
-        callback = function(opt)
-          if debounce_timer then
-            debounce_timer:stop()
-            debounce_timer = nil
-          end
-          debounce_timer = uv.new_timer()
-          debounce_timer:start(500, 0, function()
-            debounce_timer:stop()
-            debounce_timer:close()
-            debounce_timer = nil
-            vim.schedule(function()
-              do_lint(opt.buf)
-            end)
+      local cb = function(opt)
+        if debounce_timer then
+          debounce_timer:stop()
+          debounce_timer = nil
+        end
+        debounce_timer = uv.new_timer()
+        debounce_timer:start(500, 0, function()
+          debounce_timer:stop()
+          debounce_timer:close()
+          debounce_timer = nil
+          vim.schedule(function()
+            do_lint(opt.buf)
           end)
-        end,
-      })
+        end)
+      end
+      for _, ev in ipairs(events) do
+        if ev == 'User GuardFmt' then
+          api.nvim_create_autocmd('User', {
+            group = group,
+            pattern = 'GuardFmt',
+            callback = function(opt)
+              if opt.data.status == 'done' then
+                cb(opt)
+              end
+            end,
+          })
+        else
+          api.nvim_create_autocmd(ev, {
+            group = group,
+            buffer = args.buf,
+            callback = cb,
+          })
+        end
+      end
     end,
   })
 end
@@ -76,10 +107,10 @@ local function diag_fmt(buf, lnum, col, message, severity, source)
     end_col = col,
     end_lnum = lnum,
     lnum = lnum,
-    message = message,
+    message = message or '',
     namespace = ns,
-    severity = severity,
-    source = source,
+    severity = severity or vim.diagnostic.severity.HINT,
+    source = source or 'Guard',
   }
 end
 
@@ -110,6 +141,10 @@ local json_opts = {
   lines = nil,
 }
 
+local function formulate_msg(msg, code)
+  return (msg or '') .. (code and ('[%s]'):format(code) or '')
+end
+
 local function from_json(opts)
   opts = vim.tbl_deep_extend('force', from_opts, opts or {})
   opts = vim.tbl_deep_extend('force', json_opts, opts)
@@ -118,25 +153,25 @@ local function from_json(opts)
     local diags, offences = {}, {}
 
     if opts.lines then
+      -- \r\n for windows compatibility
       vim.tbl_map(function(line)
         offences[#offences + 1] = opts.get_diagnostics(line)
-      end, vim.split(result, '\n', { trimempty = true }))
+      end, vim.split(result, '\r?\n', { trimempty = true }))
     else
       offences = opts.get_diagnostics(result)
     end
 
     vim.tbl_map(function(mes)
-      local lnum = type(opts.attributes.lnum) == 'function' and opts.attributes.lnum(mes)
-        or mes[opts.attributes.lnum]
-      local col = type(opts.attributes.col) == 'function' and opts.attributes.col(mes)
-        or mes[opts.attributes.col]
-
+      local function attr_value(attribute)
+        return type(attribute) == 'function' and attribute(mes) or mes[attribute]
+      end
+      local message, code = attr_value(opts.attributes.message), attr_value(opts.attributes.code)
       diags[#diags + 1] = diag_fmt(
         buf,
-        tonumber(lnum) - opts.offset,
-        tonumber(col) - opts.offset,
-        ('%s [%s]'):format(mes[opts.attributes.message], mes[opts.attributes.code]),
-        opts.severities[mes[opts.attributes.severity]],
+        tonumber(attr_value(opts.attributes.lnum)) - opts.offset,
+        tonumber(attr_value(opts.attributes.col)) - opts.offset,
+        formulate_msg(message, code),
+        opts.severities[attr_value(opts.attributes.severity)],
         opts.source
       )
     end, offences or {})
@@ -156,8 +191,8 @@ local function from_regex(opts)
 
   return function(result, buf)
     local diags, offences = {}, {}
-
-    local lines = vim.split(result, '\n', { trimempty = true })
+    -- \r\n for windows compatibility
+    local lines = vim.split(result, '\r?\n', { trimempty = true })
 
     for _, line in ipairs(lines) do
       local offence = {}
@@ -179,7 +214,7 @@ local function from_regex(opts)
         buf,
         tonumber(mes.lnum) - opts.offset,
         tonumber(mes.col) - opts.offset,
-        ('%s [%s]'):format(mes.message, mes.code),
+        formulate_msg(mes.message, mes.code),
         opts.severities[mes.severity],
         opts.source
       )
@@ -190,6 +225,7 @@ local function from_regex(opts)
 end
 
 return {
+  do_lint = do_lint,
   register_lint = register_lint,
   diag_fmt = diag_fmt,
   from_json = from_json,

@@ -8,7 +8,15 @@ local function watch_ft(fts)
     group = group,
     pattern = fts,
     callback = function(args)
-      format.attach_to_buf(args.buf)
+      if
+        #api.nvim_get_autocmds({
+          group = group,
+          event = 'BufWritePre',
+          buffer = args.buf,
+        }) == 0
+      then
+        format.attach_to_buf(args.buf)
+      end
     end,
     desc = 'guard',
   })
@@ -24,10 +32,9 @@ local function create_lspattach_autocmd(fmt_on_save)
         return
       end
       local ft = vim.bo[args.buf].filetype
-      if not (ft_handler[ft] and ft_handler[ft].format) then
+      if not (ft_handler[ft] and ft_handler[ft].formatter) then
         ft_handler(ft):fmt('lsp')
       end
-
       if
         fmt_on_save
         and #api.nvim_get_autocmds({
