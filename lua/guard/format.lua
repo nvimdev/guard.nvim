@@ -49,7 +49,9 @@ local function update_buffer(bufnr, prev_lines, new_lines)
 
   if #new_lines ~= #prev_lines then
     api.nvim_buf_set_lines(bufnr, 0, -1, false, new_lines)
-    api.nvim_command('silent! noautocmd write!')
+    if require("guard").config.opts.save_on_fmt then
+      api.nvim_command('silent! noautocmd write!')
+    end
     restore_views(views)
     return
   end
@@ -66,7 +68,7 @@ local function update_buffer(bufnr, prev_lines, new_lines)
   end
 
   api.nvim_buf_set_lines(bufnr, 0, -1, false, new_lines)
-  if require("guard").configuration.save_on_fmt then
+  if require("guard").config.opts.save_on_fmt then
     api.nvim_command('silent! noautocmd write!')
   end
   restore_views(views)
