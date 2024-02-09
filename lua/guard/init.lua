@@ -2,6 +2,10 @@ local util = require('guard.util')
 local ft_handler = require('guard.filetype')
 local events = require('guard.events')
 
+local config = {
+  opts = nil
+}
+
 local function register_cfg_by_table(fts_with_cfg)
   for ft, cfg in pairs(fts_with_cfg or {}) do
     if not vim.tbl_isempty(cfg) then
@@ -28,23 +32,24 @@ local function resolve_multi_ft()
 end
 
 local function setup(opt)
-  opt = vim.tbl_extend('force', {
+  config.opts = vim.tbl_extend('force', {
     fmt_on_save = true,
     lsp_as_default_formatter = false,
+    save_on_fmt = true,
   }, opt or {})
 
-  register_cfg_by_table(opt.ft)
+  register_cfg_by_table(config.opts.ft)
   resolve_multi_ft()
 
-  if opt.lsp_as_default_formatter then
-    events.create_lspattach_autocmd(opt.fmt_on_save)
+  if config.opts.lsp_as_default_formatter then
+    events.create_lspattach_autocmd(config.opts.fmt_on_save)
   end
 
   local lint = require('guard.lint')
   for ft, conf in pairs(ft_handler) do
     local lint_events = { 'BufWritePost', 'BufEnter' }
 
-    if conf.formatter and opt.fmt_on_save then
+    if conf.formatter and config.opts.fmt_on_save then
       events.watch_ft(ft)
       lint_events[1] = 'User GuardFmt'
     end
@@ -63,4 +68,5 @@ end
 
 return {
   setup = setup,
+  config = config,
 }
