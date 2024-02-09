@@ -1,4 +1,4 @@
-*guard.nvim.txt*          For NVIM v0.8.0         Last change: 2024 January 31
+*guard.nvim.txt*         For NVIM v0.8.0         Last change: 2024 February 09
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -50,10 +50,13 @@ Guard is configured as follows:
     
     -- Call setup() LAST!
     require('guard').setup({
-        -- the only options for the setup function
+        -- Choose to format on every write to a buffer
         fmt_on_save = true,
         -- Use lsp if no formatter was defined for this filetype
         lsp_as_default_formatter = false,
+        -- By default, Guard writes the buffer on every format
+        -- You can disable this by setting:
+        -- save_on_fmt = false,
     })
 <
 
