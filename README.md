@@ -93,7 +93,7 @@ Easily setup your custom tool if not in the defaults or you do not want guard-co
     fname            -- boolean: insert filename to args tail
     stdin            -- boolean: pass buffer contents into stdin
     timeout          -- integer
-    ignore_patterns   -- table: don't run formatter when pattern match against file name
+    ignore_patterns  -- table: don't run formatter when pattern match against file name
     ignore_error     -- boolean: when has lsp error ignore format
     find             -- string: format if the file is found in the lsp root dir
     env              -- table: environment variables passed to cmd (key value pair)
