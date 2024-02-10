@@ -89,7 +89,7 @@ Easily setup your custom tool if not in the defaults or you do not want guard-co
 ```
 {
     cmd              -- string: tool command
-    args             -- table: command arugments
+    args             -- table: command arguments
     fname            -- boolean: insert filename to args tail
     stdin            -- boolean: pass buffer contents into stdin
     timeout          -- integer
