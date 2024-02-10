@@ -1,4 +1,4 @@
-*guard.nvim.txt*         For NVIM v0.8.0         Last change: 2024 February 09
+*guard.nvim.txt*         For NVIM v0.8.0         Last change: 2024 February 10
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -105,11 +105,11 @@ guard-collection bundled:
 >
     {
         cmd              -- string: tool command
-        args             -- table: command arugments
+        args             -- table: command arguments
         fname            -- boolean: insert filename to args tail
         stdin            -- boolean: pass buffer contents into stdin
         timeout          -- integer
-        ignore_patterns   -- table: don't run formatter when pattern match against file name
+        ignore_patterns  -- table: don't run formatter when pattern match against file name
         ignore_error     -- boolean: when has lsp error ignore format
         find             -- string: format if the file is found in the lsp root dir
         env              -- table: environment variables passed to cmd (key value pair)
