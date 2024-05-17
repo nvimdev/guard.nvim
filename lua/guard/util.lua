@@ -26,7 +26,7 @@ function util.get_lsp_root(buf)
 end
 
 function util.as_table(t)
-  return vim.tbl_islist(t) and t or { t }
+  return (vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist)(t) and t or { t }
 end
 
 -- TODO: Use `vim.region()` instead ?
