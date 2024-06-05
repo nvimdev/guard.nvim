@@ -36,7 +36,7 @@ local function restore_views(views)
   end
 end
 
-local function update_buffer(bufnr, prev_lines, new_lines)
+local function update_buffer(bufnr, prev_lines, new_lines, srow, erow)
   if not new_lines or #new_lines == 0 then
     return
   end
@@ -47,31 +47,13 @@ local function update_buffer(bufnr, prev_lines, new_lines)
     new_lines[#new_lines] = nil
   end
 
-  if #new_lines ~= #prev_lines then
-    api.nvim_buf_set_lines(bufnr, 0, -1, false, new_lines)
+  if new_lines ~= prev_lines then
+    api.nvim_buf_set_lines(bufnr, srow, erow, false, new_lines)
     if require("guard").config.opts.save_on_fmt then
       api.nvim_command('silent! noautocmd write!')
     end
     restore_views(views)
-    return
   end
-
-  --TODO(glpnir): before use diff update minimal area has bug line flush
-  --not correct so retrun to update whole buffer.
-  local diffs = vim.diff(table.concat(new_lines, '\n'), prev_lines, {
-    algorithm = 'minimal',
-    ctxlen = 0,
-    result_type = 'indices',
-  })
-  if not diffs or #diffs == 0 then
-    return
-  end
-
-  api.nvim_buf_set_lines(bufnr, 0, -1, false, new_lines)
-  if require("guard").config.opts.save_on_fmt then
-    api.nvim_command('silent! noautocmd write!')
-  end
-  restore_views(views)
 end
 
 local function find(startpath, patterns, root_dir)
@@ -193,7 +175,7 @@ local function do_fmt(buf)
         })
         return
       end
-      update_buffer(buf, prev_lines, new_lines)
+      update_buffer(buf, prev_lines, new_lines, srow, erow)
       if reload and api.nvim_get_current_buf() == buf then
         vim.cmd.edit()
       end
