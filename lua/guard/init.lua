@@ -3,7 +3,7 @@ local ft_handler = require('guard.filetype')
 local events = require('guard.events')
 
 local config = {
-  opts = nil
+  opts = nil,
 }
 
 local function register_cfg_by_table(fts_with_cfg)

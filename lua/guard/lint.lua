@@ -6,9 +6,9 @@ local spawn = require('guard.spawn').try_spawn
 local ns = api.nvim_create_namespace('Guard')
 local get_prev_lines = require('guard.util').get_prev_lines
 local vd = vim.diagnostic
-local group = require('guard.events').group
+local M = {}
 
-local function do_lint(buf)
+function M.do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
   local linters, generic_linters
 
@@ -56,51 +56,7 @@ local function do_lint(buf)
   end))
 end
 
-local debounce_timer = nil
-local function register_lint(ft, events)
-  api.nvim_create_autocmd('FileType', {
-    pattern = ft,
-    group = group,
-    callback = function(args)
-      local cb = function(opt)
-        if debounce_timer then
-          debounce_timer:stop()
-          debounce_timer = nil
-        end
-        debounce_timer = uv.new_timer()
-        debounce_timer:start(500, 0, function()
-          debounce_timer:stop()
-          debounce_timer:close()
-          debounce_timer = nil
-          vim.schedule(function()
-            do_lint(opt.buf)
-          end)
-        end)
-      end
-      for _, ev in ipairs(events) do
-        if ev == 'User GuardFmt' then
-          api.nvim_create_autocmd('User', {
-            group = group,
-            pattern = 'GuardFmt',
-            callback = function(opt)
-              if opt.data.status == 'done' then
-                cb(opt)
-              end
-            end,
-          })
-        else
-          api.nvim_create_autocmd(ev, {
-            group = group,
-            buffer = args.buf,
-            callback = cb,
-          })
-        end
-      end
-    end,
-  })
-end
-
-local function diag_fmt(buf, lnum, col, message, severity, source)
+function M.diag_fmt(buf, lnum, col, message, severity, source)
   return {
     bufnr = buf,
     col = col,
@@ -120,6 +76,7 @@ local severities = {
   info = 3,
   style = 4,
 }
+M.severities = severities
 
 local from_opts = {
   offset = 1,
@@ -145,7 +102,7 @@ local function formulate_msg(msg, code)
   return (msg or '') .. (code and ('[%s]'):format(code) or '')
 end
 
-local function from_json(opts)
+function M.from_json(opts)
   opts = vim.tbl_deep_extend('force', from_opts, opts or {})
   opts = vim.tbl_deep_extend('force', json_opts, opts)
 
@@ -166,7 +123,7 @@ local function from_json(opts)
         return type(attribute) == 'function' and attribute(mes) or mes[attribute]
       end
       local message, code = attr_value(opts.attributes.message), attr_value(opts.attributes.code)
-      diags[#diags + 1] = diag_fmt(
+      diags[#diags + 1] = M.diag_fmt(
         buf,
         tonumber(attr_value(opts.attributes.lnum)) - opts.offset,
         tonumber(attr_value(opts.attributes.col)) - opts.offset,
@@ -185,7 +142,7 @@ local regex_opts = {
   groups = { 'lnum', 'col', 'severity', 'code', 'message' },
 }
 
-local function from_regex(opts)
+function M.from_regex(opts)
   opts = vim.tbl_deep_extend('force', from_opts, opts or {})
   opts = vim.tbl_deep_extend('force', regex_opts, opts)
 
@@ -210,7 +167,7 @@ local function from_regex(opts)
     end
 
     vim.tbl_map(function(mes)
-      diags[#diags + 1] = diag_fmt(
+      diags[#diags + 1] = M.diag_fmt(
         buf,
         tonumber(mes.lnum) - opts.offset,
         tonumber(mes.col) - opts.offset,
@@ -224,11 +181,4 @@ local function from_regex(opts)
   end
 end
 
-return {
-  do_lint = do_lint,
-  register_lint = register_lint,
-  diag_fmt = diag_fmt,
-  from_json = from_json,
-  from_regex = from_regex,
-  severities = severities,
-}
+return M

@@ -16,11 +16,11 @@ local function get_tool(tool_type, tool_name)
       ),
       4
     )
-    return
+    return {}
   end
   if not tbl[tool_name] then
     vim.notify(('[Guard]: %s %s has no builtin configuration'):format(tool_type, tool_name), 4)
-    return
+    return {}
   end
   return tbl[tool_name]
 end

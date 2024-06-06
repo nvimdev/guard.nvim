@@ -49,7 +49,7 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow, erow)
 
   if new_lines ~= prev_lines then
     api.nvim_buf_set_lines(bufnr, srow, erow, false, new_lines)
-    if require("guard").config.opts.save_on_fmt then
+    if require('guard').config.opts.save_on_fmt then
       api.nvim_command('silent! noautocmd write!')
     end
     restore_views(views)
@@ -187,20 +187,6 @@ local function do_fmt(buf)
   end))
 end
 
-local function attach_to_buf(buf)
-  api.nvim_create_autocmd('BufWritePre', {
-    group = require('guard.events').group,
-    buffer = buf,
-    callback = function(opt)
-      if not vim.bo[opt.buf].modified then
-        return
-      end
-      require('guard.format').do_fmt(opt.buf)
-    end,
-  })
-end
-
 return {
   do_fmt = do_fmt,
-  attach_to_buf = attach_to_buf,
 }
