@@ -115,6 +115,13 @@ ft('asm'):fmt({
 
 Consult the [builtin tools](https://github.com/nvimdev/guard-collection/tree/main/lua/guard-collection) if needed.
 
+### Advanced configuration
+
+[ADVANCED.md](https://github.com/nvimdev/guard.nvim/blob/main/ADVANCED.md) contains tiny tutorials to:
+
+- Write your own formatting logic
+- leverage guard's autocmds, say showing formatting status?
+
 ### Supported Tools
 
 See [here](https://github.com/nvimdev/guard-collection) for an exhaustive list.
