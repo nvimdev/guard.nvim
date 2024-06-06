@@ -73,7 +73,7 @@ We get the unformatted code, then call `vim.system` with 3 arguments
 
 Now we can do our custom error handling, here we simply return if `prettierd` failed. But if it succeeded we replace the range with the formatted code and save the file.
 
-Finally we write the unformatted to stdin
+Finally we write the unformatted code to stdin
 
 ```lua
 local function prettierd_fmt(buf, range)
