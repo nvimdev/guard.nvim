@@ -1,4 +1,4 @@
----@diagnostic disable-next-line: deprecated
+---@diagnostic disable: undefined-field
 local uv = vim.version().minor >= 10 and vim.uv or vim.loop
 
 local function safe_close(handle)

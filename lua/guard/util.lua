@@ -65,7 +65,7 @@ function util.get_clients(bufnr, method)
   if vim.version().minor >= 10 then
     return vim.lsp.get_clients({ bufnr = bufnr, method = method })
   end
-  local clients = vim.lsp.get_active_clients({ bufnr = bufnr })
+  local clients = vim.lsp.get_clients({ bufnr = bufnr })
   return vim.tbl_filter(function(client)
     return client.supports_method(method)
   end, clients)
