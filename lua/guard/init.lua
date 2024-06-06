@@ -45,7 +45,6 @@ local function setup(opt)
     events.create_lspattach_autocmd(config.opts.fmt_on_save)
   end
 
-  local lint = require('guard.lint')
   for ft, conf in pairs(ft_handler) do
     local lint_events = { 'BufWritePost', 'BufEnter' }
 
@@ -60,7 +59,7 @@ local function setup(opt)
           table.insert(lint_events, 'TextChanged')
           table.insert(lint_events, 'InsertLeave')
         end
-        lint.register_lint(ft, lint_events)
+        events.register_lint(ft, lint_events)
       end
     end
   end

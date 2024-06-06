@@ -1,5 +1,97 @@
 # Advanced tips
 
+## Special case formatting logic
+
+With the introduction of `vim.system` in neovim 0.10, it is now easy to write custom formatting logic. Let's work through an example of how you could do so.
+
+`prettierd` does not work well with guard because of it's error mechanism. Guard follows a reasonable unix standard when it comes to determining exit status, that is, assuming the program would exit with non-zero exit code and print some reasonable error message in stderr:
+
+```lua
+if exit_code ~= 0 and num_stderr_chunks ~= 0 then
+    -- failed
+else
+    -- success
+end
+```
+
+However, `prettierd` prints error messages to stdout, so guard will fail to detect an error and proceed to replace your code with its error message :cry:
+
+But fear not! You can create your custom logic by passing a function in the config table, in fact, lsp formatting is simply defined as:
+
+```lua
+{
+    fn = function(bufnr, range)
+        vim.lsp.buf.format({ bufnr = bufnr, range = range, async = true })
+    end,
+}
+```
+
+Let's do this step by step:
+
+```lua
+local function prettierd_fmt(buf, range)
+    local srow = 0
+    local erow = -1
+    if range then
+        srow = range["start"][1]
+        erow = range["end"][1]
+    end
+end
+```
+
+The function signature takes a buffer number (`:h bufnr`) and (optionally) a range table, like `vim.lsp.buf.format`. The range table contains 2 keys `start` and `end`, which themselves is a { row, col } tuple, respectively. Since it's not very reasonable to format from the middle of a line, we just take the row numbers.
+
+We can now go on to mimic how we would call `prettierd` on the cmdline:
+
+```
+cat test.js | prettierd test.js
+```
+
+```lua
+local function prettierd_fmt(buf, range)
+    -- previous code omitted
+
+    local prev_lines = table.concat(vim.api.nvim_buf_get_lines(buf, srow, erow, false), "\n")
+    local handle = vim.system({ "prettierd", vim.api.nvim_buf_get_name(buf) }, {
+        stdin = true,
+    }, vim.schedule_wrap(function(result)
+        if result.code ~= 0 then
+            return
+        end
+        local out = result.stdout
+        vim.api.nvim_buf_set_lines(buf, srow, erow, false, vim.split(out, "\r?\n"))
+        vim.cmd("silent! noautocmd write!")
+    end))
+end
+```
+
+We get the unformatted code, then call `vim.system` with 3 arguments
+
+- the cmd, which is of the form `prettierd <file>`
+- the option table, here we only specified that we wish to write to its stdin, but you can refer to `:h vim.system` for more options
+- the `at_exit` function, which takes in a result table (again, check out `:h vim.system` for more details)
+
+Now we can do our custom error handling, here we simply return if `prettierd` failed. But if it succeeded we replace the range with the formatted code and save the file.
+
+Finally we write the unformatted to stdin
+
+```lua
+local function prettierd_fmt(buf, range)
+    -- previous code omitted
+
+    handle:write(prev_lines)
+    handle:write(nil)           -- closes stdin
+end
+```
+
+Whoa la! Now we can tell guard to register our formatting function
+
+```lua
+ft("javascript"):fmt({
+    fn = prettierd_fmt
+})
+```
+
 ## Take advantage of autocmd events
 
 Guard exposes a `GuardFmt` user event that you can use. It is called both before formatting starts and after it is completely done. To differentiate between pre-format and post-format calls, a `data` table is passed.
