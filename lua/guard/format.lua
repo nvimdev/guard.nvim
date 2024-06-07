@@ -1,7 +1,6 @@
 local api = vim.api
----@diagnostic disable-next-line: deprecated
-local uv = vim.version().minor >= 10 and vim.uv or vim.loop
-local spawn = require('guard.spawn').try_spawn
+local uv = vim.uv
+local spawn = require('guard.spawn')
 local util = require('guard.util')
 local get_prev_lines = util.get_prev_lines
 local filetype = require('guard.filetype')
@@ -71,27 +70,13 @@ local function find(startpath, patterns, root_dir)
   end
 end
 
-local function override_lsp(buf)
-  local co = assert(coroutine.running())
-  local original = vim.lsp.util.apply_text_edits
-  local clients = util.get_clients(buf, 'textDocument/formatting')
-  if #clients == 0 then
-    return
+local function get_cmd(config, fname)
+  local cmd = config.args or {}
+  table.insert(cmd, 1, config.cmd)
+  if config.fname then
+    table.insert(cmd, fname)
   end
-  local total = #clients
-
-  local changed_tick = api.nvim_buf_get_changedtick(buf)
-  ---@diagnostic disable-next-line: duplicate-set-field
-  vim.lsp.util.apply_text_edits = function(text_edits, bufnr, offset_encoding)
-    total = total - 1
-    original(text_edits, bufnr, offset_encoding)
-    if api.nvim_buf_get_changedtick(buf) ~= changed_tick then
-      api.nvim_command('silent! noautocmd write!')
-    end
-    if total == 0 then
-      coroutine.resume(co)
-    end
-  end
+  return cmd
 end
 
 local function do_fmt(buf)
@@ -100,6 +85,7 @@ local function do_fmt(buf)
     vim.notify('[Guard] missing config for filetype ' .. vim.bo[buf].filetype, vim.log.levels.ERROR)
     return
   end
+
   local srow = 0
   local erow = -1
   local range
@@ -109,11 +95,15 @@ local function do_fmt(buf)
     srow = range.start[1] - 1
     erow = range['end'][1]
   end
+
   local fmt_configs = filetype[vim.bo[buf].filetype].formatter
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
+  ---@diagnostic disable-next-line: param-type-mismatch
   local startpath = vim.fn.expand(fname, ':p:h')
   local root_dir = util.get_lsp_root()
+  ---@diagnostic disable-next-line: undefined-field
   local cwd = root_dir or uv.cwd()
+
   util.doau('GuardFmt', {
     status = 'pending',
     using = fmt_configs,
@@ -121,69 +111,117 @@ local function do_fmt(buf)
   local prev_lines = table.concat(get_prev_lines(buf, srow, erow), '')
 
   coroutine.resume(coroutine.create(function()
-    local new_lines
+    local new_lines = prev_lines
     local changedtick = api.nvim_buf_get_changedtick(buf)
-    local reload = nil
+    local error = false
+    local error_cmd = ''
 
-    for i, config in ipairs(fmt_configs) do
-      local allow = true
+    -- handle execution condition
+    fmt_configs = fmt_configs.filter(function(config)
       if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
-        allow = false
+        return false
       elseif config.ignore_error and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
-        allow = false
+        return false
       elseif config.find and not find(startpath, config.find, root_dir) then
-        allow = false
+        return false
       end
+      return true
+    end)
 
-      if allow then
-        if config.cmd then
-          config.lines = new_lines and new_lines or prev_lines
-          config.args = config.args or {}
-          config.args[#config.args + 1] = config.fname and fname or nil
-          config.cwd = cwd
-          reload = (not reload and config.stdout == false) and true or false
-          new_lines = spawn(config)
-          --restore
-          config.lines = nil
-          config.cwd = nil
-          if config.fname then
-            config.args[#config.args] = nil
-          end
-        elseif config.fn then
-          if not config.override then
-            override_lsp(buf)
-            config.override = true
-          end
-          config.fn(buf, range)
-          util.doau('GuardFmt', {
-            status = 'done',
-          })
-          coroutine.yield()
-          if i ~= #fmt_configs then
-            new_lines = table.concat(get_prev_lines(buf, srow, erow), '')
-          end
-        end
-        changedtick = vim.b[buf].changedtick
-      end
+    -- filter out pure and impure formatters
+    local pure = vim.iter(fmt_configs):filter(function(config)
+      return config.fn or (config.cmd and config.stdin)
+    end)
+    local impure = vim.iter(fmt_configs):filter(function(config)
+      return config.cmd and not config.stdin
+    end)
+
+    -- error if one of the formatters is impure and the user requested range formatting
+    if range and #impure:totable() > 0 then
+      local error_msg = '[Guard]: Cannot apply range formatting for filetype `'
+        .. vim.bo[buf].filetype
+        .. '` because the following formatters\n'
+        .. vim.inspect(#impure:totable())
+        .. '\n does not support reading from stdin'
+      util.doau('GuardFmt', {
+        status = 'failed',
+        msg = 'range formatting requested with non-capable formatters',
+      })
+      vim.notify(error_msg, 4)
+      return
     end
 
-    vim.schedule(function()
-      if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
-        util.doau('GuardFmt', {
-          status = 'failed',
-          msg = 'buffer changed or no longer valid',
-        })
-        return
+    new_lines = pure:fold(new_lines, function(acc, _, config)
+      -- we don't need to reformat an empty string
+      if new_lines == '' then
+        return ''
       end
-      update_buffer(buf, prev_lines, new_lines, srow, erow)
-      if reload and api.nvim_get_current_buf() == buf then
-        vim.cmd.edit()
+      if config.fn then
+        return config.fn(buf, range, acc)
+      else
+        local result = spawn.transform(get_cmd(config, fname), cwd, config.env or {}, acc)
+        if type(result) == 'number' then
+          -- indicates error
+          error = true
+          error_cmd = config.cmd
+          return ''
+        else
+          return result
+        end
       end
-      util.doau('GuardFmt', {
-        status = 'done',
-        results = new_lines,
-      })
     end)
+
+    if error then
+      util.doau('GuardFmt', {
+        status = 'failed',
+        msg = error_cmd .. ' exited with non-zero exit code',
+      })
+      vim.notify('[Guard]: ' .. error_cmd .. ' exited with errors', 4)
+      return
+    end
+
+    if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
+      util.doau('GuardFmt', {
+        status = 'failed',
+        msg = 'buffer changed or no longer valid',
+      })
+      return
+    end
+
+    update_buffer(buf, prev_lines, new_lines, srow, erow)
+
+    impure:each(function(config)
+      vim
+        .system(get_cmd(config, fname), {
+          text = true,
+          cwd = cwd,
+          env = config.env or {},
+        }, function(handle)
+          if handle.code ~= 0 and #handle.stderr > 0 then
+            error = true
+            error_cmd = config.cmd
+          end
+        end)
+        :wait()
+    end)
+
+    if error then
+      util.doau('GuardFmt', {
+        status = 'failed',
+        msg = error_cmd .. ' exited with non-zero exit code',
+      })
+      vim.notify('[Guard]: ' .. error_cmd .. ' exited with errors', 4)
+      return
+    end
+
+    if #impure:totable() > 0 and api.nvim_get_current_buf() == buf then
+      vim.cmd.edit()
+    end
+
+    util.doau('GuardFmt', {
+      status = 'done',
+      results = new_lines,
+    })
   end))
 end
 
