@@ -1,5 +1,4 @@
-local api = vim.api
-local uv = vim.uv
+local api,uv = vim.api,vim.uv
 local group = api.nvim_create_augroup('Guard', { clear = true })
 local M = {}
 
