@@ -71,7 +71,7 @@ local function find(startpath, patterns, root_dir)
 end
 
 local function get_cmd(config, fname)
-  local cmd = config.args or {}
+  local cmd = config.args and vim.deepcopy(config.args) or {}
   table.insert(cmd, 1, config.cmd)
   if config.fname then
     table.insert(cmd, fname)
@@ -114,10 +114,10 @@ local function do_fmt(buf)
     local new_lines = prev_lines
     local changedtick = api.nvim_buf_get_changedtick(buf)
     local error = false
-    local error_cmd = ''
+    local error_result = {}
 
     -- handle execution condition
-    fmt_configs = fmt_configs.filter(function(config)
+    fmt_configs = vim.iter(fmt_configs):filter(function(config)
       if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
         return false
       elseif config.ignore_error and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
@@ -129,10 +129,10 @@ local function do_fmt(buf)
     end)
 
     -- filter out pure and impure formatters
-    local pure = vim.iter(fmt_configs):filter(function(config)
+    local pure = vim.deepcopy(fmt_configs):filter(function(config)
       return config.fn or (config.cmd and config.stdin)
     end)
-    local impure = vim.iter(fmt_configs):filter(function(config)
+    local impure = vim.deepcopy(fmt_configs):filter(function(config)
       return config.cmd and not config.stdin
     end)
 
@@ -151,7 +151,7 @@ local function do_fmt(buf)
       return
     end
 
-    new_lines = pure:fold(new_lines, function(acc, _, config)
+    new_lines = pure:fold(new_lines, function(acc, config, _)
       -- we don't need to reformat an empty string
       if new_lines == '' then
         return ''
@@ -160,12 +160,15 @@ local function do_fmt(buf)
         return config.fn(buf, range, acc)
       else
         local result = spawn.transform(get_cmd(config, fname), cwd, config.env or {}, acc)
-        if type(result) == 'number' then
+        if type(result) == 'table' then
           -- indicates error
           error = true
-          error_cmd = config.cmd
+          error_result = result
+          ---@diagnostic disable-next-line: inject-field
+          error_result.cmd = config.cmd
           return ''
         else
+          ---@diagnostic disable-next-line: return-type-mismatch
           return result
         end
       end
@@ -174,9 +177,16 @@ local function do_fmt(buf)
     if error then
       util.doau('GuardFmt', {
         status = 'failed',
-        msg = error_cmd .. ' exited with non-zero exit code',
+        msg = error_result.cmd .. ' exited with non-zero exit code',
       })
-      vim.notify('[Guard]: ' .. error_cmd .. ' exited with errors', 4)
+      vim.notify(
+        ('[Guard]: %s exited with code %d\n%s'):format(
+          error_result.cmd,
+          error_result.code,
+          error_result.stderr
+        ),
+        4
+      )
       return
     end
 
@@ -196,10 +206,12 @@ local function do_fmt(buf)
           text = true,
           cwd = cwd,
           env = config.env or {},
-        }, function(handle)
-          if handle.code ~= 0 and #handle.stderr > 0 then
+        }, function(result)
+          if result.code ~= 0 and #result.stderr > 0 then
             error = true
-            error_cmd = config.cmd
+            error_result = result
+            ---@diagnostic disable-next-line: inject-field
+            error_result.cmd = config.cmd
           end
         end)
         :wait()
@@ -208,9 +220,16 @@ local function do_fmt(buf)
     if error then
       util.doau('GuardFmt', {
         status = 'failed',
-        msg = error_cmd .. ' exited with non-zero exit code',
+        msg = error_result .. ' exited with non-zero exit code',
       })
-      vim.notify('[Guard]: ' .. error_cmd .. ' exited with errors', 4)
+      vim.notify(
+        ('[Guard]: %s exited with code %d\n%s'):format(
+          error_result.cmd,
+          error_result.code,
+          error_result.stderr
+        ),
+        4
+      )
       return
     end
 
