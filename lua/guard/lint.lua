@@ -1,8 +1,6 @@
 local api = vim.api
 ---@diagnostic disable-next-line: deprecated
-local uv = vim.version().minor >= 10 and vim.uv or vim.loop
 local ft_handler = require('guard.filetype')
-local spawn = require('guard.spawn').try_spawn
 local ns = api.nvim_create_namespace('Guard')
 local get_prev_lines = require('guard.util').get_prev_lines
 local vd = vim.diagnostic

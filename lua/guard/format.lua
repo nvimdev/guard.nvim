@@ -169,13 +169,13 @@ local function do_fmt(buf)
   end
 
   -- actually start formatting
-  local changedtick = api.nvim_buf_get_changedtick(buf)
   util.doau('GuardFmt', {
     status = 'pending',
     using = fmt_configs,
   })
 
   coroutine.resume(coroutine.create(function()
+    local changedtick = api.nvim_buf_get_changedtick(buf)
     new_lines = pure:fold(new_lines, function(acc, config, _)
       if errno then
         return ''

@@ -1,5 +1,4 @@
 ---@diagnostic disable-next-line: deprecated
-local get_clients = vim.version().minor >= 10 and vim.lsp.get_clients or vim.lsp.get_active_clients
 local api = vim.api
 local util = {}
 
@@ -14,7 +13,7 @@ end
 
 function util.get_lsp_root(buf)
   buf = buf or api.nvim_get_current_buf()
-  local clients = get_clients({ bufnr = buf })
+  local clients = vim.lsp.get_clients({ bufnr = buf })
   if #clients == 0 then
     return
   end
@@ -26,7 +25,7 @@ function util.get_lsp_root(buf)
 end
 
 function util.as_table(t)
-  return (vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist)(t) and t or { t }
+  return vim.islist(t) and t or { t }
 end
 
 -- TODO: Use `vim.region()` instead ?
