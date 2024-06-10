@@ -79,13 +79,18 @@ local function get_cmd(config, fname)
   return cmd
 end
 
+local function error(msg)
+  vim.notify('[Guard]: ' .. msg, vim.log.levels.WARN)
+end
+
 local function do_fmt(buf)
   buf = buf or api.nvim_get_current_buf()
   if not filetype[vim.bo[buf].filetype] then
-    vim.notify('[Guard] missing config for filetype ' .. vim.bo[buf].filetype, vim.log.levels.ERROR)
+    error('missing config for filetype ' .. vim.bo[buf].filetype)
     return
   end
 
+  -- get format range
   local srow = 0
   local erow = -1
   local range
@@ -96,6 +101,7 @@ local function do_fmt(buf)
     erow = range['end'][1]
   end
 
+  -- init environment
   local fmt_configs = filetype[vim.bo[buf].filetype].formatter
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   ---@diagnostic disable-next-line: param-type-mismatch
@@ -104,56 +110,74 @@ local function do_fmt(buf)
   ---@diagnostic disable-next-line: undefined-field
   local cwd = root_dir or uv.cwd()
 
+  local prev_lines = table.concat(get_prev_lines(buf, srow, erow), '')
+
+  local new_lines = prev_lines
+  local errno = nil
+
+  -- handle execution condition
+  fmt_configs = vim.iter(fmt_configs):filter(function(config)
+    if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
+      return false
+    elseif config.ignore_error and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
+      return false
+    elseif config.find and not find(startpath, config.find, root_dir) then
+      return false
+    end
+    return true
+  end)
+
+  -- check if all cmds executable
+  local non_excutable = vim
+    .deepcopy(fmt_configs)
+    :filter(function(config)
+      return config.cmd and vim.fn.executable(config.cmd) ~= 1
+    end)
+    :map(function(config)
+      return config.cmd
+    end)
+    :totable()
+  if #non_excutable > 0 then
+    error(table.concat(non_excutable, ', ') .. ' not executable')
+  end
+
+  -- filter out "pure" and "impure" formatters
+  local pure = vim.deepcopy(fmt_configs):filter(function(config)
+    return config.fn or (config.cmd and config.stdin)
+  end)
+  local impure = vim.deepcopy(fmt_configs):filter(function(config)
+    return config.cmd and not config.stdin
+  end)
+
+  -- error if one of the formatters is impure and the user requested range formatting
+  if range and #impure:totable() > 0 then
+    error(
+      'Cannot apply range formatting for filetype '
+        .. vim.bo[buf].filetype
+        .. ' because the following formatters '
+        .. table.concat(
+          impure
+            :map(function(config)
+              return config.cmd or '<fn>'
+            end)
+            :totable(),
+          ', '
+        )
+        .. ' does not support reading from stdin'
+    )
+    return
+  end
+
+  -- actually start formatting
+  local changedtick = api.nvim_buf_get_changedtick(buf)
   util.doau('GuardFmt', {
     status = 'pending',
     using = fmt_configs,
   })
-  local prev_lines = table.concat(get_prev_lines(buf, srow, erow), '')
 
   coroutine.resume(coroutine.create(function()
-    local new_lines = prev_lines
-    local changedtick = api.nvim_buf_get_changedtick(buf)
-    local error = false
-    local error_result = {}
-
-    -- handle execution condition
-    fmt_configs = vim.iter(fmt_configs):filter(function(config)
-      if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
-        return false
-      elseif config.ignore_error and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
-        return false
-      elseif config.find and not find(startpath, config.find, root_dir) then
-        return false
-      end
-      return true
-    end)
-
-    -- filter out pure and impure formatters
-    local pure = vim.deepcopy(fmt_configs):filter(function(config)
-      return config.fn or (config.cmd and config.stdin)
-    end)
-    local impure = vim.deepcopy(fmt_configs):filter(function(config)
-      return config.cmd and not config.stdin
-    end)
-
-    -- error if one of the formatters is impure and the user requested range formatting
-    if range and #impure:totable() > 0 then
-      local error_msg = '[Guard]: Cannot apply range formatting for filetype `'
-        .. vim.bo[buf].filetype
-        .. '` because the following formatters\n'
-        .. vim.inspect(#impure:totable())
-        .. '\n does not support reading from stdin'
-      util.doau('GuardFmt', {
-        status = 'failed',
-        msg = 'range formatting requested with non-capable formatters',
-      })
-      vim.notify(error_msg, 4)
-      return
-    end
-
     new_lines = pure:fold(new_lines, function(acc, config, _)
-      -- we don't need to reformat an empty string
-      if new_lines == '' then
+      if errno then
         return ''
       end
       if config.fn then
@@ -162,10 +186,9 @@ local function do_fmt(buf)
         local result = spawn.transform(get_cmd(config, fname), cwd, config.env or {}, acc)
         if type(result) == 'table' then
           -- indicates error
-          error = true
-          error_result = result
+          errno = result
           ---@diagnostic disable-next-line: inject-field
-          error_result.cmd = config.cmd
+          errno.cmd = config.cmd
           return ''
         else
           ---@diagnostic disable-next-line: return-type-mismatch
@@ -174,62 +197,57 @@ local function do_fmt(buf)
       end
     end)
 
-    if error then
-      util.doau('GuardFmt', {
-        status = 'failed',
-        msg = error_result.cmd .. ' exited with non-zero exit code',
-      })
-      vim.notify(
-        ('[Guard]: %s exited with code %d\n%s'):format(
-          error_result.cmd,
-          error_result.code,
-          error_result.stderr
-        ),
-        4
-      )
-      return
-    end
+    local co = assert(coroutine.running())
 
-    if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
-      util.doau('GuardFmt', {
-        status = 'failed',
-        msg = 'buffer changed or no longer valid',
-      })
-      return
-    end
-
-    update_buffer(buf, prev_lines, new_lines, srow, erow)
-
-    impure:each(function(config)
-      vim
-        .system(get_cmd(config, fname), {
-          text = true,
-          cwd = cwd,
-          env = config.env or {},
-        }, function(result)
-          if result.code ~= 0 and #result.stderr > 0 then
-            error = true
-            error_result = result
-            ---@diagnostic disable-next-line: inject-field
-            error_result.cmd = config.cmd
-          end
-        end)
-        :wait()
+    vim.schedule(function()
+      if errno then
+        util.doau('GuardFmt', {
+          status = 'failed',
+          msg = errno.cmd .. ' exited with non-zero exit code',
+        })
+        error(('%s exited with code %d\n%s'):format(errno.cmd, errno.code, errno.stderr))
+        return
+      end
+      if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
+        util.doau('GuardFmt', {
+          status = 'failed',
+          msg = 'buffer changed or no longer valid',
+        })
+        error('buffer changed or no longer valid')
+        return
+      end
+      update_buffer(buf, prev_lines, new_lines, srow, erow)
     end)
 
-    if error then
+    -- wait until substitution is finished
+
+    impure:each(function(config)
+      if errno then
+        return
+      end
+      vim.system(get_cmd(config, fname), {
+        text = true,
+        cwd = cwd,
+        env = config.env or {},
+      }, function(result)
+        if result.code ~= 0 and #result.stderr > 0 then
+          errno = result
+          ---@diagnostic disable-next-line: inject-field
+          errno.cmd = config.cmd
+          coroutine.resume(co)
+        else
+          coroutine.resume(co)
+        end
+      end)
+      coroutine.yield()
+    end)
+
+    if errno then
       util.doau('GuardFmt', {
         status = 'failed',
-        msg = error_result .. ' exited with non-zero exit code',
+        msg = errno.cmd .. ' exited with non-zero exit code',
       })
-      vim.notify(
-        ('[Guard]: %s exited with code %d\n%s'):format(
-          error_result.cmd,
-          error_result.code,
-          error_result.stderr
-        ),
-        4
-      )
+      error(('%s exited with code %d\n%s'):format(errno.cmd, errno.code, errno.stderr))
       return
     end
 
