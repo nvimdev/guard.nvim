@@ -2,7 +2,6 @@ local api = vim.api
 local uv = vim.uv
 local spawn = require('guard.spawn')
 local util = require('guard.util')
-local get_prev_lines = util.get_prev_lines
 local filetype = require('guard.filetype')
 
 local function ignored(buf, patterns)
@@ -110,11 +109,6 @@ local function do_fmt(buf)
   ---@diagnostic disable-next-line: undefined-field
   local cwd = root_dir or uv.cwd()
 
-  local prev_lines = table.concat(get_prev_lines(buf, srow, erow), '')
-
-  local new_lines = prev_lines
-  local errno = nil
-
   -- handle execution condition
   fmt_configs = vim.iter(fmt_configs):filter(function(config)
     if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
@@ -165,6 +159,10 @@ local function do_fmt(buf)
     status = 'pending',
     using = fmt_configs,
   })
+
+  local prev_lines = table.concat(util.get_prev_lines(buf, srow, erow), '')
+  local new_lines = prev_lines
+  local errno = nil
 
   coroutine.resume(coroutine.create(function()
     local changedtick = api.nvim_buf_get_changedtick(buf)
