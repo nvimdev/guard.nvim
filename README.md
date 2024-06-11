@@ -1,6 +1,6 @@
 # guard.nvim
 
-Async formatting and linting utility for neovim.
+Async formatting and linting utility for neovim `0.10+`.
 
 ## Features
 

@@ -78,6 +78,7 @@ local function box()
     end
     local tool = self[current][#self[current]]
     tool.env = {}
+    ---@diagnostic disable-next-line: undefined-field
     env = vim.tbl_extend('force', vim.uv.os_environ(), env or {})
     for k, v in pairs(env) do
       tool.env[#tool.env + 1] = ('%s=%s'):format(k, tostring(v))

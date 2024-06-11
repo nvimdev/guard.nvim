@@ -1,7 +1,6 @@
 local fn, health = vim.fn, vim.health
 local filetype = require('guard.filetype')
-local ok = health.ok
-local error = health.error
+local ok, error = health.ok, health.error
 local M = {}
 
 local function executable_check()

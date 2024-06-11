@@ -136,9 +136,8 @@ local function do_fmt(buf)
     :map(function(config)
       return config.cmd
     end)
-    :totable()
-  if #non_excutable > 0 then
-    error(table.concat(non_excutable, ', ') .. ' not executable')
+  if non_excutable:peek() then
+    error(non_excutable:join(', ') .. ' not executable')
   end
 
   -- filter out "pure" and "impure" formatters
@@ -151,20 +150,13 @@ local function do_fmt(buf)
 
   -- error if one of the formatters is impure and the user requested range formatting
   if range and #impure:totable() > 0 then
-    error(
-      'Cannot apply range formatting for filetype '
-        .. vim.bo[buf].filetype
-        .. ' because the following formatters '
-        .. table.concat(
-          impure
-            :map(function(config)
-              return config.cmd or '<fn>'
-            end)
-            :totable(),
-          ', '
-        )
-        .. ' does not support reading from stdin'
-    )
+    error('Cannot apply range formatting for filetype ' .. vim.bo[buf].filetype)
+    error(impure
+      :map(function(config)
+        return config.cmd or '<fn>'
+      end)
+      :totable()
+      :join(', ') .. ' does not support reading from stdin')
     return
   end
 
@@ -208,7 +200,11 @@ local function do_fmt(buf)
         error(('%s exited with code %d\n%s'):format(errno.cmd, errno.code, errno.stderr))
         return
       end
-      if not api.nvim_buf_is_valid(buf) or changedtick ~= api.nvim_buf_get_changedtick(buf) then
+      if
+        not api.nvim_buf_is_valid(buf)
+        -- saving increments changed tick by 1
+        or math.abs(changedtick - api.nvim_buf_get_changedtick(buf)) > 1
+      then
         util.doau('GuardFmt', {
           status = 'failed',
           msg = 'buffer changed or no longer valid',
@@ -217,11 +213,13 @@ local function do_fmt(buf)
         return
       end
       update_buffer(buf, prev_lines, new_lines, srow, erow)
+      coroutine.resume(co)
     end)
 
     -- wait until substitution is finished
+    coroutine.yield()
 
-    impure:each(function(config)
+    impure:fold(nil, function(_, config, _)
       if errno then
         return
       end
@@ -251,8 +249,10 @@ local function do_fmt(buf)
       return
     end
 
-    if #impure:totable() > 0 and api.nvim_get_current_buf() == buf then
-      vim.cmd.edit()
+    if #impure:totable() > 0 then
+      vim.schedule(function()
+        api.nvim_buf_call(buf, vim.cmd.edit)
+      end)
     end
 
     util.doau('GuardFmt', {
