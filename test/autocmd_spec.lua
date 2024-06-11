@@ -32,15 +32,15 @@ describe('autocmd module', function()
     au(function(opts)
       -- pre format au
       if opts.data.status == 'pending' then
-        api.nvim_buf_set_lines(bufnr, 0, -1, false, {
-          'local a',
-          '          = "changed!"',
+        assert.are.same(opts.data.using, {
+          cmd = 'stylua',
+          args = { '-' },
+          stdin = true,
         })
       end
     end)
     require('guard.format').do_fmt(bufnr)
     vim.wait(500)
-    assert.are.same(api.nvim_buf_get_lines(bufnr, 0, -1, false), { "local a = 'changed!'" })
   end)
 
   it('can trigger after formatting', function()

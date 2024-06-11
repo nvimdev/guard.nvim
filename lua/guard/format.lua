@@ -82,6 +82,14 @@ local function error(msg)
   vim.notify('[Guard]: ' .. msg, vim.log.levels.WARN)
 end
 
+local function fail(msg)
+  util.doau('GuardFmt', {
+    status = 'failed',
+    msg = msg,
+  })
+  vim.notify('[Guard]: ' .. msg, vim.log.levels.WARN)
+end
+
 local function do_fmt(buf)
   buf = buf or api.nvim_get_current_buf()
   if not filetype[vim.bo[buf].filetype] then
@@ -170,6 +178,12 @@ local function do_fmt(buf)
       if errno then
         return ''
       end
+      vim.schedule(function()
+        if api.nvim_buf_get_changedtick(buf) - changedtick > 1 then
+          errno = { reason = 'buffer changed' }
+        end
+      end)
+
       if config.fn then
         return config.fn(buf, range, acc)
       else
@@ -177,8 +191,7 @@ local function do_fmt(buf)
         if type(result) == 'table' then
           -- indicates error
           errno = result
-          ---@diagnostic disable-next-line: inject-field
-          errno.cmd = config.cmd
+          errno.reason = config.cmd .. ' exited with errors'
           return ''
         else
           ---@diagnostic disable-next-line: return-type-mismatch
@@ -190,24 +203,19 @@ local function do_fmt(buf)
     local co = assert(coroutine.running())
 
     vim.schedule(function()
+      -- handle errors
       if errno then
-        util.doau('GuardFmt', {
-          status = 'failed',
-          msg = errno.cmd .. ' exited with non-zero exit code',
-        })
-        error(('%s exited with code %d\n%s'):format(errno.cmd, errno.code, errno.stderr))
+        if errno.reason == 'exit with errors' then
+          fail(('%s exited with code %d\n%s'):format(errno.cmd, errno.code, errno.stderr))
+        elseif errno.reason == 'buf changed' then
+          fail('buffer changed during formatting')
+        else
+          fail(errno.reason)
+        end
         return
       end
-      if
-        not api.nvim_buf_is_valid(buf)
-        -- saving increments changed tick by 1
-        or math.abs(changedtick - api.nvim_buf_get_changedtick(buf)) > 1
-      then
-        util.doau('GuardFmt', {
-          status = 'failed',
-          msg = 'buffer changed or no longer valid',
-        })
-        error('buffer changed or no longer valid')
+      if not api.nvim_buf_is_valid(buf) then
+        fail('buffer no longer valid')
         return
       end
       update_buffer(buf, prev_lines, new_lines, srow, erow)
@@ -221,6 +229,7 @@ local function do_fmt(buf)
       if errno then
         return
       end
+
       vim.system(get_cmd(config, fname), {
         text = true,
         cwd = cwd,
@@ -235,23 +244,19 @@ local function do_fmt(buf)
           coroutine.resume(co)
         end
       end)
+
       coroutine.yield()
     end)
 
     if errno then
-      util.doau('GuardFmt', {
-        status = 'failed',
-        msg = errno.cmd .. ' exited with non-zero exit code',
-      })
-      error(('%s exited with code %d\n%s'):format(errno.cmd, errno.code, errno.stderr))
+      fail(('%s exited with code %d\n%s'):format(errno.cmd, errno.code, errno.stderr))
       return
     end
 
-    if #impure:totable() > 0 then
-      vim.schedule(function()
-        api.nvim_buf_call(buf, vim.cmd.edit)
-      end)
-    end
+    -- refresh buffer
+    vim.schedule(function()
+      api.nvim_buf_call(buf, vim.cmd.edit)
+    end)
 
     util.doau('GuardFmt', {
       status = 'done',
