@@ -16,30 +16,15 @@ end
 
 However, `prettierd` prints error messages to stdout, so guard will fail to detect an error and proceed to replace your code with its error message :cry:
 
-But fear not! You can create your custom logic by passing a function in the config table, in fact, lsp formatting is simply defined as:
+But fear not! You can create your custom logic by passing a function in the config table, let's do this step by step:
 
 ```lua
-{
-    fn = function(bufnr, range)
-        vim.lsp.buf.format({ bufnr = bufnr, range = range, async = true })
-    end,
-}
-```
-
-Let's do this step by step:
-
-```lua
-local function prettierd_fmt(buf, range)
-    local srow = 0
-    local erow = -1
-    if range then
-        srow = range["start"][1]
-        erow = range["end"][1]
-    end
+local function prettierd_fmt(buf, range, acc)
+    local co = assert(coroutine.running())
 end
 ```
 
-The function signature takes a buffer number (`:h bufnr`) and (optionally) a range table, like `vim.lsp.buf.format`. The range table contains 2 keys `start` and `end`, which themselves is a { row, col } tuple, respectively. Since it's not very reasonable to format from the middle of a line, we just take the row numbers.
+Guard runs the format function in a coroutine so as not to block the UI, to achieve what we want we have to interact with the current coroutine.
 
 We can now go on to mimic how we would call `prettierd` on the cmdline:
 
@@ -48,20 +33,18 @@ cat test.js | prettierd test.js
 ```
 
 ```lua
-local function prettierd_fmt(buf, range)
-    -- previous code omitted
-
-    local prev_lines = table.concat(vim.api.nvim_buf_get_lines(buf, srow, erow, false), "\n")
-    local handle = vim.system({ "prettierd", vim.api.nvim_buf_get_name(buf) }, {
-        stdin = true,
-    }, vim.schedule_wrap(function(result)
-        if result.code ~= 0 then
-            return
-        end
-        local out = result.stdout
-        vim.api.nvim_buf_set_lines(buf, srow, erow, false, vim.split(out, "\r?\n"))
-        vim.cmd("silent! noautocmd write!")
-    end))
+local function prettierd_fmt(buf, range, acc)
+		local handle = vim.system({ "prettierd", vim.api.nvim_buf_get_name(buf) }, {
+			stdin = true,
+		}, function(result)
+			if result.code ~= 0 then
+				-- "returns" the error
+				coroutine.resume(co, result)
+			else
+				-- "returns" the result
+				coroutine.resume(co, result.stdout)
+			end
+		end)
 end
 ```
 
@@ -81,6 +64,7 @@ local function prettierd_fmt(buf, range)
 
     handle:write(prev_lines)
     handle:write(nil)           -- closes stdin
+    return coroutine.yield()    -- this returns either the error or the formatted code we returned earlier
 end
 ```
 

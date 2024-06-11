@@ -174,18 +174,20 @@ local function do_fmt(buf)
 
   coroutine.resume(coroutine.create(function()
     local changedtick = -1
+    -- defer initialization, since BufWritePre would trigger a tick change
     vim.schedule(function()
       changedtick = api.nvim_buf_get_changedtick(buf)
     end)
     new_lines = pure:fold(new_lines, function(acc, config, _)
-      if errno then
-        return ''
-      end
+      -- check if we are in a valid state
       vim.schedule(function()
         if api.nvim_buf_get_changedtick(buf) ~= changedtick then
           errno = { reason = 'buffer changed' }
         end
       end)
+      if errno then
+        return ''
+      end
 
       if config.fn then
         return config.fn(buf, range, acc)
@@ -216,6 +218,10 @@ local function do_fmt(buf)
           fail(errno.reason)
         end
         return
+      end
+      -- check buffer one last time
+      if api.nvim_buf_get_changedtick(buf) ~= changedtick then
+        fail('buffer changed during formatting')
       end
       if not api.nvim_buf_is_valid(buf) then
         fail('buffer no longer valid')
