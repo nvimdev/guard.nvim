@@ -173,13 +173,16 @@ local function do_fmt(buf)
   local errno = nil
 
   coroutine.resume(coroutine.create(function()
-    local changedtick = api.nvim_buf_get_changedtick(buf)
+    local changedtick = -1
+    vim.schedule(function()
+      changedtick = api.nvim_buf_get_changedtick(buf)
+    end)
     new_lines = pure:fold(new_lines, function(acc, config, _)
       if errno then
         return ''
       end
       vim.schedule(function()
-        if api.nvim_buf_get_changedtick(buf) - changedtick > 1 then
+        if api.nvim_buf_get_changedtick(buf) ~= changedtick then
           errno = { reason = 'buffer changed' }
         end
       end)
