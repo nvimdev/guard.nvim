@@ -1,4 +1,3 @@
----@diagnostic disable-next-line: deprecated
 local api = vim.api
 local util = {}
 
@@ -28,21 +27,17 @@ function util.as_table(t)
   return vim.islist(t) and t or { t }
 end
 
--- TODO: Use `vim.region()` instead ?
+---@source runtime/lua/vim/lsp/buf.lua
 ---@param bufnr integer
 ---@param mode "v"|"V"
 ---@return table {start={row,col}, end={row,col}} using (1, 0) indexing
 function util.range_from_selection(bufnr, mode)
-  -- [bufnum, lnum, col, off]; both row and column 1-indexed
   local start = vim.fn.getpos('v')
   local end_ = vim.fn.getpos('.')
   local start_row = start[2]
   local start_col = start[3]
   local end_row = end_[2]
   local end_col = end_[3]
-
-  -- A user can start visual selection at the end and move backwards
-  -- Normalize the range to start < end
   if start_row == end_row and end_col < start_col then
     end_col, start_col = start_col, end_col
   elseif end_row < start_row then
@@ -58,16 +53,6 @@ function util.range_from_selection(bufnr, mode)
     ['start'] = { start_row, start_col - 1 },
     ['end'] = { end_row, end_col - 1 },
   }
-end
-
-function util.get_clients(bufnr, method)
-  if vim.version().minor >= 10 then
-    return vim.lsp.get_clients({ bufnr = bufnr, method = method })
-  end
-  local clients = vim.lsp.get_clients({ bufnr = bufnr })
-  return vim.tbl_filter(function(client)
-    return client.supports_method(method)
-  end, clients)
 end
 
 function util.doau(pattern, data)

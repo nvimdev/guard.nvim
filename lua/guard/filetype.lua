@@ -2,11 +2,7 @@ local M = {}
 
 local function get_tool(tool_type, tool_name)
   if tool_name == 'lsp' then
-    return {
-      fn = function(bufnr, range)
-        vim.lsp.buf.format({ bufnr = bufnr, range = range, async = true })
-      end,
-    }
+    return { fn = require('guard.lsp').format }
   end
   local ok, tbl = pcall(require, 'guard-collection.' .. tool_type)
   if not ok then

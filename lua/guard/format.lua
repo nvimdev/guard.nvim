@@ -98,9 +98,8 @@ local function do_fmt(buf)
   end
 
   -- get format range
-  local srow = 0
-  local erow = -1
-  local range
+  local srow, erow = 0, -1
+  local range = nil
   local mode = api.nvim_get_mode().mode
   if mode == 'V' or mode == 'v' then
     range = util.range_from_selection(buf, mode)
@@ -189,6 +188,7 @@ local function do_fmt(buf)
         return ''
       end
 
+      -- NB: we rely on the `fn` and spawn.transform to yield the coroutine
       if config.fn then
         return config.fn(buf, range, acc)
       else
