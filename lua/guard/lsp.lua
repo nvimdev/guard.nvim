@@ -1,7 +1,10 @@
 local M = {}
 local api = vim.api
-local scratch = api.nvim_create_buf(false, true)
 
+---@param buf number
+---@param range table
+---@param acc string
+---@return string
 function M.format(buf, range, acc)
   local co = assert(coroutine.running())
   local clients = vim.lsp.get_clients({ bufnr = buf, method = 'textDocument/formatting' })
@@ -9,6 +12,8 @@ function M.format(buf, range, acc)
     return acc
   end
 
+  -- use a temporary buffer to apply edits
+  local scratch = api.nvim_create_buf(false, true)
   local apply = vim.lsp.util.apply_text_edits
   local n_edits = #clients
   api.nvim_buf_set_lines(scratch, 0, -1, false, vim.split(acc, '\r?\n'))
@@ -22,16 +27,14 @@ function M.format(buf, range, acc)
 
     -- we apply it to our scratch buffer
     n_edits = n_edits - 1
-    vim.print(line_offset)
-    vim.print(text_edits)
     vim.tbl_map(function(edit)
       edit.range.start.line = edit.range.start.line - line_offset
       edit.range['end'].line = edit.range['end'].line - line_offset
     end, text_edits)
-    vim.print(text_edits)
     apply(text_edits, scratch, offset_encoding)
     if n_edits == 0 then
       vim.lsp.util.apply_text_edits = apply
+      api.nvim_command('silent! bufwipe! ' .. scratch)
       coroutine.resume(co, table.concat(api.nvim_buf_get_lines(scratch, 0, -1, false), '\n'))
     end
   end

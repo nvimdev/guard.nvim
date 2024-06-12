@@ -156,7 +156,6 @@ local function do_fmt(buf)
       :map(function(config)
         return config.cmd or '<fn>'
       end)
-      :totable()
       :join(', ') .. ' does not support reading from stdin')
     return
   end
