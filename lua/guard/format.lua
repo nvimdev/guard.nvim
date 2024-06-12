@@ -69,15 +69,6 @@ local function find(startpath, patterns, root_dir)
   end
 end
 
-local function get_cmd(config, fname)
-  local cmd = config.args and vim.deepcopy(config.args) or {}
-  table.insert(cmd, 1, config.cmd)
-  if config.fname then
-    table.insert(cmd, fname)
-  end
-  return cmd
-end
-
 local function error(msg)
   vim.notify('[Guard]: ' .. msg, vim.log.levels.WARN)
 end
@@ -191,7 +182,7 @@ local function do_fmt(buf)
       if config.fn then
         return config.fn(buf, range, acc)
       else
-        local result = spawn.transform(get_cmd(config, fname), cwd, config.env or {}, acc)
+        local result = spawn.transform(util.get_cmd(config, fname), cwd, config.env or {}, acc)
         if type(result) == 'table' then
           -- indicates error
           errno = result
@@ -238,7 +229,7 @@ local function do_fmt(buf)
         return
       end
 
-      vim.system(get_cmd(config, fname), {
+      vim.system(util.get_cmd(config, fname), {
         text = true,
         cwd = cwd,
         env = config.env or {},

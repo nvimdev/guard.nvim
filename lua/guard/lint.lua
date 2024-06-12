@@ -1,7 +1,8 @@
 local api = vim.api
----@diagnostic disable-next-line: deprecated
 local ft_handler = require('guard.filetype')
+local util = require('guard.util')
 local ns = api.nvim_create_namespace('Guard')
+local spawn = require('guard.spawn')
 local get_prev_lines = require('guard.util').get_prev_lines
 local vd = vim.diagnostic
 local M = {}
@@ -35,11 +36,7 @@ function M.do_lint(buf)
     local results = {}
 
     for _, lint in ipairs(linters) do
-      lint = vim.deepcopy(lint)
-      lint.args = lint.args or {}
-      lint.args[#lint.args + 1] = fname
-      lint.lines = prev_lines
-      local data = spawn(lint)
+      local data = spawn.transform(util.get_cmd(lint, fname), lint.cwd, lint.env, prev_lines)
       if #data > 0 then
         vim.list_extend(results, lint.parse(data, buf))
       end

@@ -1,7 +1,7 @@
 local api = vim.api
-local util = {}
+local M = {}
 
-function util.get_prev_lines(bufnr, srow, erow)
+function M.get_prev_lines(bufnr, srow, erow)
   local tbl = api.nvim_buf_get_lines(bufnr, srow, erow, false)
   local res = {}
   for _, text in ipairs(tbl) do
@@ -10,7 +10,7 @@ function util.get_prev_lines(bufnr, srow, erow)
   return res
 end
 
-function util.get_lsp_root(buf)
+function M.get_lsp_root(buf)
   buf = buf or api.nvim_get_current_buf()
   local clients = vim.lsp.get_clients({ bufnr = buf })
   if #clients == 0 then
@@ -23,7 +23,7 @@ function util.get_lsp_root(buf)
   end
 end
 
-function util.as_table(t)
+function M.as_table(t)
   return vim.islist(t) and t or { t }
 end
 
@@ -31,7 +31,7 @@ end
 ---@param bufnr integer
 ---@param mode "v"|"V"
 ---@return table {start={row,col}, end={row,col}} using (1, 0) indexing
-function util.range_from_selection(bufnr, mode)
+function M.range_from_selection(bufnr, mode)
   local start = vim.fn.getpos('v')
   local end_ = vim.fn.getpos('.')
   local start_row = start[2]
@@ -55,11 +55,20 @@ function util.range_from_selection(bufnr, mode)
   }
 end
 
-function util.doau(pattern, data)
+function M.doau(pattern, data)
   api.nvim_exec_autocmds('User', {
     pattern = pattern,
     data = data,
   })
 end
 
-return util
+function M.get_cmd(config, fname)
+  local cmd = config.args and vim.deepcopy(config.args) or {}
+  table.insert(cmd, 1, config.cmd)
+  if config.fname then
+    table.insert(cmd, fname)
+  end
+  return cmd
+end
+
+return M
