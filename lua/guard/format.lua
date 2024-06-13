@@ -53,7 +53,8 @@ end
 
 local function do_fmt(buf)
   buf = buf or api.nvim_get_current_buf()
-  if not filetype[vim.bo[buf].filetype] then
+  local ft_conf = filetype[vim.bo[buf].filetype]
+  if not ft_conf or not ft_conf.formatter then
     error('missing config for filetype ' .. vim.bo[buf].filetype)
     return
   end
@@ -69,13 +70,13 @@ local function do_fmt(buf)
   end
 
   -- init environment
-  local fmt_configs = filetype[vim.bo[buf].filetype].formatter
+  local fmt_configs = ft_conf.formatter
   local fname, startpath, root_dir, cwd = util.buf_get_info(buf)
 
   -- handle execution condition
-  fmt_configs = vim.iter(vim.tbl_filter(function(config)
+  fmt_configs = vim.tbl_filter(function(config)
     return util.should_run(config, buf, startpath, root_dir)
-  end, fmt_configs))
+  end, fmt_configs)
 
   -- check if all cmds executable
   local non_excutable = vim.tbl_filter(function(config)
