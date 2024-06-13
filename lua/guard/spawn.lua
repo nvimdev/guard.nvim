@@ -1,12 +1,13 @@
 local M = {}
 
 -- @return table | string
-function M.transform(cmd, cwd, env, lines)
+function M.transform(cmd, config, lines)
   local co = assert(coroutine.running())
   local handle = vim.system(cmd, {
     stdin = true,
-    cwd = cwd,
-    env = env,
+    cwd = config.cwd,
+    env = config.env,
+    timeout = config.timeout,
   }, function(result)
     if result.code ~= 0 and #result.stderr > 0 then
       -- error

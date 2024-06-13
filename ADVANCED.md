@@ -76,6 +76,59 @@ ft("javascript"):fmt({
 })
 ```
 
+## Custom logic with linters
+
+```
+local ft = require("guard.filetype")
+local lint = require("guard.lint")
+
+local function clippy_driver_lint(acc)
+	local co = assert(coroutine.running())
+	local handle = vim.system({ "clippy-driver", "-", "--error-format=json", "--edition=2021" }, {
+		stdin = true,
+	}, function(result)
+		coroutine.resume(co, result.stderr)
+	end)
+	-- write to stdin and close it
+	handle:write(acc)
+	handle:write(nil)
+	return coroutine.yield()
+end
+
+ft("rust"):lint({
+	fn = clippy_driver_lint,
+	stdin = true,
+	parse = lint.from_json({
+		get_diagnostics = function(line)
+			local json = vim.json.decode(line)
+			if not vim.tbl_isempty(json.spans) then
+				return json
+			end
+		end,
+		attributes = {
+			lnum = function(it)
+				return math.ceil(tonumber(it.spans[1].line_start) / 2)
+			end,
+			lnum_end = function(it)
+				return math.ceil(tonumber(it.spans[1].line_end) / 2)
+			end,
+			code = function(it)
+				return it.code.code
+			end,
+			col = function(it)
+				return it.spans[1].column_start
+			end,
+			col_end = function(it)
+				return it.spans[1].column_end
+			end,
+			severity = "level",
+			message = "message",
+		},
+		lines = true,
+	}),
+})
+```
+
 ## Take advantage of autocmd events
 
 Guard exposes a `GuardFmt` user event that you can use. It is called both before formatting starts and after it is completely done. To differentiate between pre-format and post-format calls, a `data` table is passed.

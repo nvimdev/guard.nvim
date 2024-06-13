@@ -1,22 +1,7 @@
 local api = vim.api
-local uv = vim.uv
 local spawn = require('guard.spawn')
 local util = require('guard.util')
 local filetype = require('guard.filetype')
-
-local function ignored(buf, patterns)
-  local fname = api.nvim_buf_get_name(buf)
-  if #fname == 0 then
-    return false
-  end
-
-  for _, pattern in pairs(util.as_table(patterns)) do
-    if fname:find(pattern) then
-      return true
-    end
-  end
-  return false
-end
 
 local function save_views(bufnr)
   local views = {}
@@ -54,21 +39,6 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow, erow)
   end
 end
 
-local function find(startpath, patterns, root_dir)
-  patterns = util.as_table(patterns)
-  for _, pattern in ipairs(patterns) do
-    if
-      #vim.fs.find(pattern, {
-        upward = true,
-        stop = root_dir and vim.fn.fnamemodify(root_dir, ':h') or vim.env.HOME,
-        path = startpath,
-      }) > 0
-    then
-      return true
-    end
-  end
-end
-
 local function error(msg)
   vim.notify('[Guard]: ' .. msg, vim.log.levels.WARN)
 end
@@ -100,24 +70,12 @@ local function do_fmt(buf)
 
   -- init environment
   local fmt_configs = filetype[vim.bo[buf].filetype].formatter
-  local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
-  ---@diagnostic disable-next-line: param-type-mismatch
-  local startpath = vim.fn.expand(fname, ':p:h')
-  local root_dir = util.get_lsp_root()
-  ---@diagnostic disable-next-line: undefined-field
-  local cwd = root_dir or uv.cwd()
+  local fname, startpath, root_dir, cwd = util.buf_get_info(buf)
 
   -- handle execution condition
-  fmt_configs = vim.iter(fmt_configs):filter(function(config)
-    if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
-      return false
-    elseif config.ignore_error and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
-      return false
-    elseif config.find and not find(startpath, config.find, root_dir) then
-      return false
-    end
-    return true
-  end)
+  fmt_configs = vim.iter(vim.tbl_filter(function(config)
+    return util.should_run(config, buf, startpath, root_dir)
+  end, fmt_configs))
 
   -- check if all cmds executable
   local non_excutable = vim
@@ -182,7 +140,8 @@ local function do_fmt(buf)
       if config.fn then
         return config.fn(buf, range, acc)
       else
-        local result = spawn.transform(util.get_cmd(config, fname), cwd, config.env or {}, acc)
+        config.cwd = config.cwd or cwd
+        local result = spawn.transform(util.get_cmd(config, fname), config, acc)
         if type(result) == 'table' then
           -- indicates error
           errno = result

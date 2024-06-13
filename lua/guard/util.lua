@@ -71,4 +71,54 @@ function M.get_cmd(config, fname)
   return cmd
 end
 
+local function find(startpath, patterns, root_dir)
+  patterns = M.as_table(patterns)
+  for _, pattern in ipairs(patterns) do
+    if
+      #vim.fs.find(pattern, {
+        upward = true,
+        stop = root_dir and vim.fn.fnamemodify(root_dir, ':h') or vim.env.HOME,
+        path = startpath,
+      }) > 0
+    then
+      return true
+    end
+  end
+end
+
+local function ignored(buf, patterns)
+  local fname = api.nvim_buf_get_name(buf)
+  if #fname == 0 then
+    return false
+  end
+
+  for _, pattern in pairs(M.as_table(patterns)) do
+    if fname:find(pattern) then
+      return true
+    end
+  end
+  return false
+end
+
+function M.should_run(config, buf, startpath, root_dir)
+  if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
+    return false
+  elseif config.ignore_error and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
+    return false
+  elseif config.find and not find(startpath, config.find, root_dir) then
+    return false
+  end
+  return true
+end
+
+function M.buf_get_info(buf)
+  local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
+  ---@diagnostic disable-next-line: param-type-mismatch
+  local startpath = vim.fn.expand(fname, ':p:h')
+  local root_dir = M.get_lsp_root()
+  ---@diagnostic disable-next-line: undefined-field
+  local cwd = root_dir or vim.uv.cwd()
+  return fname, startpath, root_dir, cwd
+end
+
 return M
