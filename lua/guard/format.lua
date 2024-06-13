@@ -213,12 +213,13 @@ local function do_fmt(buf)
 
     -- refresh buffer
     vim.schedule(function()
-      api.nvim_buf_call(buf, vim.cmd.edit)
+      api.nvim_buf_call(buf, function()
+        api.nvim_command('edit!')
+      end)
     end)
 
     util.doau('GuardFmt', {
       status = 'done',
-      results = new_lines,
     })
   end))
 end

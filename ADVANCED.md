@@ -33,20 +33,18 @@ cat test.js | prettierd test.js
 ```
 
 ```lua
-local function prettierd_fmt(buf, range, acc)
-		-- previous code omitted
-		local handle = vim.system({ "prettierd", vim.api.nvim_buf_get_name(buf) }, {
-			stdin = true,
-		}, function(result)
-			if result.code ~= 0 then
-				-- "returns" the error
-				coroutine.resume(co, result)
-			else
-				-- "returns" the result
-				coroutine.resume(co, result.stdout)
-			end
-		end)
-end
+-- previous code omitted
+local handle = vim.system({ "prettierd", vim.api.nvim_buf_get_name(buf) }, {
+	stdin = true,
+}, function(result)
+	if result.code ~= 0 then
+		-- "returns" the error
+		coroutine.resume(co, result)
+	else
+		-- "returns" the result
+		coroutine.resume(co, result.stdout)
+	end
+end)
 ```
 
 We get the unformatted code, then call `vim.system` with 3 arguments
@@ -60,12 +58,10 @@ Now we can do our custom error handling, here we simply return if `prettierd` fa
 Finally we write the unformatted code to stdin
 
 ```lua
-local function prettierd_fmt(buf, range)
-    -- previous code omitted
-    handle:write(acc)
-    handle:write(nil)           -- closes stdin
-    return coroutine.yield()    -- this returns either the error or the formatted code we returned earlier
-end
+-- previous code omitted
+handle:write(acc)
+handle:write(nil)           -- closes stdin
+return coroutine.yield()    -- this returns either the error or the formatted code we returned earlier
 ```
 
 Whoa la! Now we can tell guard to register our formatting function
@@ -77,8 +73,6 @@ ft("javascript"):fmt({
 ```
 
 [demo](https://github.com/xiaoshihou514/guard.nvim/assets/108414369/56dd35d4-8bf6-445a-adfd-8786fb461021)
-
-
 
 ## Custom logic with linters
 
@@ -132,6 +126,7 @@ ft("rust"):lint({
 	}),
 })
 ```
+
 ![image](https://github.com/xiaoshihou514/guard.nvim/assets/108414369/f9137b5a-ae69-494f-9f5b-b6044ae63c86)
 
 ## Take advantage of autocmd events
@@ -142,17 +137,16 @@ Guard exposes a `GuardFmt` user event that you can use. It is called both before
 -- for pre-format calls
 data = {
     status = "pending", -- type: string, called whenever a format is requested
-    using = {...}       -- type: table, whatever formatters you are using for this format action
+    using = {...}       -- type: table, formatters that are going to run
 }
 -- for post-format calls
 data = {
     status = "done",    -- type: string, only called on success
-    results = {...}     -- type: table, formatted buffer text as a list of lines
 }
 -- or
 data = {
     status = "failed"   -- type: string, buffer remain unchanged
-    msg = "..."         -- type: string, currently only if buffer became invalid or changed during formatting
+    msg = "..."         -- type: string, reason for failure
 }
 ```
 
@@ -183,7 +177,7 @@ vim.api.nvim_create_autocmd("User", {
     end,
 })
 ```
-[demo](https://github.com/xiaoshihou514/guard.nvim/assets/108414369/339ff4ff-288c-49e4-8ab1-789a6175d201)
 
+[demo](https://github.com/xiaoshihou514/guard.nvim/assets/108414369/339ff4ff-288c-49e4-8ab1-789a6175d201)
 
 You can do the similar for your statusline plugin of choice as long as you "refresh" it on `GuardFmt`.
