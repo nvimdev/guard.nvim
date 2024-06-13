@@ -34,6 +34,7 @@ cat test.js | prettierd test.js
 
 ```lua
 local function prettierd_fmt(buf, range, acc)
+		-- previous code omitted
 		local handle = vim.system({ "prettierd", vim.api.nvim_buf_get_name(buf) }, {
 			stdin = true,
 		}, function(result)
@@ -61,8 +62,7 @@ Finally we write the unformatted code to stdin
 ```lua
 local function prettierd_fmt(buf, range)
     -- previous code omitted
-
-    handle:write(prev_lines)
+    handle:write(acc)
     handle:write(nil)           -- closes stdin
     return coroutine.yield()    -- this returns either the error or the formatted code we returned earlier
 end
@@ -75,6 +75,10 @@ ft("javascript"):fmt({
     fn = prettierd_fmt
 })
 ```
+
+[demo](https://github.com/xiaoshihou514/guard.nvim/assets/108414369/56dd35d4-8bf6-445a-adfd-8786fb461021)
+
+
 
 ## Custom logic with linters
 
@@ -128,6 +132,7 @@ ft("rust"):lint({
 	}),
 })
 ```
+![image](https://github.com/xiaoshihou514/guard.nvim/assets/108414369/f9137b5a-ae69-494f-9f5b-b6044ae63c86)
 
 ## Take advantage of autocmd events
 
@@ -178,5 +183,7 @@ vim.api.nvim_create_autocmd("User", {
     end,
 })
 ```
+[demo](https://github.com/xiaoshihou514/guard.nvim/assets/108414369/339ff4ff-288c-49e4-8ab1-789a6175d201)
+
 
 You can do the similar for your statusline plugin of choice as long as you "refresh" it on `GuardFmt`.
