@@ -1,3 +1,16 @@
+---@class LintConfig
+---@field cmd string?
+---@field args string[]?
+---@field fname boolean?
+---@field stdin boolean?
+---@field fn function?
+---@field parse function
+---@field ignore_patterns string[]?
+---@field ignore_error boolean?
+---@field find string?
+---@field env table<string, string>?
+---@field timeout integer?
+
 local api = vim.api
 local ft_handler = require('guard.filetype')
 local util = require('guard.util')
@@ -9,6 +22,7 @@ local M = {}
 
 function M.do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
+  ---@type LintConfig[]
   local linters, generic_linters
 
   local generic_config = ft_handler['*']
@@ -23,7 +37,7 @@ function M.do_lint(buf)
     linters = generic_linters
   else
     -- buf_config exists, we want both
-    linters = vim.deepcopy(buf_config.linter)
+    linters = vim.tbl_map(util.toolcopy, buf_config.linter)
     if generic_linters then
       vim.list_extend(linters, generic_linters)
     end

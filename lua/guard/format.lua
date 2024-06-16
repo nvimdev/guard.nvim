@@ -1,3 +1,15 @@
+---@class FmtConfig
+---@field cmd string?
+---@field args string[]?
+---@field fname boolean?
+---@field stdin boolean?
+---@field fn function?
+---@field ignore_patterns string[]?
+---@field ignore_error boolean?
+---@field find string?
+---@field env table<string, string>?
+---@field timeout integer?
+
 local api = vim.api
 local spawn = require('guard.spawn')
 local util = require('guard.util')
@@ -70,6 +82,7 @@ local function do_fmt(buf)
   end
 
   -- init environment
+  ---@type FmtConfig[]
   local fmt_configs = ft_conf.formatter
   local fname, startpath, root_dir, cwd = util.buf_get_info(buf)
 

@@ -100,6 +100,11 @@ local function ignored(buf, patterns)
   return false
 end
 
+---@param config FmtConfig
+---@param buf integer
+---@param startpath string
+---@param root_dir string
+---@return boolean
 function M.should_run(config, buf, startpath, root_dir)
   if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
     return false
@@ -111,6 +116,7 @@ function M.should_run(config, buf, startpath, root_dir)
   return true
 end
 
+---@return string, string, string, string
 function M.buf_get_info(buf)
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   ---@diagnostic disable-next-line: param-type-mismatch
@@ -118,7 +124,26 @@ function M.buf_get_info(buf)
   local root_dir = M.get_lsp_root()
   ---@diagnostic disable-next-line: undefined-field
   local cwd = root_dir or vim.uv.cwd()
+  ---@diagnostic disable-next-line: return-type-mismatch
   return fname, startpath, root_dir, cwd
+end
+
+---@param c (FmtConfig|LintConfig)
+---@return (FmtConfig|LintConfig)
+function M.toolcopy(c)
+  return {
+    cmd = c.cmd,
+    args = c.args,
+    fname = c.fname,
+    stdin = c.stdin,
+    fn = c.fn,
+    ignore_patterns = c.ignore_patterns,
+    ignore_error = c.ignore_error,
+    find = c.find,
+    env = c.env,
+    timeout = c.timeout,
+    parse = c.parse,
+  }
 end
 
 return M

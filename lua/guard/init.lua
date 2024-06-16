@@ -24,7 +24,7 @@ local function resolve_multi_ft()
     if key:find(',') then
       local t = vim.split(key, ',')
       for _, item in ipairs(t) do
-        ft_handler[item] = vim.deepcopy(ft_handler[key])
+        ft_handler[item] = util.toolcopy(ft_handler[key])
       end
       ft_handler[key] = nil
     end
