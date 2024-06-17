@@ -177,7 +177,7 @@ attributes = {
 },
 ```
 
-Done! :start2:
+Et voilà!
 
 ![image](https://github.com/xiaoshihou514/guard.nvim/assets/108414369/f9137b5a-ae69-494f-9f5b-b6044ae63c86)
 
