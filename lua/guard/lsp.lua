@@ -45,7 +45,7 @@ function M.format(buf, range, acc)
     async = true,
   })
 
-  return coroutine.yield()
+  return (coroutine.yield())
 end
 
 return M
