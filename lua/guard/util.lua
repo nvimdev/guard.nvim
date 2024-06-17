@@ -128,9 +128,12 @@ function M.buf_get_info(buf)
   return fname, startpath, root_dir, cwd
 end
 
----@param c (FmtConfig|LintConfig)
----@return (FmtConfig|LintConfig)
+---@param c (FmtConfig|LintConfig)?
+---@return (FmtConfig|LintConfig)?
 function M.toolcopy(c)
+  if not c or vim.tbl_isempty(c) then
+    return nil
+  end
   return {
     cmd = c.cmd,
     args = c.args,

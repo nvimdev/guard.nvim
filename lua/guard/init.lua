@@ -22,9 +22,11 @@ local function resolve_multi_ft()
   local keys = vim.tbl_keys(ft_handler)
   vim.tbl_map(function(key)
     if key:find(',') then
-      local t = vim.split(key, ',')
-      for _, item in ipairs(t) do
-        ft_handler[item] = util.toolcopy(ft_handler[key])
+      local src = ft_handler[key]
+      for _, item in ipairs(vim.split(key, ',')) do
+        ft_handler[item] = {}
+        ft_handler[item].formatter = src.formatter and vim.tbl_map(util.toolcopy, src.formatter)
+        ft_handler[item].linter = src.linter and vim.tbl_map(util.toolcopy, src.linter)
       end
       ft_handler[key] = nil
     end

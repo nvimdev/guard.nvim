@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field, undefined-global
 local api = vim.api
 local equal = assert.equal
 local ft = require('guard.filetype')
@@ -12,6 +13,9 @@ describe('format module', function()
   local bufnr
   before_each(function()
     bufnr = api.nvim_create_buf(true, false)
+    vim.bo[bufnr].filetype = 'lua'
+    api.nvim_set_current_buf(bufnr)
+    vim.cmd('silent! write! /tmp/fmt_spec_test.lua')
   end)
 
   it('can format with stylua', function()

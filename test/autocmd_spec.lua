@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field, undefined-global
 local api = vim.api
 local ft = require('guard.filetype')
 ft('lua'):fmt({
