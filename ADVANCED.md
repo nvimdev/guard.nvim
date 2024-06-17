@@ -74,7 +74,7 @@ ft("javascript"):fmt({
 
 [demo](https://github.com/xiaoshihou514/guard.nvim/assets/108414369/56dd35d4-8bf6-445a-adfd-8786fb461021)
 
-You can always refer to [spawn.lua](https://github.com/xiaoshihou514/guard.nvim/blob/ref-api/lua/guard/spawn.lua).
+You can always refer to [spawn.lua](https://github.com/nvimdev/guard.nvim/blob/main/lua/guard/spawn.lua).
 
 ## Custom logic with linters
 
@@ -87,7 +87,7 @@ local ft = require("guard.filetype")
 local lint = require("guard.lint")
 ```
 
-The lint function is a simple modification of the one in [spawn.lua](https://github.com/xiaoshihou514/guard.nvim/blob/ref-api/lua/guard/spawn.lua).
+The lint function is a simple modification of the one in [spawn.lua](https://github.com/nvimdev/guard.nvim/blob/main/lua/guard/spawn.lua).
 
 ```lua
 local function clippy_driver_lint(acc)
