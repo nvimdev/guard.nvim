@@ -135,7 +135,7 @@ end
 ---@return string, string, string, string
 function M.buf_get_info(buf)
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
-  local startpath = vim.fn.expand(fname, false, ':p:h')
+  local startpath = vim.fn.fnamemodify(fname, ':p:h')
   local root_dir = M.get_lsp_root()
   ---@diagnostic disable-next-line: undefined-field
   local cwd = root_dir or vim.uv.cwd()
