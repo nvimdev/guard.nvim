@@ -135,8 +135,7 @@ end
 ---@return string, string, string, string
 function M.buf_get_info(buf)
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
-  ---@diagnostic disable-next-line: param-type-mismatch
-  local startpath = vim.fn.expand(fname, ':p:h')
+  local startpath = vim.fn.expand(fname, false, ':p:h')
   local root_dir = M.get_lsp_root()
   ---@diagnostic disable-next-line: undefined-field
   local cwd = root_dir or vim.uv.cwd()
