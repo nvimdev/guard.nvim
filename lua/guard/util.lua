@@ -1,6 +1,10 @@
 local api = vim.api
 local M = {}
 
+---@param bufnr number
+---@param srow number
+---@param erow number
+---@return string[]
 function M.get_prev_lines(bufnr, srow, erow)
   local tbl = api.nvim_buf_get_lines(bufnr, srow, erow, false)
   local res = {}
@@ -10,6 +14,7 @@ function M.get_prev_lines(bufnr, srow, erow)
   return res
 end
 
+---@return string?
 function M.get_lsp_root(buf)
   buf = buf or api.nvim_get_current_buf()
   local clients = vim.lsp.get_clients({ bufnr = buf })
@@ -62,6 +67,9 @@ function M.doau(pattern, data)
   })
 end
 
+---@param config FmtConfig|LintConfig
+---@param fname string
+---@return string[]
 function M.get_cmd(config, fname)
   local cmd = config.args and vim.deepcopy(config.args) or {}
   table.insert(cmd, 1, vim.fn.exepath(config.cmd))
@@ -71,6 +79,10 @@ function M.get_cmd(config, fname)
   return cmd
 end
 
+---@param startpath string
+---@param patterns string[]|string?
+---@param root_dir string
+---@return boolean
 local function find(startpath, patterns, root_dir)
   patterns = M.as_table(patterns)
   for _, pattern in ipairs(patterns) do
@@ -84,8 +96,12 @@ local function find(startpath, patterns, root_dir)
       return true
     end
   end
+  return false
 end
 
+---@param buf number
+---@param patterns string[]
+---@return boolean
 local function ignored(buf, patterns)
   local fname = api.nvim_buf_get_name(buf)
   if #fname == 0 then
@@ -100,7 +116,7 @@ local function ignored(buf, patterns)
   return false
 end
 
----@param config FmtConfig
+---@param config FmtConfig|LintConfig
 ---@param buf integer
 ---@param startpath string
 ---@param root_dir string

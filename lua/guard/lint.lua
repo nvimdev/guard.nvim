@@ -7,7 +7,7 @@
 ---@field parse function
 ---@field ignore_patterns string[]?
 ---@field ignore_error boolean?
----@field find string?
+---@field find string|string[]?
 ---@field env table<string, string>?
 ---@field timeout integer?
 
