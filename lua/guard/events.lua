@@ -1,9 +1,10 @@
 local api, uv = vim.api, vim.uv
 local group = api.nvim_create_augroup('Guard', { clear = true })
+local au = api.nvim_create_autocmd
 local M = {}
 
 function M.attach_to_buf(buf)
-  api.nvim_create_autocmd('BufWritePre', {
+  au('BufWritePre', {
     group = group,
     buffer = buf,
     callback = function(opt)
@@ -16,7 +17,7 @@ function M.attach_to_buf(buf)
 end
 
 function M.watch_ft(ft)
-  api.nvim_create_autocmd('FileType', {
+  au('FileType', {
     group = group,
     pattern = ft,
     callback = function(args)
@@ -35,7 +36,7 @@ function M.watch_ft(ft)
 end
 
 function M.create_lspattach_autocmd(fmt_on_save)
-  api.nvim_create_autocmd('LspAttach', {
+  au('LspAttach', {
     group = group,
     callback = function(args)
       local client = vim.lsp.get_client_by_id(args.data.client_id)
@@ -65,7 +66,7 @@ end
 
 local debounce_timer = nil
 function M.register_lint(ft, events)
-  api.nvim_create_autocmd('FileType', {
+  au('FileType', {
     pattern = ft,
     group = group,
     callback = function(args)
@@ -87,7 +88,7 @@ function M.register_lint(ft, events)
       end
       for _, ev in ipairs(events) do
         if ev == 'User GuardFmt' then
-          api.nvim_create_autocmd('User', {
+          au('User', {
             group = group,
             pattern = 'GuardFmt',
             callback = function(opt)
@@ -97,7 +98,7 @@ function M.register_lint(ft, events)
             end,
           })
         else
-          api.nvim_create_autocmd(ev, {
+          au(ev, {
             group = group,
             buffer = args.buf,
             callback = cb,

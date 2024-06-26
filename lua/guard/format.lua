@@ -14,6 +14,7 @@ local api = vim.api
 local spawn = require('guard.spawn')
 local util = require('guard.util')
 local filetype = require('guard.filetype')
+local iter, filter = vim.iter, vim.tbl_filter
 
 local function save_views(bufnr)
   local views = {}
@@ -87,29 +88,29 @@ local function do_fmt(buf)
   local fname, startpath, root_dir, cwd = util.buf_get_info(buf)
 
   -- handle execution condition
-  fmt_configs = vim.tbl_filter(function(config)
+  fmt_configs = filter(function(config)
     return util.should_run(config, buf, startpath, root_dir)
   end, fmt_configs)
 
   -- check if all cmds executable
-  local non_excutable = vim.tbl_filter(function(config)
+  local non_excutable = filter(function(config)
     return config.cmd and vim.fn.executable(config.cmd) ~= 1
   end, fmt_configs)
 
   if #non_excutable > 0 then
-    error(table.concat(
+    error(('%s not executable'):format(table.concat(
       vim.tbl_map(function(config)
         return config.cmd
       end, non_excutable),
       ', '
-    ) .. ' not executable')
+    )))
   end
 
   -- filter out "pure" and "impure" formatters
-  local pure = vim.iter(vim.tbl_filter(function(config)
+  local pure = iter(filter(function(config)
     return config.fn or (config.cmd and config.stdin)
   end, fmt_configs))
-  local impure = vim.iter(vim.tbl_filter(function(config)
+  local impure = iter(filter(function(config)
     return config.cmd and not config.stdin
   end, fmt_configs))
 
