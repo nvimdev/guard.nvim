@@ -75,8 +75,7 @@ function M.register_lint(ft, events)
           debounce_timer:stop()
           debounce_timer = nil
         end
-        ---@diagnostic disable-next-line: undefined-field
-        debounce_timer = uv.new_timer()
+        debounce_timer = assert(uv.new_timer()) --[[uv_timer_t]]
         debounce_timer:start(500, 0, function()
           debounce_timer:stop()
           debounce_timer:close()
