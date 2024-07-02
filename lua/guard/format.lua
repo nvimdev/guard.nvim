@@ -13,6 +13,7 @@
 local api = vim.api
 local spawn = require('guard.spawn')
 local util = require('guard.util')
+local error = util.error
 local filetype = require('guard.filetype')
 local iter, filter = vim.iter, vim.tbl_filter
 
@@ -50,10 +51,6 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow, erow)
     end
     restore_views(views)
   end
-end
-
-local function error(msg)
-  vim.notify('[Guard]: ' .. msg, vim.log.levels.WARN)
 end
 
 local function fail(msg)
