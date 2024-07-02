@@ -20,12 +20,8 @@ function M.format(buf, range, acc)
   local line_offset = range and range.start[1] - 1 or 0
 
   ---@diagnostic disable-next-line: duplicate-set-field
-  vim.lsp.util.apply_text_edits = function(text_edits, bufnr, offset_encoding)
-    if bufnr ~= buf then
-      apply(text_edits, bufnr, offset_encoding)
-    end
-
-    -- we apply it to our scratch buffer
+  vim.lsp.util.apply_text_edits = function(text_edits, _, offset_encoding)
+    -- the target buffer must be buf, we apply it to our scratch buffer
     n_edits = n_edits - 1
     vim.tbl_map(function(edit)
       edit.range.start.line = edit.range.start.line - line_offset
