@@ -1,6 +1,7 @@
 local api, uv = vim.api, vim.uv
 local group = api.nvim_create_augroup('Guard', { clear = true })
 local au = api.nvim_create_autocmd
+local filter = vim.tbl_filter
 local M = {}
 
 function M.attach_to_buf(buf)
@@ -8,15 +9,29 @@ function M.attach_to_buf(buf)
     group = group,
     buffer = buf,
     callback = function(opt)
-      if not vim.bo[opt.buf].modified then
-        return
+      if vim.bo[opt.buf].modified then
+        require('guard.format').do_fmt(opt.buf)
       end
-      require('guard.format').do_fmt(opt.buf)
     end,
   })
 end
 
 function M.watch_ft(ft)
+  -- check if all cmds executable before registering formatter
+  local non_excutable = filter(function(config)
+    return config.cmd and vim.fn.executable(config.cmd) ~= 1
+  end, ft.formatter)
+
+  if #non_excutable > 0 then
+    error(('%s not executable'):format(table.concat(
+      vim.tbl_map(function(config)
+        return config.cmd
+      end, non_excutable),
+      ', '
+    )))
+    return
+  end
+
   au('FileType', {
     group = group,
     pattern = ft,
@@ -66,6 +81,21 @@ end
 
 local debounce_timer = nil
 function M.register_lint(ft, events)
+  -- check if all cmds executable before registering formatter
+  local non_excutable = filter(function(config)
+    return config.cmd and vim.fn.executable(config.cmd) ~= 1
+  end, ft.linter)
+
+  if #non_excutable > 0 then
+    error(('%s not executable'):format(table.concat(
+      vim.tbl_map(function(config)
+        return config.cmd
+      end, non_excutable),
+      ', '
+    )))
+    return
+  end
+
   au('FileType', {
     pattern = ft,
     group = group,

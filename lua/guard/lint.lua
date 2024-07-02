@@ -49,20 +49,6 @@ function M.do_lint(buf)
     return util.should_run(config, buf, startpath, root_dir)
   end, linters)
 
-  -- check if all cmds executable
-  local non_excutable = vim.tbl_filter(function(config)
-    return config.cmd and vim.fn.executable(config.cmd) ~= 1
-  end, linters)
-
-  if #non_excutable > 0 then
-    error(('%s not executable'):format(table.concat(
-      vim.tbl_map(function(config)
-        return config.cmd
-      end, non_excutable),
-      ', '
-    )))
-  end
-
   local prev_lines = get_prev_lines(buf, 0, -1)
   vd.reset(ns, buf)
 

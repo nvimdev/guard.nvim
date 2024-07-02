@@ -89,7 +89,7 @@ local function do_fmt(buf)
     return util.should_run(config, buf, startpath, root_dir)
   end, fmt_configs)
 
-  -- check if all cmds executable
+  -- check if all cmds executable again, since user can call format manually
   local non_excutable = filter(function(config)
     return config.cmd and vim.fn.executable(config.cmd) ~= 1
   end, fmt_configs)
