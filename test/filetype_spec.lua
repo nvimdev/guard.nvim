@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field, undefined-global
 local ft = require('guard.filetype')
 local same = assert.are.same
 
@@ -11,11 +12,10 @@ describe('filetype module', function()
   it('can register filetype with fmt config', function()
     ft('c'):fmt({
       cmd = 'clang-format',
-      lines = { 'test', 'lines' },
     })
     same({
       formatter = {
-        { cmd = 'clang-format', lines = { 'test', 'lines' } },
+        { cmd = 'clang-format' },
       },
     }, ft.c)
   end)
@@ -23,17 +23,15 @@ describe('filetype module', function()
   it('can register fmt with many configs', function()
     ft('python'):fmt({
       cmd = 'tool1',
-      lines = { 'test' },
       timeout = 1000,
     }):append({
       cmd = 'tool2',
-      lines = 'test',
       timeout = 1000,
     })
     same({
       formatter = {
-        { cmd = 'tool1', lines = { 'test' }, timeout = 1000 },
-        { cmd = 'tool2', lines = 'test', timeout = 1000 },
+        { cmd = 'tool1', timeout = 1000 },
+        { cmd = 'tool2', timeout = 1000 },
       },
     }, ft.python)
   end)
@@ -41,11 +39,10 @@ describe('filetype module', function()
   it('can register filetype with lint config', function()
     ft('python'):lint({
       cmd = 'black',
-      lines = { 'test', 'lines' },
     })
     same({
       linter = {
-        { cmd = 'black', lines = { 'test', 'lines' } },
+        { cmd = 'black' },
       },
     }, ft.python)
   end)
@@ -53,17 +50,15 @@ describe('filetype module', function()
   it('can register filetype with many lint config', function()
     ft('python'):lint({
       cmd = 'black',
-      lines = { 'test', 'lines' },
       timeout = 1000,
     }):append({
       cmd = 'other',
-      lines = { 'test' },
       timeout = 1000,
     })
     same({
       linter = {
-        { cmd = 'black', lines = { 'test', 'lines' }, timeout = 1000 },
-        { cmd = 'other', lines = { 'test' }, timeout = 1000 },
+        { cmd = 'black', timeout = 1000 },
+        { cmd = 'other', timeout = 1000 },
       },
     }, ft.python)
   end)
@@ -92,7 +87,6 @@ describe('filetype module', function()
         c = {
           fmt = {
             cmd = 'clang-format',
-            lines = { 'test', 'lines' },
           },
         },
         python = {
@@ -117,7 +111,7 @@ describe('filetype module', function()
     })
     same({
       formatter = {
-        { cmd = 'clang-format', lines = { 'test', 'lines' } },
+        { cmd = 'clang-format' },
       },
     }, ft.c)
     same({
