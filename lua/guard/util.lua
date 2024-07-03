@@ -73,10 +73,10 @@ end
 ---@return string[]
 function M.get_cmd(config, fname)
   local cmd = config.args and vim.deepcopy(config.args) or {}
-  table.insert(cmd, 1, vim.fn.exepath(config.cmd))
   if config.fname then
     table.insert(cmd, fname)
   end
+  table.insert(cmd, 1, config.cmd)
   return cmd
 end
 
