@@ -164,7 +164,7 @@ function M.toolcopy(c)
   }
 end
 
-function M.error(msg)
+function M.report_error(msg)
   vim.notify('[Guard]: ' .. msg, vim.log.levels.WARN)
 end
 
