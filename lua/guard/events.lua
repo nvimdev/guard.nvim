@@ -84,7 +84,7 @@ function M.register_lint(ft, events)
   -- check if all cmds executable before registering formatter
   local non_excutable = filter(function(config)
     return config.cmd and vim.fn.executable(config.cmd) ~= 1
-  end, ft.linter)
+  end, require('guard.filetype')[ft].linter)
 
   if #non_excutable > 0 then
     error(('%s not executable'):format(table.concat(
