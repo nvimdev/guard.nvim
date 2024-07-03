@@ -90,7 +90,7 @@ Easily setup your custom tool if not in the defaults or you do not want guard-co
 {
     -- specify an executable
     cmd              -- string: tool command
-    args             -- table: command arguments
+    args             -- string[]: command arguments
     fname            -- boolean: insert filename to args tail
     stdin            -- boolean: pass buffer contents into stdin
 
@@ -98,12 +98,12 @@ Easily setup your custom tool if not in the defaults or you do not want guard-co
     fn               -- function: write your own logic for formatting / linting, more in ADVANCED.md
 
     -- running condition
-    ignore_patterns  -- table: don't run formatter when pattern match against file name
+    ignore_patterns  -- string|string[]: don't run formatter when pattern match against file name
     ignore_error     -- boolean: when has lsp error ignore format
-    find             -- string: format if the file is found in the lsp root dir
+    find             -- string|string[]: format if the file is found in the lsp root dir
 
     -- misc
-    env              -- table: environment variables passed to cmd (key value pair)
+    env              -- table<string, string>?: environment variables passed to cmd (key value pair)
     timeout          -- integer
 
     -- special

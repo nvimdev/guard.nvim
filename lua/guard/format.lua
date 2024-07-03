@@ -4,7 +4,7 @@
 ---@field fname boolean?
 ---@field stdin boolean?
 ---@field fn function?
----@field ignore_patterns string[]?
+---@field ignore_patterns string|string[]?
 ---@field ignore_error boolean?
 ---@field find string|string[]?
 ---@field env table<string, string>?

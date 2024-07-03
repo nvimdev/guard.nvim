@@ -95,7 +95,7 @@ local function find(startpath, patterns, root_dir)
 end
 
 ---@param buf number
----@param patterns string[]
+---@param patterns string[]|string?
 ---@return boolean
 local function ignored(buf, patterns)
   local fname = api.nvim_buf_get_name(buf)
@@ -103,7 +103,7 @@ local function ignored(buf, patterns)
     return false
   end
 
-  return iter(patterns):any(function(pattern)
+  return iter(M.as_table(patterns)):any(function(pattern)
     return fname:find(pattern) ~= nil
   end)
 end
