@@ -1,4 +1,5 @@
 local api = vim.api
+local iter = vim.iter
 local M = {}
 
 ---@param bufnr number
@@ -84,19 +85,13 @@ end
 ---@param root_dir string
 ---@return boolean
 local function find(startpath, patterns, root_dir)
-  patterns = M.as_table(patterns)
-  for _, pattern in ipairs(patterns) do
-    if
-      #vim.fs.find(pattern, {
-        upward = true,
-        stop = root_dir and vim.fn.fnamemodify(root_dir, ':h') or vim.env.HOME,
-        path = startpath,
-      }) > 0
-    then
-      return true
-    end
-  end
-  return false
+  return iter(M.as_table(patterns)):any(function(pattern)
+    return #vim.fs.find(pattern, {
+      upward = true,
+      stop = root_dir and vim.fn.fnamemodify(root_dir, ':h') or vim.env.HOME,
+      path = startpath,
+    }) > 0
+  end)
 end
 
 ---@param buf number
@@ -108,12 +103,9 @@ local function ignored(buf, patterns)
     return false
   end
 
-  for _, pattern in pairs(M.as_table(patterns)) do
-    if fname:find(pattern) then
-      return true
-    end
-  end
-  return false
+  return iter(patterns):any(function(pattern)
+    return fname:find(pattern) ~= nil
+  end)
 end
 
 ---@param config FmtConfig|LintConfig
