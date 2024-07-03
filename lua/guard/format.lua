@@ -90,7 +90,7 @@ local function do_fmt(buf)
   end, fmt_configs)
 
   -- check if all cmds executable again, since user can call format manually
-  iter(require('guard.filetype')[filetype].formatter):any(function(config)
+  iter(fmt_configs):any(function(config)
     if config.cmd and vim.fn.executable(config.cmd) ~= 1 then
       error(config.cmd .. ' not executable', 1)
     end

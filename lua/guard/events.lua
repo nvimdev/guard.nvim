@@ -74,7 +74,7 @@ end
 
 local debounce_timer = nil
 function M.register_lint(ft, events)
-  iter(require('guard.filetype')[ft].formatter):any(function(config)
+  iter(require('guard.filetype')[ft].linter):any(function(config)
     if config.cmd and vim.fn.executable(config.cmd) ~= 1 then
       error(config.cmd .. ' not executable', 1)
     end
