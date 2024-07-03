@@ -18,19 +18,12 @@ end
 
 function M.watch_ft(ft)
   -- check if all cmds executable before registering formatter
-  local non_excutable = filter(function(config)
-    return config.cmd and vim.fn.executable(config.cmd) ~= 1
-  end, ft.formatter)
-
-  if #non_excutable > 0 then
-    error(('%s not executable'):format(table.concat(
-      vim.tbl_map(function(config)
-        return config.cmd
-      end, non_excutable),
-      ', '
-    )))
-    return
-  end
+  vim.iter(require('guard.filetype')[ft].formatter):any(function(config)
+    if config.cmd and vim.fn.executable(config.cmd) ~= 1 then
+      error(config.cmd .. ' not executable', 1)
+    end
+    return true
+  end)
 
   au('FileType', {
     group = group,
