@@ -90,18 +90,12 @@ local function do_fmt(buf)
   end, fmt_configs)
 
   -- check if all cmds executable again, since user can call format manually
-  local non_excutable = filter(function(config)
-    return config.cmd and vim.fn.executable(config.cmd) ~= 1
-  end, fmt_configs)
-
-  if #non_excutable > 0 then
-    report_error(('%s not executable'):format(table.concat(
-      vim.tbl_map(function(config)
-        return config.cmd
-      end, non_excutable),
-      ', '
-    )))
-  end
+  iter(require('guard.filetype')[filetype].formatter):any(function(config)
+    if config.cmd and vim.fn.executable(config.cmd) ~= 1 then
+      error(config.cmd .. ' not executable', 1)
+    end
+    return true
+  end)
 
   -- filter out "pure" and "impure" formatters
   local pure = iter(filter(function(config)
