@@ -68,6 +68,19 @@ function M.doau(pattern, data)
   })
 end
 
+local ffi = require('ffi')
+ffi.cdef([[
+bool os_can_exe(const char *name, char **abspath, bool use_path)
+]])
+
+---@param exe string
+---@return string
+local function exepath_ffi(exe)
+  local charpp = ffi.new('char*[1]')
+  assert(ffi.C.os_can_exe(exe, charpp, true))
+  return ffi.string(charpp[0])
+end
+
 ---@param config FmtConfig|LintConfig
 ---@param fname string
 ---@return string[]
@@ -76,7 +89,7 @@ function M.get_cmd(config, fname)
   if config.fname then
     table.insert(cmd, fname)
   end
-  table.insert(cmd, 1, config.cmd)
+  table.insert(cmd, 1, exepath_ffi(config.cmd))
   return cmd
 end
 
