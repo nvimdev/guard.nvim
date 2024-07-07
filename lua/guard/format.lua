@@ -110,7 +110,7 @@ local function do_fmt(buf)
     report_error('Cannot apply range formatting for filetype ' .. vim.bo[buf].filetype)
     report_error(impure
       :map(function(config)
-        return config.cmd or '<fn>'
+        return config.cmd
       end)
       :join(', ') .. ' does not support reading from stdin')
     return
