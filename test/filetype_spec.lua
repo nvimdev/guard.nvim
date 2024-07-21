@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field, undefined-global
 local ft = require('guard.filetype')
 local same = assert.are.same
 
@@ -9,79 +10,79 @@ describe('filetype module', function()
   end)
 
   it('can register filetype with fmt config', function()
-    ft('c'):fmt({
-      cmd = 'clang-format',
-      lines = { 'test', 'lines' },
+    ft('lua'):fmt({
+      cmd = 'stylua',
+      args = { '-' },
+      stdin = true,
     })
     same({
       formatter = {
-        { cmd = 'clang-format', lines = { 'test', 'lines' } },
+        {
+          cmd = 'stylua',
+          args = { '-' },
+          stdin = true,
+        },
       },
-    }, ft.c)
+    }, ft.lua)
   end)
 
   it('can register fmt with many configs', function()
     ft('python'):fmt({
-      cmd = 'tool1',
-      lines = { 'test' },
+      cmd = 'tac',
       timeout = 1000,
     }):append({
-      cmd = 'tool2',
-      lines = 'test',
+      cmd = 'cat',
       timeout = 1000,
     })
     same({
       formatter = {
-        { cmd = 'tool1', lines = { 'test' }, timeout = 1000 },
-        { cmd = 'tool2', lines = 'test', timeout = 1000 },
+        { cmd = 'tac', timeout = 1000 },
+        { cmd = 'cat', timeout = 1000 },
       },
     }, ft.python)
   end)
 
   it('can register filetype with lint config', function()
     ft('python'):lint({
-      cmd = 'black',
-      lines = { 'test', 'lines' },
+      cmd = 'wc',
     })
     same({
       linter = {
-        { cmd = 'black', lines = { 'test', 'lines' } },
+        { cmd = 'wc' },
       },
     }, ft.python)
   end)
 
   it('can register filetype with many lint config', function()
     ft('python'):lint({
-      cmd = 'black',
-      lines = { 'test', 'lines' },
+      cmd = 'wc',
       timeout = 1000,
     }):append({
-      cmd = 'other',
-      lines = { 'test' },
+      cmd = 'file',
       timeout = 1000,
     })
     same({
       linter = {
-        { cmd = 'black', lines = { 'test', 'lines' }, timeout = 1000 },
-        { cmd = 'other', lines = { 'test' }, timeout = 1000 },
+        { cmd = 'wc', timeout = 1000 },
+        { cmd = 'file', timeout = 1000 },
       },
     }, ft.python)
   end)
 
   it('can register format and lint ', function()
     local py = ft('python')
-    py:fmt({ cmd = 'first', timeout = 1000 }):append({ cmd = 'second' }):append({ cmd = 'third' })
-    py:lint({ cmd = 'first' }):append({ cmd = 'second' }):append({ cmd = 'third' })
+    py:fmt({ cmd = 'head' }):append({ cmd = 'cat', timeout = 1000 }):append({ cmd = 'tail' })
+    py:lint({ cmd = 'tac' }):append({ cmd = 'wc' }):append({ cmd = 'cat' })
     same({
       formatter = {
-        { cmd = 'first', timeout = 1000 },
-        { cmd = 'second' },
-        { cmd = 'third' },
+        { cmd = 'head' },
+        { cmd = 'cat', timeout = 1000 },
+        { cmd = 'tail' },
       },
       linter = {
-        { cmd = 'first' },
-        { cmd = 'second' },
-        { cmd = 'third' },
+        { cmd = 'tac' },
+        { cmd = 'wc' },
+        { cmd = 'cat' },
       },
     }, ft.python)
   end)
@@ -91,25 +92,24 @@ describe('filetype module', function()
       ft = {
         c = {
           fmt = {
-            cmd = 'clang-format',
-            lines = { 'test', 'lines' },
+            cmd = 'cat',
           },
         },
         python = {
           fmt = {
-            { cmd = 'tool-1' },
-            { cmd = 'tool-2' },
+            { cmd = 'tac' },
+            { cmd = 'cat' },
           },
           lint = {
-            cmd = 'lint_tool_1',
+            cmd = 'wc',
           },
         },
         rust = {
           lint = {
             {
-              cmd = 'clippy',
-              args = { 'check' },
-              stdin = true,
+              cmd = 'wc',
+              args = { '-l' },
+              fname = true,
             },
           },
         },
@@ -117,60 +117,72 @@ describe('filetype module', function()
     })
     same({
       formatter = {
-        { cmd = 'clang-format', lines = { 'test', 'lines' } },
+        { cmd = 'cat' },
       },
     }, ft.c)
     same({
       formatter = {
-        { cmd = 'tool-1' },
-        { cmd = 'tool-2' },
+        { cmd = 'tac' },
+        { cmd = 'cat' },
       },
       linter = {
-        { cmd = 'lint_tool_1' },
+        { cmd = 'wc' },
       },
     }, ft.python)
     same({
       linter = {
-        { cmd = 'clippy', args = { 'check' }, stdin = true },
+        { cmd = 'wc', args = { '-l' }, fname = true },
       },
     }, ft.rust)
   end)
 
   it('can register a formatter for multiple filetypes simultaneously', function()
     ft('javascript,javascriptreact'):fmt({
-      cmd = 'prettier',
-      args = { 'some', 'args' },
+      cmd = 'cat',
+      args = { '-v', '-E' },
     })
     require('guard').setup({})
     same({
-      formatter = { { cmd = 'prettier', args = { 'some', 'args' } } },
+      formatter = { { cmd = 'cat', args = { '-v', '-E' } } },
     }, ft.javascript)
     same({
-      formatter = { { cmd = 'prettier', args = { 'some', 'args' } } },
+      formatter = { { cmd = 'cat', args = { '-v', '-E' } } },
     }, ft.javascriptreact)
   end)
 
   it('can add extra command arguments', function()
     ft('c')
       :fmt({
-        cmd = 'clang-format',
-        args = { '--style=Mozilla' },
+        cmd = 'cat',
+        args = { '-n' },
         stdin = true,
       })
-      :extra('--verbose')
+      :extra('-s')
       :lint({
-        cmd = 'clang-tidy',
-        args = { '--quiet' },
+        cmd = 'wc',
+        args = { '-L', '1' },
         parse = function() end,
       })
-      :extra('--fix')
+      :extra('-l')
 
     same({
-      cmd = 'clang-format',
-      args = { '--verbose', '--style=Mozilla' },
+      cmd = 'cat',
+      args = { '-s', '-n' },
       stdin = true,
     }, ft.c.formatter[1])
 
-    same({ '--fix', '--quiet' }, ft.c.linter[1].args)
+    same({ '-l', '-L', '1' }, ft.c.linter[1].args)
+  end)
+
+  it('can detect non executable formatters', function()
+    local c = ft('c')
+    c:fmt({ cmd = 'hjkl' })
+    assert(not pcall(require('guard').setup))
+  end)
+
+  it('can detect non executable linters', function()
+    local c = ft('c')
+    c:lint({ cmd = 'hjkl' })
+    assert(not pcall(require('guard').setup))
   end)
 end)

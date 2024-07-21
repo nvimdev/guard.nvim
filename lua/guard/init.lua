@@ -3,7 +3,7 @@ local ft_handler = require('guard.filetype')
 local events = require('guard.events')
 
 local config = {
-  opts = nil
+  opts = nil,
 }
 
 local function register_cfg_by_table(fts_with_cfg)
@@ -22,9 +22,11 @@ local function resolve_multi_ft()
   local keys = vim.tbl_keys(ft_handler)
   vim.tbl_map(function(key)
     if key:find(',') then
-      local t = vim.split(key, ',')
-      for _, item in ipairs(t) do
-        ft_handler[item] = vim.deepcopy(ft_handler[key])
+      local src = ft_handler[key]
+      for _, item in ipairs(vim.split(key, ',')) do
+        ft_handler[item] = {}
+        ft_handler[item].formatter = src.formatter and vim.tbl_map(util.toolcopy, src.formatter)
+        ft_handler[item].linter = src.linter and vim.tbl_map(util.toolcopy, src.linter)
       end
       ft_handler[key] = nil
     end
@@ -45,7 +47,6 @@ local function setup(opt)
     events.create_lspattach_autocmd(config.opts.fmt_on_save)
   end
 
-  local lint = require('guard.lint')
   for ft, conf in pairs(ft_handler) do
     local lint_events = { 'BufWritePost', 'BufEnter' }
 
@@ -60,7 +61,7 @@ local function setup(opt)
           table.insert(lint_events, 'TextChanged')
           table.insert(lint_events, 'InsertLeave')
         end
-        lint.register_lint(ft, lint_events)
+        events.register_lint(ft, lint_events)
       end
     end
   end

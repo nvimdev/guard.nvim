@@ -1,14 +1,14 @@
-local try_spawn = require('guard.spawn').try_spawn
+---@diagnostic disable: undefined-field, undefined-global
+local spawn = require('guard.spawn')
+local same = assert.are.same
 
 describe('spawn module', function()
-  it('can spawn a process', function()
-    local opt = {
-      cmd = 'stylua',
-    }
+  it('can spawn executables with stdin access', function()
     coroutine.resume(coroutine.create(function()
-      try_spawn(opt)
+      local result = spawn.transform({ 'tac', '-s', '  ' }, {
+        stdin = true,
+      }, 'test1  test2  test3  ')
+      same(result, 'test3  test2  test1  ')
     end))
-
-    assert.is_true(true)
   end)
 end)

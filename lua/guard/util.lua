@@ -1,9 +1,12 @@
----@diagnostic disable-next-line: deprecated
-local get_clients = vim.version().minor >= 10 and vim.lsp.get_clients or vim.lsp.get_active_clients
 local api = vim.api
-local util = {}
+local iter = vim.iter
+local M = {}
 
-function util.get_prev_lines(bufnr, srow, erow)
+---@param bufnr number
+---@param srow number
+---@param erow number
+---@return string[]
+function M.get_prev_lines(bufnr, srow, erow)
   local tbl = api.nvim_buf_get_lines(bufnr, srow, erow, false)
   local res = {}
   for _, text in ipairs(tbl) do
@@ -12,9 +15,10 @@ function util.get_prev_lines(bufnr, srow, erow)
   return res
 end
 
-function util.get_lsp_root(buf)
+---@return string?
+function M.get_lsp_root(buf)
   buf = buf or api.nvim_get_current_buf()
-  local clients = get_clients({ bufnr = buf })
+  local clients = vim.lsp.get_clients({ bufnr = buf })
   if #clients == 0 then
     return
   end
@@ -25,25 +29,21 @@ function util.get_lsp_root(buf)
   end
 end
 
-function util.as_table(t)
-  return (vim.fn.has('nvim-0.10') == 1 and vim.islist or vim.tbl_islist)(t) and t or { t }
+function M.as_table(t)
+  return vim.islist(t) and t or { t }
 end
 
--- TODO: Use `vim.region()` instead ?
+---@source runtime/lua/vim/lsp/buf.lua
 ---@param bufnr integer
 ---@param mode "v"|"V"
 ---@return table {start={row,col}, end={row,col}} using (1, 0) indexing
-function util.range_from_selection(bufnr, mode)
-  -- [bufnum, lnum, col, off]; both row and column 1-indexed
+function M.range_from_selection(bufnr, mode)
   local start = vim.fn.getpos('v')
   local end_ = vim.fn.getpos('.')
   local start_row = start[2]
   local start_col = start[3]
   local end_row = end_[2]
   local end_col = end_[3]
-
-  -- A user can start visual selection at the end and move backwards
-  -- Normalize the range to start < end
   if start_row == end_row and end_col < start_col then
     end_col, start_col = start_col, end_col
   elseif end_row < start_row then
@@ -61,21 +61,117 @@ function util.range_from_selection(bufnr, mode)
   }
 end
 
-function util.get_clients(bufnr, method)
-  if vim.version().minor >= 10 then
-    return vim.lsp.get_clients({ bufnr = bufnr, method = method })
-  end
-  local clients = vim.lsp.get_active_clients({ bufnr = bufnr })
-  return vim.tbl_filter(function(client)
-    return client.supports_method(method)
-  end, clients)
-end
-
-function util.doau(pattern, data)
+function M.doau(pattern, data)
   api.nvim_exec_autocmds('User', {
     pattern = pattern,
     data = data,
   })
 end
 
-return util
+local ffi = require('ffi')
+ffi.cdef([[
+bool os_can_exe(const char *name, char **abspath, bool use_path)
+]])
+
+---@param exe string
+---@return string
+local function exepath_ffi(exe)
+  local charpp = ffi.new('char*[1]')
+  assert(ffi.C.os_can_exe(exe, charpp, true))
+  return ffi.string(charpp[0])
+end
+
+---@param config FmtConfig|LintConfig
+---@param fname string
+---@return string[]
+function M.get_cmd(config, fname)
+  local cmd = config.args and vim.deepcopy(config.args) or {}
+  if config.fname then
+    table.insert(cmd, fname)
+  end
+  table.insert(cmd, 1, exepath_ffi(config.cmd))
+  return cmd
+end
+
+---@param startpath string
+---@param patterns string[]|string?
+---@param root_dir string
+---@return boolean
+local function find(startpath, patterns, root_dir)
+  return iter(M.as_table(patterns)):any(function(pattern)
+    return #vim.fs.find(pattern, {
+      upward = true,
+      stop = root_dir and vim.fn.fnamemodify(root_dir, ':h') or vim.env.HOME,
+      path = startpath,
+    }) > 0
+  end)
+end
+
+---@param buf number
+---@param patterns string[]|string?
+---@return boolean
+local function ignored(buf, patterns)
+  local fname = api.nvim_buf_get_name(buf)
+  if #fname == 0 then
+    return false
+  end
+
+  return iter(M.as_table(patterns)):any(function(pattern)
+    return fname:find(pattern) ~= nil
+  end)
+end
+
+---@param config FmtConfig|LintConfig
+---@param buf integer
+---@param startpath string
+---@param root_dir string
+---@return boolean
+function M.should_run(config, buf, startpath, root_dir)
+  if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
+    return false
+  elseif config.ignore_error and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
+    return false
+  elseif config.find and not find(startpath, config.find, root_dir) then
+    return false
+  end
+  return true
+end
+
+---@return string, string, string, string
+function M.buf_get_info(buf)
+  local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
+  local startpath = vim.fn.fnamemodify(fname, ':p:h')
+  local root_dir = M.get_lsp_root()
+  ---@diagnostic disable-next-line: undefined-field
+  local cwd = root_dir or vim.uv.cwd()
+  ---@diagnostic disable-next-line: return-type-mismatch
+  return fname, startpath, root_dir, cwd
+end
+
+---@param c (FmtConfig|LintConfig)?
+---@return (FmtConfig|LintConfig)?
+function M.toolcopy(c)
+  if not c or vim.tbl_isempty(c) then
+    return nil
+  end
+  return {
+    cmd = c.cmd,
+    args = c.args,
+    fname = c.fname,
+    stdin = c.stdin,
+    fn = c.fn,
+    ignore_patterns = c.ignore_patterns,
+    ignore_error = c.ignore_error,
+    find = c.find,
+    env = c.env,
+    timeout = c.timeout,
+    parse = c.parse,
+  }
+end
+
+---@param msg string
+function M.report_error(msg)
+  vim.notify('[Guard]: ' .. msg, vim.log.levels.WARN)
+end
+
+return M

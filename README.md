@@ -1,6 +1,6 @@
 # guard.nvim
 
-Async formatting and linting utility for neovim.
+Async formatting and linting utility for neovim `0.10+`.
 
 ## Features
 
@@ -88,19 +88,26 @@ Easily setup your custom tool if not in the defaults or you do not want guard-co
 
 ```
 {
+    -- specify an executable
     cmd              -- string: tool command
-    args             -- table: command arguments
+    args             -- string[]: command arguments
     fname            -- boolean: insert filename to args tail
     stdin            -- boolean: pass buffer contents into stdin
-    timeout          -- integer
-    ignore_patterns  -- table: don't run formatter when pattern match against file name
+
+    -- or provide your own logic
+    fn               -- function: write your own logic for formatting / linting, more in ADVANCED.md
+
+    -- running condition
+    ignore_patterns  -- string|string[]: don't run formatter when pattern match against file name
     ignore_error     -- boolean: when has lsp error ignore format
-    find             -- string: format if the file is found in the lsp root dir
-    env              -- table: environment variables passed to cmd (key value pair)
+    find             -- string|string[]: format if the file is found in the lsp root dir
+
+    -- misc
+    env              -- table<string, string>?: environment variables passed to cmd (key value pair)
+    timeout          -- integer
 
     -- special
-    parse            -- function: used to parse linter output to neovim diagnostic
-    fn               -- function: if fn is set other fields will not take effect
+    parse            -- function: linter only, parses linter output to neovim diagnostic
 }
 ```
 
@@ -114,6 +121,14 @@ ft('asm'):fmt({
 ```
 
 Consult the [builtin tools](https://github.com/nvimdev/guard-collection/tree/main/lua/guard-collection) if needed.
+
+### Advanced configuration
+
+[ADVANCED.md](https://github.com/nvimdev/guard.nvim/blob/main/ADVANCED.md) contains tiny tutorials to:
+
+- Write your own formatting logic using the fn field
+- Write your own linting logic using the fn field
+- leverage guard's autocmds, say showing formatting status?
 
 ### Supported Tools
 

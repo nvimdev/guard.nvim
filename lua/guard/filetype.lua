@@ -1,12 +1,9 @@
+local util = require('guard.util')
 local M = {}
 
 local function get_tool(tool_type, tool_name)
   if tool_name == 'lsp' then
-    return {
-      fn = function(bufnr, range)
-        vim.lsp.buf.format({ bufnr = bufnr, range = range, async = true })
-      end,
-    }
+    return { fn = require('guard.lsp').format }
   end
   local ok, tbl = pcall(require, 'guard-collection.' .. tool_type)
   if not ok then
@@ -16,14 +13,15 @@ local function get_tool(tool_type, tool_name)
       ),
       4
     )
-    return
+    return {}
   end
   if not tbl[tool_name] then
     vim.notify(('[Guard]: %s %s has no builtin configuration'):format(tool_type, tool_name), 4)
-    return
+    return {}
   end
   return tbl[tool_name]
 end
+---@return FmtConfig|LintConfig
 local function try_as(tool_type, config)
   return type(config) == 'table' and config or get_tool(tool_type, config)
 end
@@ -39,7 +37,7 @@ local function box()
     })
     current = 'formatter'
     self.formatter = {
-      vim.deepcopy(try_as('formatter', config)),
+      util.toolcopy(try_as('formatter', config)),
     }
     return self
   end
@@ -50,7 +48,7 @@ local function box()
     })
     current = 'linter'
     self.linter = {
-      vim.deepcopy(try_as('linter', config)),
+      util.toolcopy(try_as('linter', config)),
     }
     return self
   end
@@ -78,6 +76,7 @@ local function box()
     end
     local tool = self[current][#self[current]]
     tool.env = {}
+    ---@diagnostic disable-next-line: undefined-field
     env = vim.tbl_extend('force', vim.uv.os_environ(), env or {})
     for k, v in pairs(env) do
       tool.env[#tool.env + 1] = ('%s=%s'):format(k, tostring(v))
@@ -112,7 +111,7 @@ local function box()
     local target = self:key_alias(key)
     local tool_type = key == 'fmt' and 'formatter' or 'linter'
     for _, item in ipairs(cfg) do
-      target[#target + 1] = vim.deepcopy(try_as(tool_type, item))
+      target[#target + 1] = util.toolcopy(try_as(tool_type, item))
     end
   end
 
