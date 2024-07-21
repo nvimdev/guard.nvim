@@ -1,4 +1,4 @@
-*guard.nvim.txt*           For NVIM v0.8.0           Last change: 2024 June 06
+*guard.nvim.txt*           For NVIM v0.8.0           Last change: 2024 July 21
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -10,7 +10,7 @@ Table of Contents                               *guard.nvim-table-of-contents*
 ==============================================================================
 1. guard.nvim                                          *guard.nvim-guard.nvim*
 
-Async formatting and linting utility for neovim.
+Async formatting and linting utility for neovim `0.10+`.
 
 
 FEATURES                                      *guard.nvim-guard.nvim-features*
@@ -104,19 +104,26 @@ guard-collection bundled:
 
 >
     {
+        -- specify an executable
         cmd              -- string: tool command
-        args             -- table: command arguments
+        args             -- string[]: command arguments
         fname            -- boolean: insert filename to args tail
         stdin            -- boolean: pass buffer contents into stdin
-        timeout          -- integer
-        ignore_patterns  -- table: don't run formatter when pattern match against file name
+    
+        -- or provide your own logic
+        fn               -- function: write your own logic for formatting / linting, more in ADVANCED.md
+    
+        -- running condition
+        ignore_patterns  -- string|string[]: don't run formatter when pattern match against file name
         ignore_error     -- boolean: when has lsp error ignore format
-        find             -- string: format if the file is found in the lsp root dir
-        env              -- table: environment variables passed to cmd (key value pair)
+        find             -- string|string[]: format if the file is found in the lsp root dir
+    
+        -- misc
+        env              -- table<string, string>?: environment variables passed to cmd (key value pair)
+        timeout          -- integer
     
         -- special
-        parse            -- function: used to parse linter output to neovim diagnostic
-        fn               -- function: if fn is set other fields will not take effect
+        parse            -- function: linter only, parses linter output to neovim diagnostic
     }
 <
 
@@ -133,6 +140,16 @@ For example, format your assembly with asmfmt
 Consult the builtin tools
 <https://github.com/nvimdev/guard-collection/tree/main/lua/guard-collection> if
 needed.
+
+
+ADVANCED CONFIGURATION ~
+
+ADVANCED.md <https://github.com/nvimdev/guard.nvim/blob/main/ADVANCED.md>
+contains tiny tutorials to:
+
+- Write your own formatting logic using the fn field
+- Write your own linting logic using the fn field
+- leverage guard’s autocmds, say showing formatting status?
 
 
 SUPPORTED TOOLS ~
