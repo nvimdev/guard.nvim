@@ -85,7 +85,7 @@ end
 ---@param message string
 ---@param severity number
 ---@param source string
-function M.diag_fmt(buf, lnum_start, lnum_end, col_start, col_end, message, severity, source)
+function M.diag_fmt(buf, lnum_start, col_start, message, severity, source, lnum_end, col_end)
   return {
     bufnr = buf,
     col = col_start,
