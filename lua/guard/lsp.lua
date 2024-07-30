@@ -30,8 +30,8 @@ function M.format(buf, range, acc)
     apply(text_edits, scratch, offset_encoding)
     if n_edits == 0 then
       vim.lsp.util.apply_text_edits = apply
-      api.nvim_command('silent! bufwipe! ' .. scratch)
       coroutine.resume(co, table.concat(api.nvim_buf_get_lines(scratch, 0, -1, false), '\n'))
+      api.nvim_command('silent! bwipe! ' .. scratch)
     end
   end
 
