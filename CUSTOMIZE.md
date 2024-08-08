@@ -1,4 +1,4 @@
-# Creating new configuration
+# Creating new configurations
 A tool is specified as follows:
 
 ```lua
@@ -66,6 +66,7 @@ clang-tidy /tmp/test.c
 ```
 <details>
 <summary>Output</summary>
+
 ```
 Error while trying to load a compilation database:
 Could not auto-detect compilation database for file "/tmp/test.c"
@@ -75,6 +76,7 @@ json-compilation-database: Error while opening JSON database: No such file or di
 Running without flags.
 1 warning generated.
 /tmp/test.c:6:20: warning: Division by zero [clang-analyzer-core.DivideZero]
+/tmp/test.c:6:20: warning: Division by zero [clang-analyzer-core.DivideZero]
     6 |     printf("%d", x / y);
       |                  ~~^~~
 /tmp/test.c:5:5: note: 'y' initialized to 0
@@ -83,8 +85,10 @@ Running without flags.
 /tmp/test.c:6:20: note: Division by zero
     6 |     printf("%d", x / y);
       |                  ~~^~~
+
 ```
 </details>
+
 
 In this case we are most interested in this line:
 
@@ -153,6 +157,7 @@ cat /tmp/test.py | pylint --from-stdin true --output-format json
 ```
 <details>
 <summary>Output</summary>
+    
 ```
 [
     {
