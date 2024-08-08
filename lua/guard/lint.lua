@@ -166,12 +166,12 @@ function M.from_json(opts)
       diags[#diags + 1] = M.diag_fmt(
         buf,
         tonumber(attr_value(mes, attr.lnum)) - opts.offset,
-        tonumber(attr_value(mes, attr.lnum_end or attr.lnum)) - opts.offset,
         tonumber(attr_value(mes, attr.col)) - opts.offset,
-        tonumber(attr_value(mes, attr.col_end or attr.lnum)) - opts.offset,
         formulate_msg(message, code),
         opts.severities[attr_value(mes, attr.severity)],
-        opts.source
+        opts.source,
+        tonumber(attr_value(mes, attr.lnum_end or attr.lnum)) - opts.offset,
+        tonumber(attr_value(mes, attr.col_end or attr.lnum)) - opts.offset,
       )
     end, offences or {})
 
@@ -207,12 +207,12 @@ function M.from_regex(opts)
       diags[#diags + 1] = M.diag_fmt(
         buf,
         tonumber(mes.lnum) - opts.offset,
-        tonumber(mes.lnum_end or mes.lnum) - opts.offset,
         tonumber(mes.col) - opts.offset,
-        tonumber(mes.col_end or mes.col) - opts.offset,
         formulate_msg(mes.message, mes.code),
         opts.severities[mes.severity],
-        opts.source
+        opts.source,
+        tonumber(mes.lnum_end or mes.lnum) - opts.offset,
+        tonumber(mes.col_end or mes.col) - opts.offset
       )
     end, offences)
 
