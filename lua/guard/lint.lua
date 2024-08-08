@@ -171,7 +171,7 @@ function M.from_json(opts)
         opts.severities[attr_value(mes, attr.severity)],
         opts.source,
         tonumber(attr_value(mes, attr.lnum_end or attr.lnum)) - opts.offset,
-        tonumber(attr_value(mes, attr.col_end or attr.lnum)) - opts.offset,
+        tonumber(attr_value(mes, attr.col_end or attr.lnum)) - opts.offset
       )
     end, offences or {})
 

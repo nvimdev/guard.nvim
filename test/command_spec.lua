@@ -4,7 +4,6 @@ local api = vim.api
 local same = assert.are.same
 
 describe('commands', function()
-
   require('guard.filetype')('lua'):fmt({
     cmd = 'stylua',
     args = { '-' },
@@ -45,12 +44,12 @@ describe('commands', function()
     same(api.nvim_buf_get_lines(bufnr, 0, -1, false), { 'local a = 42' })
 
     -- disable
-    vim.cmd("GuardDisable")
+    vim.cmd('GuardDisable')
     api.nvim_buf_set_lines(bufnr, 0, -1, false, {
       'local a',
       '          =42',
     })
-    vim.cmd("silent! write")
+    vim.cmd('silent! write')
     vim.wait(500)
     same(api.nvim_buf_get_lines(bufnr, 0, -1, false), {
       'local a',
@@ -58,7 +57,7 @@ describe('commands', function()
     })
 
     -- enable
-    vim.cmd("GuardEnable")
+    vim.cmd('GuardEnable')
     -- make changes to trigger format
     api.nvim_buf_set_lines(bufnr, 0, -1, false, {
       'local a',
