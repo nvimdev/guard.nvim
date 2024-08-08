@@ -52,8 +52,6 @@ require('guard').setup({
 - `GuardDisable` disables auto format for the current buffer, you can also `GuardDisable 16` (the buffer number)
 - Use `GuardEnable` to re-enable auto format, usage is the same as `GuardDisable`
 
-### Example Configuration
-
 Format c files with clang-format and lint with clang-tidy:
 
 ```lua
@@ -82,54 +80,10 @@ Lint all your files with `codespell`
 ft('*'):lint('codespell')
 ```
 
-### Custom Configuration
+You can also easily create your own configuration that's not in `guard-collection`, see [CUSTOMIZE.md](./CUSTOMIZE.md).
 
-Easily setup your custom tool if not in the defaults or you do not want guard-collection bundled:
+For more niche use cases, [ADVANCED.md](./ADVANCED.md) demonstrates how to:
 
-```
-{
-    -- specify an executable
-    cmd              -- string: tool command
-    args             -- string[]: command arguments
-    fname            -- boolean: insert filename to args tail
-    stdin            -- boolean: pass buffer contents into stdin
-
-    -- or provide your own logic
-    fn               -- function: write your own logic for formatting / linting, more in ADVANCED.md
-
-    -- running condition
-    ignore_patterns  -- string|string[]: don't run formatter when pattern match against file name
-    ignore_error     -- boolean: when has lsp error ignore format
-    find             -- string|string[]: format if the file is found in the lsp root dir
-
-    -- misc
-    env              -- table<string, string>?: environment variables passed to cmd (key value pair)
-    timeout          -- integer
-
-    -- special
-    parse            -- function: linter only, parses linter output to neovim diagnostic
-}
-```
-
-For example, format your assembly with [asmfmt](https://github.com/klauspost/asmfmt):
-
-```lua
-ft('asm'):fmt({
-    cmd = 'asmfmt',
-    stdin = true
-})
-```
-
-Consult the [builtin tools](https://github.com/nvimdev/guard-collection/tree/main/lua/guard-collection) if needed.
-
-### Advanced configuration
-
-[ADVANCED.md](https://github.com/nvimdev/guard.nvim/blob/main/ADVANCED.md) contains tiny tutorials to:
-
-- Write your own formatting logic using the fn field
-- Write your own linting logic using the fn field
-- leverage guard's autocmds, say showing formatting status?
-
-### Supported Tools
-
-See [here](https://github.com/nvimdev/guard-collection) for an exhaustive list.
+- Write your own formatting logic using the `fn` field
+- Write your own linting logic using the `fn` field
+- leverage guard's autocmds to create a status line component
