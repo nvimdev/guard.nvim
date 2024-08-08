@@ -87,3 +87,8 @@ For more niche use cases, [ADVANCED.md](./ADVANCED.md) demonstrates how to:
 - Write your own formatting logic using the `fn` field
 - Write your own linting logic using the `fn` field
 - leverage guard's autocmds to create a status line component
+
+```{.include}
+CUSTOMIZE.md
+ADVANCED.md
+```
