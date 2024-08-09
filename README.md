@@ -30,22 +30,22 @@ Guard is configured as follows:
 local ft = require('guard.filetype')
 
 -- Assuming you have guard-collection
+-- Put this in your ftplugin/lang.lua to lazy load guard
 ft('lang'):fmt('format-tool-1')
           :append('format-tool-2')
           :env(env_table)
           :lint('lint-tool-1')
           :extra(extra_args)
 
--- Call setup() LAST!
-require('guard').setup({
-    -- Choose to format on every write to a buffer
+-- change this anywhere in your config, these are the defaults
+vim.g.guard_config = {
+    -- format on write to buffer
     fmt_on_save = true,
-    -- Use lsp if no formatter was defined for this filetype
+    -- use lsp if no formatter was defined for this filetype
     lsp_as_default_formatter = false,
-    -- By default, Guard writes the buffer on every format
-    -- You can disable this by setting:
-    -- save_on_fmt = false,
-})
+    -- whether or not to save the buffer after formatting
+    save_on_fmt = false,
+}
 ```
 
 - Use `GuardFmt` to manually call format, when there is a visual selection only the selection is formatted. **NOTE**: Regional formatting just sends your selection to the formatter, if there's not enough context incoherent formatting might occur (e.g. indent being erased)
