@@ -1,5 +1,6 @@
 local M = {}
 local api = vim.api
+local apply = vim.lsp.util.apply_text_edits
 
 ---@param buf number
 ---@param range table
@@ -14,7 +15,6 @@ function M.format(buf, range, acc)
 
   -- use a temporary buffer to apply edits
   local scratch = api.nvim_create_buf(false, true)
-  local apply = vim.lsp.util.apply_text_edits
   local n_edits = #clients
   api.nvim_buf_set_lines(scratch, 0, -1, false, vim.split(acc, '\r?\n'))
   local line_offset = range and range.start[1] - 1 or 0
@@ -30,8 +30,9 @@ function M.format(buf, range, acc)
     apply(text_edits, scratch, offset_encoding)
     if n_edits == 0 then
       vim.lsp.util.apply_text_edits = apply
-      coroutine.resume(co, table.concat(api.nvim_buf_get_lines(scratch, 0, -1, false), '\n'))
+      local lines = api.nvim_buf_get_lines(scratch, 0, -1, false)
       api.nvim_command('silent! bwipe! ' .. scratch)
+      coroutine.resume(co, table.concat(lines, '\n'))
     end
   end
 
