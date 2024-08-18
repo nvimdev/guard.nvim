@@ -1,5 +1,7 @@
 # guard.nvim
 
+[![LuaRocks](https://img.shields.io/luarocks/v/nvimdev/guard.nvim?logo=lua&color=green)](https://luarocks.org/modules/nvimdev/guard.nvim)
+
 Async formatting and linting utility for neovim `0.10+`.
 
 ## Features
@@ -12,7 +14,13 @@ Async formatting and linting utility for neovim `0.10+`.
 
 ## Usage
 
-Installation for lazy.nvim
+For rocks.nvim
+
+```vim
+Rocks install guard.nvim
+```
+
+For lazy.nvim
 
 ```lua
 {
@@ -22,12 +30,6 @@ Installation for lazy.nvim
         "nvimdev/guard-collection",
     },
 }
-```
-
-For rocks.nvim
-
-```vim
-Rocks install guard.nvim
 ```
 
 To register formatters and linters:
