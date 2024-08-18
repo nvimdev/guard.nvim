@@ -97,7 +97,6 @@ describe('filetype module', function()
       cmd = 'cat',
       args = { '-v', '-E' },
     })
-    require('guard').setup({})
     same({
       formatter = { { cmd = 'cat', args = { '-v', '-E' } } },
     }, ft.javascript)

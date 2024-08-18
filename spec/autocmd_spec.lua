@@ -11,7 +11,6 @@ ft('lua'):fmt({
   args = { '-' },
   stdin = true,
 })
-require('guard').setup()
 
 describe('autocmd module', function()
   local bufnr

@@ -9,7 +9,6 @@ describe('commands', function()
     args = { '-' },
     stdin = true,
   })
-  require('guard').setup()
 
   local bufnr
   before_each(function()

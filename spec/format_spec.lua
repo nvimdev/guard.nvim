@@ -27,7 +27,6 @@ describe('format module', function()
       args = { '-' },
       stdin = true,
     })
-    require('guard').setup()
     api.nvim_buf_set_lines(bufnr, 0, -1, false, {
       'local a',
       '          = "test"',
@@ -48,7 +47,6 @@ describe('format module', function()
       args = { '-s', ' ' },
       stdin = true,
     })
-    require('guard').setup()
     api.nvim_buf_set_lines(bufnr, 0, -1, false, {
       'local a',
       '          = "test"',
