@@ -9,7 +9,7 @@ function M.attach_to_buf(buf)
     group = group,
     buffer = buf,
     callback = function(opt)
-      if vim.bo[opt.buf].modified or not vim.g.guard_config.fmt_on_save then
+      if vim.bo[opt.buf].modified and vim.g.guard_config.fmt_on_save then
         require('guard.format').do_fmt(opt.buf)
       end
     end,
