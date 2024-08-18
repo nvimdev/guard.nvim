@@ -1,4 +1,4 @@
-*guard.nvim.txt*          For NVIM v0.8.0          Last change: 2024 August 09
+*guard.nvim.txt*          For NVIM v0.8.0          Last change: 2024 August 18
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -44,7 +44,13 @@ Installation for lazy.nvim
     }
 <
 
-Guard is configured as follows:
+For rocks.nvim
+
+>vim
+    Rocks install guard.nvim
+<
+
+To register formatters and linters:
 
 >lua
     local ft = require('guard.filetype')
@@ -64,13 +70,13 @@ Guard is configured as follows:
         -- use lsp if no formatter was defined for this filetype
         lsp_as_default_formatter = false,
         -- whether or not to save the buffer after formatting
-        save_on_fmt = false,
+        save_on_fmt = true,
     }
 <
 
-- Use `GuardFmt` to manually call format, when there is a visual selection only the selection is formatted. **NOTE**: Regional formatting just sends your selection to the formatter, if there’s not enough context incoherent formatting might occur (e.g. indent being erased)
-- `GuardDisable` disables auto format for the current buffer, you can also `GuardDisable 16` (the buffer number)
-- Use `GuardEnable` to re-enable auto format, usage is the same as `GuardDisable`
+- Use `Guard fmt` to manually call format, when there is a visual selection only the selection is formatted. **NOTE**: Regional formatting just sends your selection to the formatter, if there’s not enough context incoherent formatting might occur (e.g. indent being erased)
+- `Guard disable` disables auto format for the current buffer, you can also `Guard disable 16` (the buffer number)
+- Use `Guard enable` to re-enable auto format, usage is the same as `Guard disable`
 
 Format c files with clang-format and lint with clang-tidy:
 
