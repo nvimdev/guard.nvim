@@ -26,10 +26,15 @@ local function try_as(tool_type, config)
   return type(config) == 'table' and config or get_tool(tool_type, config)
 end
 
-local function box()
+local function box(ft)
   local current
   local tbl = {}
+  local ft_tbl = ft:find(',') and vim.split(ft, ',') or { ft }
   tbl.__index = tbl
+
+  function tbl:ft()
+    return ft_tbl
+  end
 
   function tbl:fmt(config)
     vim.validate({
@@ -39,6 +44,15 @@ local function box()
     self.formatter = {
       util.toolcopy(try_as('formatter', config)),
     }
+    local events = require('guard.events')
+    for _, it in ipairs(self:ft()) do
+      if it ~= ft then
+        M[it] = box(it)
+        M[it].formatter = self.formatter
+      end
+      events.watch_ft(it)
+      events.fmt_attach_to_existing(it)
+    end
     return self
   end
 
@@ -50,6 +64,19 @@ local function box()
     self.linter = {
       util.toolcopy(try_as('linter', config)),
     }
+    local events = require('guard.events')
+    local evs = { 'User GuardFmt', 'BufWritePost', 'BufEnter' }
+    if config.stdin then
+      table.insert(events, 'TextChanged')
+      table.insert(events, 'InsertLeave')
+    end
+    for _, it in ipairs(self:ft()) do
+      if it ~= ft then
+        M[it] = box(it)
+        M[it].linter = self.linter
+      end
+      events.register_lint(it, evs)
+    end
     return self
   end
 
@@ -119,10 +146,10 @@ local function box()
 end
 
 return setmetatable(M, {
-  __call = function(t, ft)
-    if not rawget(t, ft) then
-      rawset(t, ft, box())
+  __call = function(_self, ft)
+    if not rawget(_self, ft) then
+      rawset(_self, ft, box(ft))
     end
-    return t[ft]
+    return _self[ft]
   end,
 })

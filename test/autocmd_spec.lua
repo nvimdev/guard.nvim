@@ -1,6 +1,11 @@
 ---@diagnostic disable: undefined-field, undefined-global
 local api = vim.api
 local ft = require('guard.filetype')
+vim.g.guard_config = {
+  fmt_on_save = true,
+  lsp_as_default_formatter = false,
+  save_on_fmt = true,
+}
 ft('lua'):fmt({
   cmd = 'stylua',
   args = { '-' },

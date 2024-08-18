@@ -5,13 +5,14 @@ end
 loaded = true
 
 local api = vim.api
+local events = require('guard.events')
 
 local cmds = {
   fmt = function()
     require('guard.format').do_fmt()
   end,
   enable = function(opts)
-    local group = require('guard.events').group
+    local group = events.group
     local arg = opts.args
     local bufnr = (#opts.fargs == 1) and api.nvim_get_current_buf() or tonumber(arg)
     if not bufnr or not api.nvim_buf_is_valid(bufnr) then
@@ -23,7 +24,7 @@ local cmds = {
     end
   end,
   disable = function(opts)
-    local group = require('guard.events').group
+    local group = events.group
     local arg = opts.args
     local bufnr = (#opts.fargs == 1) and api.nvim_get_current_buf() or tonumber(arg)
     if not bufnr or not api.nvim_buf_is_valid(bufnr) then
@@ -52,3 +53,11 @@ end, {
     end
   end,
 })
+
+vim.g.guard_config = {
+  fmt_on_save = true,
+  lsp_as_default_formatter = false,
+  save_on_fmt = true,
+}
+
+events.create_lspattach_autocmd()

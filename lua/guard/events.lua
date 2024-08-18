@@ -9,13 +9,24 @@ function M.attach_to_buf(buf)
     group = group,
     buffer = buf,
     callback = function(opt)
-      if vim.bo[opt.buf].modified then
+      if vim.bo[opt.buf].modified or not vim.g.guard_config.fmt_on_save then
         require('guard.format').do_fmt(opt.buf)
       end
     end,
   })
 end
 
+---@param ft string
+function M.fmt_attach_to_existing(ft)
+  local bufs = api.nvim_list_bufs()
+  for _, buf in ipairs(bufs) do
+    if vim.bo[buf].ft == ft then
+      M.attach_to_buf(buf)
+    end
+  end
+end
+
+---@param ft string
 function M.watch_ft(ft)
   -- check if all cmds executable before registering formatter
   iter(require('guard.filetype')[ft].formatter):any(function(config)
@@ -43,7 +54,7 @@ function M.watch_ft(ft)
   })
 end
 
-function M.create_lspattach_autocmd(fmt_on_save)
+function M.create_lspattach_autocmd()
   au('LspAttach', {
     group = group,
     callback = function(args)
@@ -57,7 +68,7 @@ function M.create_lspattach_autocmd(fmt_on_save)
       if not (ft_handler[ft] and ft_handler[ft].formatter) then
         ft_handler(ft):fmt('lsp')
       end
-      if fmt_on_save then
+      if vim.g.guard_config.fmt_on_save then
         if
           #api.nvim_get_autocmds({
             group = group,
@@ -99,6 +110,7 @@ function M.register_lint(ft, events)
           debounce_timer:stop()
           debounce_timer = nil
         end
+        ---@diagnostic disable-next-line: undefined-field
         debounce_timer = assert(uv.new_timer()) --[[uv_timer_t]]
         debounce_timer:start(500, 0, function()
           debounce_timer:stop()

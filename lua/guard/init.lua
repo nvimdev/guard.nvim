@@ -34,36 +34,29 @@ local function resolve_multi_ft()
 end
 
 local function setup(opt)
-  config.opts = vim.tbl_extend('force', {
+  vim.g.guard_config = vim.tbl_extend('force', {
     fmt_on_save = true,
     lsp_as_default_formatter = false,
     save_on_fmt = true,
   }, opt or {})
 
-  register_cfg_by_table(config.opts.ft)
-  resolve_multi_ft()
-
-  if config.opts.lsp_as_default_formatter then
-    events.create_lspattach_autocmd(config.opts.fmt_on_save)
-  end
-
   for ft, conf in pairs(ft_handler) do
     local lint_events = { 'BufWritePost', 'BufEnter' }
 
-    if conf.formatter and config.opts.fmt_on_save then
-      events.watch_ft(ft)
-      lint_events[1] = 'User GuardFmt'
-    end
+    -- if conf.formatter and config.opts.fmt_on_save then
+    --   events.watch_ft(ft)
+    --   lint_events[1] = 'User GuardFmt'
+    -- end
 
-    if conf.linter then
-      for i, _ in ipairs(conf.linter) do
-        if conf.linter[i].stdin then
-          table.insert(lint_events, 'TextChanged')
-          table.insert(lint_events, 'InsertLeave')
-        end
-        events.register_lint(ft, lint_events)
-      end
-    end
+    -- if conf.linter then
+    --   for i, _ in ipairs(conf.linter) do
+    --     if conf.linter[i].stdin then
+    --       table.insert(lint_events, 'TextChanged')
+    --       table.insert(lint_events, 'InsertLeave')
+    --     end
+    --     events.register_lint(ft, lint_events)
+    --   end
+    -- end
   end
 end
 
