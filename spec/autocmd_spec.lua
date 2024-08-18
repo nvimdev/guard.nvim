@@ -37,7 +37,7 @@ describe('autocmd module', function()
     au(function(opts)
       -- pre format au
       if opts.data.status == 'pending' then
-        assert.are.same(opts.data.using, {
+        assert.are.same(opts.data.using[1], {
           cmd = 'stylua',
           args = { '-' },
           stdin = true,
