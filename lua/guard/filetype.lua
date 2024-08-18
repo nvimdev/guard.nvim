@@ -25,6 +25,22 @@ end
 local function try_as(tool_type, config)
   return type(config) == 'table' and config or get_tool(tool_type, config)
 end
+---@param val any
+---@param expected string[]
+---@return boolean
+local function check_type(val, expected)
+  if not vim.tbl_contains(expected, type(val)) then
+    vim.notify(
+      ('[guard]: %s is %s, expected %s'):format(
+        vim.inspect(val),
+        type(val),
+        table.concat(expected, '/')
+      )
+    )
+    return false
+  end
+  return true
+end
 
 local function box(ft)
   local current
@@ -37,9 +53,9 @@ local function box(ft)
   end
 
   function tbl:fmt(config)
-    vim.validate({
-      config = { config, { 'table', 'string' } },
-    })
+    if not check_type(config, { 'table', 'string' }) then
+      return
+    end
     current = 'formatter'
     self.formatter = {
       util.toolcopy(try_as('formatter', config)),
@@ -57,9 +73,9 @@ local function box(ft)
   end
 
   function tbl:lint(config)
-    vim.validate({
-      config = { config, { 'table', 'string' } },
-    })
+    if not check_type(config, { 'table', 'string' }) then
+      return
+    end
     current = 'linter'
     self.linter = {
       util.toolcopy(try_as('linter', config)),
@@ -81,9 +97,9 @@ local function box(ft)
   end
 
   function tbl:append(config)
-    vim.validate({
-      config = { config, { 'table', 'string' } },
-    })
+    if not check_type(config, { 'table', 'string' }) then
+      return
+    end
     self[current][#self[current] + 1] = try_as(current, config)
     return self
   end
@@ -95,9 +111,9 @@ local function box(ft)
   end
 
   function tbl:env(env)
-    vim.validate({
-      env = { env, 'table' },
-    })
+    if not check_type(env, { 'table' }) then
+      return
+    end
     if vim.tbl_count(env) == 0 then
       return self
     end
