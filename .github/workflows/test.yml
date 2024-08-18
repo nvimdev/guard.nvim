@@ -1,4 +1,3 @@
----
 name: Run tests
 on:
   pull_request: ~
@@ -16,12 +15,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Run tests
-        uses: nvim-neorocks/nvim-busted-action@v1
-        shell: bash
+      - shell: bash
         run: |
           wget "https://github.com/JohnnyMorganz/StyLua/releases/download/v0.18.0/stylua-linux.zip" -P /home/runner/.local/bin
           unzip /home/runner/.local/bin/stylua-linux.zip -d /home/runner/.local/bin
           chmod +x /home/runner/.local/bin/stylua
+      - name: Run tests
+        uses: nvim-neorocks/nvim-busted-action@v1
         with:
           nvim_version: ${{ matrix.neovim_version }}
