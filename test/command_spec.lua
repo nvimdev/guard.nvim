@@ -28,7 +28,7 @@ describe('commands', function()
       'local a',
       '          =42',
     })
-    vim.cmd('GuardFmt')
+    vim.cmd('Guard fmt')
     vim.wait(500)
     same(api.nvim_buf_get_lines(bufnr, 0, -1, false), { 'local a = 42' })
   end)
@@ -44,7 +44,7 @@ describe('commands', function()
     same(api.nvim_buf_get_lines(bufnr, 0, -1, false), { 'local a = 42' })
 
     -- disable
-    vim.cmd('GuardDisable')
+    vim.cmd('Guard disable')
     api.nvim_buf_set_lines(bufnr, 0, -1, false, {
       'local a',
       '          =42',
@@ -57,7 +57,7 @@ describe('commands', function()
     })
 
     -- enable
-    vim.cmd('GuardEnable')
+    vim.cmd('Guard enable')
     -- make changes to trigger format
     api.nvim_buf_set_lines(bufnr, 0, -1, false, {
       'local a',

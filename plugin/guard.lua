@@ -5,32 +5,50 @@ end
 loaded = true
 
 local api = vim.api
-local group = require('guard.events').group
 
-vim.api.nvim_create_user_command('GuardDisable', function(opts)
-  local arg = opts.args
-  local bufnr = (#opts.fargs == 0) and api.nvim_get_current_buf() or tonumber(arg)
-  if not bufnr or not api.nvim_buf_is_valid(bufnr) then
-    return
-  end
-  local bufau = api.nvim_get_autocmds({ group = group, event = 'BufWritePre', buffer = bufnr })
-  if #bufau ~= 0 then
-    api.nvim_del_autocmd(bufau[1].id)
-  end
-end, { nargs = '?' })
+local cmds = {
+  fmt = function()
+    require('guard.format').do_fmt()
+  end,
+  enable = function(opts)
+    local group = require('guard.events').group
+    local arg = opts.args
+    local bufnr = (#opts.fargs == 1) and api.nvim_get_current_buf() or tonumber(arg)
+    if not bufnr or not api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+    local bufau = api.nvim_get_autocmds({ group = group, event = 'BufWritePre', buffer = bufnr })
+    if #bufau == 0 then
+      require('guard.events').attach_to_buf(bufnr)
+    end
+  end,
+  disable = function(opts)
+    local group = require('guard.events').group
+    local arg = opts.args
+    local bufnr = (#opts.fargs == 1) and api.nvim_get_current_buf() or tonumber(arg)
+    if not bufnr or not api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+    local bufau = api.nvim_get_autocmds({ group = group, event = 'BufWritePre', buffer = bufnr })
+    if #bufau ~= 0 then
+      api.nvim_del_autocmd(bufau[1].id)
+    end
+  end,
+}
 
-vim.api.nvim_create_user_command('GuardEnable', function(opts)
-  local arg = opts.args
-  local bufnr = (#opts.fargs == 0) and api.nvim_get_current_buf() or tonumber(arg)
-  if not bufnr or not api.nvim_buf_is_valid(bufnr) then
-    return
-  end
-  local bufau = api.nvim_get_autocmds({ group = group, event = 'BufWritePre', buffer = bufnr })
-  if #bufau == 0 then
-    require('guard.events').attach_to_buf(bufnr)
-  end
-end, { nargs = '?' })
-
-vim.api.nvim_create_user_command('GuardFmt', function()
-  require('guard.format').do_fmt()
-end, { nargs = 0 })
+api.nvim_create_user_command('Guard', function(opts)
+  local f = cmds[opts.args]
+  _ = not f and vim.notify('Invalid subcommand: ' .. opts.args) or f(opts)
+end, {
+  nargs = '+',
+  complete = function(arg_lead, cmdline, _)
+    if cmdline:match('Guard*%s+%w*$') then
+      return vim
+        .iter(vim.tbl_keys(cmds))
+        :filter(function(key)
+          return key:find(arg_lead) ~= nil
+        end)
+        :totable()
+    end
+  end,
+})
