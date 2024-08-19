@@ -27,6 +27,13 @@ local function executable_check()
         table.insert(checked, conf.cmd)
       end
     end
+    if pcall(require, 'mason') then
+      health.warn(
+        'It seems that mason.nvim is installed,'
+          .. 'in which case checkhealth may be inaccurate.'
+          .. ' Please add your mason bin path to PATH to avoid potential issues.'
+      )
+    end
   end
 end
 

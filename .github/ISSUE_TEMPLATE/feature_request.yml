@@ -1,0 +1,16 @@
+# https://github.com/mrcjkb/haskell-tools.nvim/blob/master/.github/ISSUE_TEMPLATE/feature_request.yml
+name: Feature request
+description: Request an enhancement for guard.nvim
+labels: [enhancement]
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        Maybe checkout `:h guard.nvim-advanced-tips`?
+
+  - type: textarea
+    attributes:
+      label: "Feature description"
+    validations:
+      required: true
