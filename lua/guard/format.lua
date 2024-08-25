@@ -1,15 +1,3 @@
----@class FmtConfig
----@field cmd string?
----@field args string[]?
----@field fname boolean?
----@field stdin boolean?
----@field fn function?
----@field ignore_patterns string|string[]?
----@field ignore_error boolean?
----@field find string|string[]?
----@field env table<string, string>?
----@field timeout integer?
-
 local api = vim.api
 local spawn = require('guard.spawn')
 local util = require('guard.util')
@@ -46,7 +34,7 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow, erow)
 
   if new_lines ~= prev_lines then
     api.nvim_buf_set_lines(bufnr, srow, erow, false, new_lines)
-    if vim.g.guard_config.save_on_fmt then
+    if util.getopt('save_on_fmt') then
       api.nvim_command('silent! noautocmd write!')
     end
     restore_views(views)

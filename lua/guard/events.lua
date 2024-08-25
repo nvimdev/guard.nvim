@@ -1,4 +1,5 @@
 local api, uv = vim.api, vim.uv
+local getopt = require('guard.util').getopt
 local group = api.nvim_create_augroup('Guard', { clear = true })
 local au = api.nvim_create_autocmd
 local iter = vim.iter
@@ -9,7 +10,7 @@ function M.attach_to_buf(buf)
     group = group,
     buffer = buf,
     callback = function(opt)
-      if vim.bo[opt.buf].modified and vim.g.guard_config.fmt_on_save then
+      if vim.bo[opt.buf].modified and getopt('fmt_on_save') then
         require('guard.format').do_fmt(opt.buf)
       end
     end,
@@ -68,7 +69,7 @@ function M.create_lspattach_autocmd()
       if not (ft_handler[ft] and ft_handler[ft].formatter) then
         ft_handler(ft):fmt('lsp')
       end
-      if vim.g.guard_config.fmt_on_save then
+      if getopt('fmt_on_save') then
         if
           #api.nvim_get_autocmds({
             group = group,

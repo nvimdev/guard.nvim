@@ -174,4 +174,17 @@ function M.report_error(msg)
   vim.notify('[Guard]: ' .. msg, vim.log.levels.WARN)
 end
 
+---@param opt string
+function M.getopt(opt)
+  local default = {
+    fmt_on_save = true,
+    lsp_as_default_formatter = false,
+    save_on_fmt = true,
+  }
+  if not vim.g.guard_config or type(vim.g.guard_config) ~= 'table' then
+    return default[opt]
+  end
+  return vim.g.guard_config[opt] or default[opt]
+end
+
 return M
