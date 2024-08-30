@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field, undefined-global
 require('plugin.guard')
 vim.opt_global.swapfile = false
 local api = vim.api

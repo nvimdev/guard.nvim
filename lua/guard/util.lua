@@ -184,7 +184,10 @@ function M.getopt(opt)
   if not vim.g.guard_config or type(vim.g.guard_config) ~= 'table' then
     return default[opt]
   end
-  return vim.g.guard_config[opt] or default[opt]
+  if vim.g.guard_config[opt] ~= nil then
+    return vim.g.guard_config[opt]
+  end
+  return default[opt]
 end
 
 return M
