@@ -26,6 +26,14 @@ body:
       required: true
   - type: textarea
     attributes:
+      label: "Output of :Guard info"
+      render: "console"
+      placeholder: |
+        Are the autocmds attached?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
       label: "How to reproduce the issue"
       placeholder: |
         git clone https://github.com/nvimdev/guard.nvim /tmp
