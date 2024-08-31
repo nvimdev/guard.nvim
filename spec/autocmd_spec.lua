@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-field, undefined-global
 local api = vim.api
 local ft = require('guard.filetype')
+local same = assert.are.same
 
 ft('lua'):fmt({
   cmd = 'stylua',
@@ -33,7 +34,7 @@ describe('autocmd module', function()
     au(function(opts)
       -- pre format au
       if opts.data.status == 'pending' then
-        assert.are.same(opts.data.using[1], {
+        same(opts.data.using[1], {
           cmd = 'stylua',
           args = { '-' },
           stdin = true,
@@ -53,6 +54,6 @@ describe('autocmd module', function()
     end)
     require('guard.format').do_fmt(bufnr)
     vim.wait(500)
-    assert.are.same(api.nvim_buf_get_lines(bufnr, 0, -1, false), { '' })
+    same(api.nvim_buf_get_lines(bufnr, 0, -1, false), { '' })
   end)
 end)

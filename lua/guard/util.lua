@@ -181,13 +181,14 @@ function M.getopt(opt)
     lsp_as_default_formatter = false,
     save_on_fmt = true,
   }
-  if not vim.g.guard_config or type(vim.g.guard_config) ~= 'table' then
+  if
+    not vim.g.guard_config
+    or type(vim.g.guard_config) ~= 'table'
+    or vim.g.guard_config[opt] == nil
+  then
     return default[opt]
   end
-  if vim.g.guard_config[opt] ~= nil then
-    return vim.g.guard_config[opt]
-  end
-  return default[opt]
+  return vim.g.guard_config[opt]
 end
 
 return M
