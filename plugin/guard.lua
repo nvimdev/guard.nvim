@@ -39,9 +39,9 @@ local cmds = {
     local util = require('guard.util')
     local group = events.group
     local buf = api.nvim_get_current_buf()
-    local ft = require('guard.filetype')[vim.bo[buf].ft]
-    local formatters = ft.formatter
-    local linters = ft.linter
+    local ft = require('guard.filetype')[vim.bo[buf].ft] or {}
+    local formatters = ft.formatter or {}
+    local linters = ft.linter or {}
     local fmtau = api.nvim_get_autocmds({ group = group, event = 'BufWritePre', buffer = buf })
     local lintau = api.nvim_get_autocmds({ group = group, event = 'BufWritePost', buffer = buf })
     print(table.concat({
