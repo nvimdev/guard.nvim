@@ -7,6 +7,11 @@ test_dependencies = {
   'nlua',
 }
 
+dependencies = {
+  'lua >= 5.1',
+  'guard-collection',
+}
+
 source = {
   url = 'git://github.com/nvimdev/' .. package,
 }
@@ -14,4 +19,3 @@ source = {
 build = {
   type = 'builtin',
 }
-
