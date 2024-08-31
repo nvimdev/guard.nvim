@@ -35,6 +35,29 @@ local cmds = {
       api.nvim_del_autocmd(bufau[1].id)
     end
   end,
+  info = function()
+    local util = require('guard.util')
+    local group = events.group
+    local buf = api.nvim_get_current_buf()
+    local ft = require('guard.filetype')[vim.bo[buf].ft]
+    local formatters = ft.formatter
+    local linters = ft.linter
+    local fmtau = api.nvim_get_autocmds({ group = group, event = 'BufWritePre', buffer = buf })
+    local lintau = api.nvim_get_autocmds({ group = group, event = 'BufWritePost', buffer = buf })
+    print(table.concat({
+      'Settings:',
+      ('fmt_on_save: %s'):format(util.getopt('fmt_on_save')),
+      ('lsp_as_default_formatter: %s'):format(util.getopt('lsp_as_default_formatter')),
+      ('save_on_fmt: %s'):format(util.getopt('save_on_fmt')),
+      '',
+      ('Current buffer has filetype %s:'):format(vim.bo[buf].ft),
+      'formatters:',
+      vim.inspect(formatters),
+      vim.inspect(linters),
+      ('%s formatter autocmds attached'):format(#fmtau),
+      ('%s linter autocmds attached'):format(#lintau),
+    }, '\n'))
+  end,
 }
 
 api.nvim_create_user_command('Guard', function(opts)
