@@ -25,6 +25,7 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow, erow)
   if not new_lines or #new_lines == 0 then
     return
   end
+
   local views = save_views(bufnr)
   -- \r\n for windows compatibility
   new_lines = vim.split(new_lines, '\r?\n')
@@ -207,13 +208,15 @@ local function do_fmt(buf)
     end
 
     -- refresh buffer
-    vim.schedule(function()
-      api.nvim_buf_call(buf, function()
-        local views = save_views(buf)
-        api.nvim_command('silent! edit!')
-        restore_views(views)
+    if impure and #impure > 0 then
+      vim.schedule(function()
+        api.nvim_buf_call(buf, function()
+          local views = save_views(buf)
+          api.nvim_command('silent! edit!')
+          restore_views(views)
+        end)
       end)
-    end)
+    end
 
     util.doau('GuardFmt', {
       status = 'done',

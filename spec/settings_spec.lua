@@ -93,7 +93,7 @@ describe('settings', function()
     vim.cmd('silent! write')
     vim.cmd('Guard fmt')
     vim.wait(500)
-    same(true, vim.bo.modified)
+    same(true, vim.bo[bufnr].modified)
   end)
 
   it('can override save_on_fmt after setting up formatter', function()
@@ -110,7 +110,7 @@ describe('settings', function()
     same(true, util.getopt('save_on_fmt'))
     vim.cmd('Guard fmt')
     vim.wait(500)
-    same(false, vim.bo.modified)
+    same(false, vim.bo[bufnr].modified)
 
     vim.g.guard_config = { save_on_fmt = false }
     same(false, util.getopt('save_on_fmt'))
@@ -123,7 +123,7 @@ describe('settings', function()
 
     vim.cmd('Guard fmt')
     vim.wait(500)
-    same(true, vim.bo.modified)
+    same(true, vim.bo[bufnr].modified)
 
     api.nvim_buf_set_lines(bufnr, 0, -1, false, {
       'local a',
@@ -131,6 +131,6 @@ describe('settings', function()
     })
     vim.cmd('Guard fmt')
     vim.wait(500)
-    same(true, vim.bo.modified)
+    same(true, vim.bo[bufnr].modified)
   end)
 end)
