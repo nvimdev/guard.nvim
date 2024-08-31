@@ -53,6 +53,7 @@ local cmds = {
       ('Current buffer has filetype %s:'):format(vim.bo[buf].ft),
       'formatters:',
       vim.inspect(formatters),
+      'linters:',
       vim.inspect(linters),
       ('%s formatter autocmds attached'):format(#fmtau),
       ('%s linter autocmds attached'):format(#lintau),
