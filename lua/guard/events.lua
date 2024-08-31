@@ -5,7 +5,17 @@ local au = api.nvim_create_autocmd
 local iter = vim.iter
 local M = {}
 
-function M.attach_to_buf(buf)
+function M.try_attach_to_buf(buf)
+  if
+    #api.nvim_get_autocmds({
+      group = group,
+      event = 'BufWritePre',
+      buffer = buf,
+    }) > 0
+  then
+    -- already attached
+    return
+  end
   au('BufWritePre', {
     group = group,
     buffer = buf,
@@ -22,7 +32,7 @@ function M.fmt_attach_to_existing(ft)
   local bufs = api.nvim_list_bufs()
   for _, buf in ipairs(bufs) do
     if vim.bo[buf].ft == ft then
-      M.attach_to_buf(buf)
+      M.try_attach_to_buf(buf)
     end
   end
 end
@@ -41,15 +51,7 @@ function M.watch_ft(ft)
     group = group,
     pattern = ft,
     callback = function(args)
-      if
-        #api.nvim_get_autocmds({
-          group = group,
-          event = 'BufWritePre',
-          buffer = args.buf,
-        }) == 0
-      then
-        M.attach_to_buf(args.buf)
-      end
+      M.try_attach_to_buf(args.buf)
     end,
     desc = 'guard',
   })
@@ -79,15 +81,7 @@ function M.create_lspattach_autocmd()
         then
           M.watch_ft(ft)
         end
-        if
-          #api.nvim_get_autocmds({
-            group = group,
-            event = 'BufWritePre',
-            buffer = args.buf,
-          }) == 0
-        then
-          M.attach_to_buf(args.buf)
-        end
+        M.try_attach_to_buf(args.buf)
       end
     end,
   })

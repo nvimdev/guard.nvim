@@ -20,7 +20,7 @@ local cmds = {
     end
     local bufau = api.nvim_get_autocmds({ group = group, event = 'BufWritePre', buffer = bufnr })
     if #bufau == 0 then
-      require('guard.events').attach_to_buf(bufnr)
+      require('guard.events').try_attach_to_buf(bufnr)
     end
   end,
   disable = function(opts)
