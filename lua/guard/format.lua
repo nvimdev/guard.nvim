@@ -32,7 +32,7 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow, erow)
     new_lines[#new_lines] = nil
   end
 
-  if new_lines ~= prev_lines then
+  if not vim.deep_equal(new_lines, prev_lines) then
     api.nvim_buf_set_lines(bufnr, srow, erow, false, new_lines)
     if util.getopt('save_on_fmt') then
       api.nvim_command('silent! noautocmd write!')

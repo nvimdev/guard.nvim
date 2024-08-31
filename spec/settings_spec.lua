@@ -76,9 +76,9 @@ describe('settings', function()
   end)
 
   it('can override save_on_fmt before setting up formatter', function()
-    same(true, util.getopt('fmt_on_save'))
+    same(true, util.getopt('save_on_fmt'))
     vim.g.guard_config = { save_on_fmt = false }
-    same(false, util.getopt('fmt_on_save'))
+    same(false, util.getopt('save_on_fmt'))
 
     ft('lua'):fmt({
       cmd = 'stylua',
@@ -90,6 +90,7 @@ describe('settings', function()
       'local a',
       '          =42',
     })
+    vim.cmd('silent! write')
     vim.cmd('Guard fmt')
     vim.wait(500)
     same(true, vim.bo.modified)
@@ -112,17 +113,24 @@ describe('settings', function()
     same(false, vim.bo.modified)
 
     vim.g.guard_config = { save_on_fmt = false }
-
     same(false, util.getopt('save_on_fmt'))
+
     api.nvim_buf_set_lines(bufnr, 0, -1, false, {
       'local a',
-      '          =42',
+      '      =42',
+    })
+    vim.cmd('silent! write')
+
+    vim.cmd('Guard fmt')
+    vim.wait(500)
+    same(true, vim.bo.modified)
+
+    api.nvim_buf_set_lines(bufnr, 0, -1, false, {
+      'local a',
+      '      =42',
     })
     vim.cmd('Guard fmt')
     vim.wait(500)
-    same({
-      'local a = 42',
-    }, api.nvim_buf_get_lines(bufnr, 0, -1, false))
     same(true, vim.bo.modified)
   end)
 end)
