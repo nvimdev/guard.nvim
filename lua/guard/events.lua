@@ -1,14 +1,14 @@
 local api, uv = vim.api, vim.uv
 local getopt = require('guard.util').getopt
-local group = api.nvim_create_augroup('Guard', { clear = true })
 local au = api.nvim_create_autocmd
 local iter = vim.iter
 local M = {}
+M.group = api.nvim_create_augroup('Guard', { clear = true })
 
 function M.try_attach_to_buf(buf)
   if
     #api.nvim_get_autocmds({
-      group = group,
+      group = M.group,
       event = 'BufWritePre',
       buffer = buf,
     }) > 0
@@ -17,7 +17,7 @@ function M.try_attach_to_buf(buf)
     return
   end
   au('BufWritePre', {
-    group = group,
+    group = M.group,
     buffer = buf,
     callback = function(opt)
       if vim.bo[opt.buf].modified and getopt('fmt_on_save') then
@@ -48,7 +48,7 @@ function M.watch_ft(ft)
   end)
 
   au('FileType', {
-    group = group,
+    group = M.group,
     pattern = ft,
     callback = function(args)
       M.try_attach_to_buf(args.buf)
@@ -59,7 +59,7 @@ end
 
 function M.create_lspattach_autocmd()
   au('LspAttach', {
-    group = group,
+    group = M.group,
     callback = function(args)
       if not getopt('lsp_as_default_formatter') then
         return
@@ -77,7 +77,7 @@ function M.create_lspattach_autocmd()
       if getopt('fmt_on_save') then
         if
           #api.nvim_get_autocmds({
-            group = group,
+            group = M.group,
             event = 'FileType',
             pattern = ft,
           }) == 0
@@ -101,7 +101,7 @@ function M.register_lint(ft, events)
 
   au('FileType', {
     pattern = ft,
-    group = group,
+    group = M.group,
     callback = function(args)
       local cb = function(opt)
         if debounce_timer then
@@ -122,7 +122,7 @@ function M.register_lint(ft, events)
       for _, ev in ipairs(events) do
         if ev == 'User GuardFmt' then
           au('User', {
-            group = group,
+            group = M.group,
             pattern = 'GuardFmt',
             callback = function(opt)
               if opt.data.status == 'done' then
@@ -132,7 +132,7 @@ function M.register_lint(ft, events)
           })
         else
           au(ev, {
-            group = group,
+            group = M.group,
             buffer = args.buf,
             callback = cb,
           })

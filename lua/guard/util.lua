@@ -191,4 +191,24 @@ function M.getopt(opt)
   return vim.g.guard_config[opt]
 end
 
+function M.open_info_win()
+  local height, width = vim.o.lines, vim.o.columns
+  local pad_top = math.ceil(height * 0.15)
+  local pad_bot = math.ceil(height * 0.2)
+  local buf = api.nvim_create_buf(false, true)
+  local win = api.nvim_open_win(buf, true, {
+    relative = 'editor',
+    row = pad_top,
+    col = math.floor(width * 0.2),
+    height = height - pad_top - pad_bot,
+    width = math.ceil(width * 0.6),
+    border = 'single',
+  })
+  vim.bo.ft = 'markdown'
+  api.nvim_set_option_value('bufhidden', 'wipe', { buf = buf })
+  api.nvim_set_option_value('conceallevel', 3, { win = win })
+  api.nvim_buf_set_keymap(buf, 'n', '<Esc>', '<cmd>quit!<cr>', {})
+  api.nvim_buf_set_keymap(buf, 'n', 'q', '<cmd>quit!<cr>', {})
+end
+
 return M
