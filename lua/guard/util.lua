@@ -95,7 +95,7 @@ end
 
 ---@param startpath string
 ---@param patterns string[]|string?
----@param root_dir string
+---@param root_dir string?
 ---@return boolean
 local function find(startpath, patterns, root_dir)
   return iter(M.as_table(patterns)):any(function(pattern)
@@ -124,7 +124,7 @@ end
 ---@param config FmtConfig|LintConfig
 ---@param buf integer
 ---@param startpath string
----@param root_dir string
+---@param root_dir string?
 ---@return boolean
 function M.should_run(config, buf, startpath, root_dir)
   if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
@@ -137,7 +137,7 @@ function M.should_run(config, buf, startpath, root_dir)
   return true
 end
 
----@return string, string, string, string
+---@return string, string, string?, string
 function M.buf_get_info(buf)
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   local startpath = vim.fn.fnamemodify(fname, ':p:h')
