@@ -59,22 +59,34 @@ local cmds = {
       '',
       '```lua',
     }
-    for _, formatter in ipairs(formatters) do
-      for _, line in ipairs(vim.split(vim.inspect(formatter), '\n')) do
-        table.insert(lines, line)
-      end
-    end
-    table.insert(lines, '```')
-    table.insert(lines, '')
-    table.insert(lines, '- linters:')
-    table.insert(lines, '')
-    table.insert(lines, '```lua')
-    for _, linter in ipairs(linters) do
-      for _, line in ipairs(vim.split(vim.inspect(linter), '\n')) do
-        table.insert(lines, line)
-      end
-    end
-    table.insert(lines, '```')
+    vim.list_extend(
+      lines,
+      vim
+        .iter(formatters)
+        :map(function(formatter)
+          return vim.split(vim.inspect(formatter), '\n', { trimempty = true })
+        end)
+        :flatten()
+        :totable()
+    )
+    vim.list_extend(lines, {
+      '```',
+      '',
+      '- linters:',
+      '',
+      '```lua',
+    })
+    vim.list_extend(
+      lines,
+      vim
+        .iter(linters)
+        :map(function(linter)
+          return vim.split(vim.inspect(linter), '\n', { trimempty = true })
+        end)
+        :flatten()
+        :totable()
+    )
+    vim.list_extend(lines, { '```' })
     api.nvim_buf_set_lines(0, 0, -1, true, lines)
     api.nvim_set_option_value('modifiable', false, { buf = 0 })
   end,
