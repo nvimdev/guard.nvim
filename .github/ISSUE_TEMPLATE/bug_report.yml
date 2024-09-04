@@ -27,7 +27,7 @@ body:
   - type: textarea
     attributes:
       label: "Output of :Guard info"
-      render: "console"
+      render: "markdown"
       placeholder: |
         Are the autocmds attached?
     validations:
