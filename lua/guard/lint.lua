@@ -16,7 +16,6 @@ local ft_handler = require('guard.filetype')
 local util = require('guard.util')
 local ns = api.nvim_create_namespace('Guard')
 local spawn = require('guard.spawn')
-local get_prev_lines = require('guard.util').get_prev_lines
 local vd = vim.diagnostic
 local M = {}
 
@@ -49,7 +48,7 @@ function M.do_lint(buf)
     return util.should_run(config, buf, startpath, root_dir)
   end, linters)
 
-  local prev_lines = get_prev_lines(buf, 0, -1)
+  local prev_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
   vd.reset(ns, buf)
 
   coroutine.resume(coroutine.create(function()
