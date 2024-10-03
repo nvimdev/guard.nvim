@@ -111,7 +111,7 @@ local function do_fmt(buf)
     using = fmt_configs,
   })
 
-  local prev_lines = table.concat(util.get_prev_lines(buf, srow, erow), '')
+  local prev_lines = table.concat(api.nvim_buf_get_lines(buf, srow, erow, false), '\n')
   local new_lines = prev_lines
   local errno = nil
 

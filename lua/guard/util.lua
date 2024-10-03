@@ -2,19 +2,6 @@ local api = vim.api
 local iter = vim.iter
 local M = {}
 
----@param bufnr number
----@param srow number
----@param erow number
----@return string[]
-function M.get_prev_lines(bufnr, srow, erow)
-  local tbl = api.nvim_buf_get_lines(bufnr, srow, erow, false)
-  local res = {}
-  for _, text in ipairs(tbl) do
-    res[#res + 1] = text .. '\n'
-  end
-  return res
-end
-
 ---@return string?
 function M.get_lsp_root(buf)
   buf = buf or api.nvim_get_current_buf()
