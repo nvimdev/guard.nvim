@@ -1,22 +1,8 @@
----@class LintConfig
----@field cmd string?
----@field args string[]?
----@field fname boolean?
----@field stdin boolean?
----@field fn function?
----@field parse function
----@field ignore_patterns string|string[]?
----@field ignore_error boolean?
----@field find string|string[]?
----@field env table<string, string>?
----@field timeout integer?
-
 local api = vim.api
 local ft_handler = require('guard.filetype')
 local util = require('guard.util')
 local ns = api.nvim_create_namespace('Guard')
 local spawn = require('guard.spawn')
-local get_prev_lines = require('guard.util').get_prev_lines
 local vd = vim.diagnostic
 local M = {}
 
@@ -43,13 +29,15 @@ function M.do_lint(buf)
     end
   end
 
+  linters = util.eval(linters)
+
   -- check run condition
   local fname, startpath, root_dir, cwd = util.buf_get_info(buf)
   linters = vim.tbl_filter(function(config)
     return util.should_run(config, buf, startpath, root_dir)
   end, linters)
 
-  local prev_lines = get_prev_lines(buf, 0, -1)
+  local prev_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
   vd.reset(ns, buf)
 
   coroutine.resume(coroutine.create(function()

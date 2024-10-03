@@ -23,40 +23,90 @@ local function get_tool(tool_type, tool_name)
 end
 ---@return FmtConfig|LintConfig
 local function try_as(tool_type, config)
-  return type(config) == 'table' and config or get_tool(tool_type, config)
+  if type(config) == 'function' then
+    return config
+  end
+  if type(config) == 'table' then
+    return config
+  else
+    return get_tool(tool_type, config)
+  end
+end
+---@param val any
+---@param expected string[]
+---@return boolean
+local function check_type(val, expected)
+  if not vim.tbl_contains(expected, type(val)) then
+    vim.notify(
+      ('[guard]: %s is %s, expected %s'):format(
+        vim.inspect(val),
+        type(val),
+        table.concat(expected, '/')
+      )
+    )
+    return false
+  end
+  return true
 end
 
-local function box()
+local function box(ft)
   local current
   local tbl = {}
+  local ft_tbl = ft:find(',') and vim.split(ft, ',') or { ft }
   tbl.__index = tbl
 
+  function tbl:ft()
+    return ft_tbl
+  end
+
   function tbl:fmt(config)
-    vim.validate({
-      config = { config, { 'table', 'string' } },
-    })
+    if not check_type(config, { 'table', 'string', 'function' }) then
+      return
+    end
     current = 'formatter'
     self.formatter = {
       util.toolcopy(try_as('formatter', config)),
     }
+    local events = require('guard.events')
+    for _, it in ipairs(self:ft()) do
+      if it ~= ft then
+        M[it] = box(it)
+        M[it].formatter = self.formatter
+      end
+      events.watch_ft(it)
+      events.fmt_attach_to_existing(it)
+    end
     return self
   end
 
   function tbl:lint(config)
-    vim.validate({
-      config = { config, { 'table', 'string' } },
-    })
+    if not check_type(config, { 'table', 'string', 'function' }) then
+      return
+    end
     current = 'linter'
     self.linter = {
       util.toolcopy(try_as('linter', config)),
     }
+    local events = require('guard.events')
+    local evs = { 'User GuardFmt', 'BufWritePost', 'BufEnter' }
+    if config.stdin then
+      table.insert(events, 'TextChanged')
+      table.insert(events, 'InsertLeave')
+    end
+    for _, it in ipairs(self:ft()) do
+      if it ~= ft then
+        M[it] = box(it)
+        M[it].linter = self.linter
+      end
+      events.register_lint(it, evs)
+    end
     return self
   end
 
   function tbl:append(config)
-    vim.validate({
-      config = { config, { 'table', 'string' } },
-    })
+    if not check_type(config, { 'table', 'string', 'function' }) then
+      return
+    end
     self[current][#self[current] + 1] = try_as(current, config)
     return self
   end
@@ -68,9 +118,9 @@ local function box()
   end
 
   function tbl:env(env)
-    vim.validate({
-      env = { env, 'table' },
-    })
+    if not check_type(env, { 'table' }) then
+      return
+    end
     if vim.tbl_count(env) == 0 then
       return self
     end
@@ -119,10 +169,10 @@ local function box()
 end
 
 return setmetatable(M, {
-  __call = function(t, ft)
-    if not rawget(t, ft) then
-      rawset(t, ft, box())
+  __call = function(_self, ft)
+    if not rawget(_self, ft) then
+      rawset(_self, ft, box(ft))
     end
-    return t[ft]
+    return _self[ft]
   end,
 })

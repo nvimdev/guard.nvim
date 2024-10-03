@@ -1,5 +1,7 @@
 # guard.nvim
 
+[![LuaRocks](https://img.shields.io/luarocks/v/nvimdev/guard.nvim?logo=lua&color=green)](https://luarocks.org/modules/nvimdev/guard.nvim)
+
 Async formatting and linting utility for neovim `0.10+`.
 
 ## Features
@@ -12,7 +14,13 @@ Async formatting and linting utility for neovim `0.10+`.
 
 ## Usage
 
-Installation for lazy.nvim
+For rocks.nvim
+
+```vim
+Rocks install guard.nvim
+```
+
+For lazy.nvim
 
 ```lua
 {
@@ -24,33 +32,33 @@ Installation for lazy.nvim
 }
 ```
 
-Guard is configured as follows:
+To register formatters and linters:
 
 ```lua
 local ft = require('guard.filetype')
 
 -- Assuming you have guard-collection
+-- Put this in your ftplugin/lang.lua to lazy load guard
 ft('lang'):fmt('format-tool-1')
           :append('format-tool-2')
           :env(env_table)
           :lint('lint-tool-1')
           :extra(extra_args)
 
--- Call setup() LAST!
-require('guard').setup({
-    -- Choose to format on every write to a buffer
+-- change this anywhere in your config, these are the defaults
+vim.g.guard_config = {
+    -- format on write to buffer
     fmt_on_save = true,
-    -- Use lsp if no formatter was defined for this filetype
+    -- use lsp if no formatter was defined for this filetype
     lsp_as_default_formatter = false,
-    -- By default, Guard writes the buffer on every format
-    -- You can disable this by setting:
-    -- save_on_fmt = false,
-})
+    -- whether or not to save the buffer after formatting
+    save_on_fmt = true,
+}
 ```
 
-- Use `GuardFmt` to manually call format, when there is a visual selection only the selection is formatted. **NOTE**: Regional formatting just sends your selection to the formatter, if there's not enough context incoherent formatting might occur (e.g. indent being erased)
-- `GuardDisable` disables auto format for the current buffer, you can also `GuardDisable 16` (the buffer number)
-- Use `GuardEnable` to re-enable auto format, usage is the same as `GuardDisable`
+- Use `Guard fmt` to manually call format, when there is a visual selection only the selection is formatted. **NOTE**: Regional formatting just sends your selection to the formatter, if there's not enough context incoherent formatting might occur (e.g. indent being erased)
+- `Guard disable` disables auto format for the current buffer, you can also `Guard disable 16` (the buffer number)
+- Use `Guard enable` to re-enable auto format, usage is the same as `Guard disable`
 
 Format c files with clang-format and lint with clang-tidy:
 

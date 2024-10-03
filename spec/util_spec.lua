@@ -17,4 +17,17 @@ describe('util module', function()
     original = nil
     same(copy.args, { '-' })
   end)
+
+  it('can eval function in tables', function()
+    local xs = {
+      { cmd = 'foo' },
+      function()
+        return { cmd = 'bar' }
+      end,
+    }
+    same(util.eval(xs), {
+      { cmd = 'foo' },
+      { cmd = 'bar' },
+    })
+  end)
 end)

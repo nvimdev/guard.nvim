@@ -138,8 +138,7 @@ fn main() {
 That's a lot of output! But we can see three main blocks: the first two diagnostics and the last one an overview. We only need the first two:
 
 ```lua
-local clippy_diagnostic_parse =
-	parse = lint.from_json({
+local clippy_diagnostic_parse = lint.from_json({
 		get_diagnostics = function(line)
 			local json = vim.json.decode(line)
             -- ignore overview json which does not have position info
@@ -158,11 +157,10 @@ Now our diagnostics are transformed into a list of json, we just need to get the
 attributes = {
     -- it is json turned into a lua table
     lnum = function(it)
-        -- clippy has really weird indexes
-        return math.ceil(tonumber(it.spans[1].line_start) / 2)
+        return math.ceil(tonumber(it.spans[1].line_start))
     end,
     lnum_end = function(it)
-        return math.ceil(tonumber(it.spans[1].line_end) / 2)
+        return math.ceil(tonumber(it.spans[1].line_end))
     end,
     code = function(it)
         return it.code.code

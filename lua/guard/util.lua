@@ -2,19 +2,6 @@ local api = vim.api
 local iter = vim.iter
 local M = {}
 
----@param bufnr number
----@param srow number
----@param erow number
----@return string[]
-function M.get_prev_lines(bufnr, srow, erow)
-  local tbl = api.nvim_buf_get_lines(bufnr, srow, erow, false)
-  local res = {}
-  for _, text in ipairs(tbl) do
-    res[#res + 1] = text .. '\n'
-  end
-  return res
-end
-
 ---@return string?
 function M.get_lsp_root(buf)
   buf = buf or api.nvim_get_current_buf()
@@ -95,7 +82,7 @@ end
 
 ---@param startpath string
 ---@param patterns string[]|string?
----@param root_dir string
+---@param root_dir string?
 ---@return boolean
 local function find(startpath, patterns, root_dir)
   return iter(M.as_table(patterns)):any(function(pattern)
@@ -124,7 +111,7 @@ end
 ---@param config FmtConfig|LintConfig
 ---@param buf integer
 ---@param startpath string
----@param root_dir string
+---@param root_dir string?
 ---@return boolean
 function M.should_run(config, buf, startpath, root_dir)
   if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
@@ -137,7 +124,7 @@ function M.should_run(config, buf, startpath, root_dir)
   return true
 end
 
----@return string, string, string, string
+---@return string, string, string?, string
 function M.buf_get_info(buf)
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   local startpath = vim.fn.fnamemodify(fname, ':p:h')
@@ -151,6 +138,9 @@ end
 ---@param c (FmtConfig|LintConfig)?
 ---@return (FmtConfig|LintConfig)?
 function M.toolcopy(c)
+  if type(c) == 'function' then
+    return c
+  end
   if not c or vim.tbl_isempty(c) then
     return nil
   end
@@ -172,6 +162,55 @@ end
 ---@param msg string
 function M.report_error(msg)
   vim.notify('[Guard]: ' .. msg, vim.log.levels.WARN)
+end
+
+---@param opt string
+function M.getopt(opt)
+  local default = {
+    fmt_on_save = true,
+    lsp_as_default_formatter = false,
+    save_on_fmt = true,
+  }
+  if
+    not vim.g.guard_config
+    or type(vim.g.guard_config) ~= 'table'
+    or vim.g.guard_config[opt] == nil
+  then
+    return default[opt]
+  end
+  return vim.g.guard_config[opt]
+end
+
+function M.open_info_win()
+  local height, width = vim.o.lines, vim.o.columns
+  local pad_top = math.ceil(height * 0.15)
+  local pad_bot = math.ceil(height * 0.2)
+  local buf = api.nvim_create_buf(false, true)
+  local win = api.nvim_open_win(buf, true, {
+    relative = 'editor',
+    row = pad_top,
+    col = math.floor(width * 0.2),
+    height = height - pad_top - pad_bot,
+    width = math.ceil(width * 0.6),
+    border = 'single',
+  })
+  vim.bo.ft = 'markdown'
+  api.nvim_set_option_value('bufhidden', 'wipe', { buf = buf })
+  api.nvim_set_option_value('conceallevel', 3, { win = win })
+  api.nvim_buf_set_keymap(buf, 'n', '<Esc>', '<cmd>quit!<cr>', {})
+  api.nvim_buf_set_keymap(buf, 'n', 'q', '<cmd>quit!<cr>', {})
+end
+
+---@param xs (FmtConfig | LintConfig)[]
+---@return (FmtConfigTable | LintConfigTable)[]
+function M.eval(xs)
+  return vim.tbl_map(function(x)
+    if type(x) == 'function' then
+      return x()
+    else
+      return x
+    end
+  end, xs)
 end
 
 return M

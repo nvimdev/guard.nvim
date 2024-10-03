@@ -87,61 +87,11 @@ describe('filetype module', function()
     }, ft.python)
   end)
 
-  it('can setup filetypes via setup()', function()
-    require('guard').setup({
-      ft = {
-        c = {
-          fmt = {
-            cmd = 'cat',
-          },
-        },
-        python = {
-          fmt = {
-            { cmd = 'tac' },
-            { cmd = 'cat' },
-          },
-          lint = {
-            cmd = 'wc',
-          },
-        },
-        rust = {
-          lint = {
-            {
-              cmd = 'wc',
-              args = { '-l' },
-              fname = true,
-            },
-          },
-        },
-      },
-    })
-    same({
-      formatter = {
-        { cmd = 'cat' },
-      },
-    }, ft.c)
-    same({
-      formatter = {
-        { cmd = 'tac' },
-        { cmd = 'cat' },
-      },
-      linter = {
-        { cmd = 'wc' },
-      },
-    }, ft.python)
-    same({
-      linter = {
-        { cmd = 'wc', args = { '-l' }, fname = true },
-      },
-    }, ft.rust)
-  end)
-
   it('can register a formatter for multiple filetypes simultaneously', function()
     ft('javascript,javascriptreact'):fmt({
       cmd = 'cat',
       args = { '-v', '-E' },
     })
-    require('guard').setup({})
     same({
       formatter = { { cmd = 'cat', args = { '-v', '-E' } } },
     }, ft.javascript)
@@ -175,14 +125,14 @@ describe('filetype module', function()
   end)
 
   it('can detect non executable formatters', function()
-    local c = ft('c')
-    c:fmt({ cmd = 'hjkl' })
-    assert(not pcall(require('guard').setup))
+    assert(not pcall(function()
+      ft('c'):fmt({ cmd = 'hjkl' })
+    end))
   end)
 
   it('can detect non executable linters', function()
-    local c = ft('c')
-    c:lint({ cmd = 'hjkl' })
-    assert(not pcall(require('guard').setup))
+    assert(not pcall(function()
+      ft('c'):lint({ cmd = 'hjkl' })
+    end))
   end)
 end)
