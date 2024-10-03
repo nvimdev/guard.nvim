@@ -1,4 +1,4 @@
-*guard.nvim.txt*         For NVIM v0.8.0        Last change: 2024 September 04
+*guard.nvim.txt*          For NVIM v0.8.0         Last change: 2024 October 03
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -539,8 +539,7 @@ That’s a lot of output! But we can see three main blocks: the first two
 diagnostics and the last one an overview. We only need the first two:
 
 >lua
-    local clippy_diagnostic_parse =
-    	parse = lint.from_json({
+    local clippy_diagnostic_parse = lint.from_json({
     		get_diagnostics = function(line)
     			local json = vim.json.decode(line)
                 -- ignore overview json which does not have position info
@@ -561,11 +560,10 @@ That’s what the attributes field does, it extracts them from the json table:
     attributes = {
         -- it is json turned into a lua table
         lnum = function(it)
-            -- clippy has really weird indexes
-            return math.ceil(tonumber(it.spans[1].line_start) / 2)
+            return math.ceil(tonumber(it.spans[1].line_start))
         end,
         lnum_end = function(it)
-            return math.ceil(tonumber(it.spans[1].line_end) / 2)
+            return math.ceil(tonumber(it.spans[1].line_end))
         end,
         code = function(it)
             return it.code.code
