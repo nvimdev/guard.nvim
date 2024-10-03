@@ -92,13 +92,13 @@ describe('format module', function()
     require('guard.format').do_fmt(bufnr)
     vim.wait(500)
     local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    assert.are.same({ 'abc' }, lines)
+    assert.are.same({ 'def' }, lines)
 
     vim.g.some_flag_idk = true
 
     require('guard.format').do_fmt(bufnr)
     vim.wait(500)
     lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    assert.are.same({ 'def' }, lines)
+    assert.are.same({ 'abc' }, lines)
   end)
 end)
