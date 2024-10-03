@@ -41,7 +41,7 @@ end
 function M.watch_ft(ft)
   -- check if all cmds executable before registering formatter
   iter(require('guard.filetype')[ft].formatter):any(function(config)
-    if config.cmd and vim.fn.executable(config.cmd) ~= 1 then
+    if type(config) == 'table' and config.cmd and vim.fn.executable(config.cmd) ~= 1 then
       error(config.cmd .. ' not executable', 1)
     end
     return true
