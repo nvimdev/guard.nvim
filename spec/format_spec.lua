@@ -54,7 +54,7 @@ describe('format module', function()
 
   it('can format with function', function()
     ft('lua'):fmt({
-      fn = function(buf, range, acc)
+      fn = function(_, range, acc)
         return table.concat(vim.split(acc, '\n'), '') .. vim.inspect(range)
       end,
     })
@@ -66,5 +66,39 @@ describe('format module', function()
     vim.wait(500)
     local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
     assert.are.same({ 'local a          = "test"nil' }, lines)
+  end)
+
+  it('can format with dynamic formatters', function()
+    ft('lua'):fmt(function()
+      if vim.g.some_flag_idk then
+        return {
+          fn = function()
+            return 'abc'
+          end,
+        }
+      else
+        return {
+          fn = function()
+            return 'def'
+          end,
+        }
+      end
+    end)
+
+    api.nvim_buf_set_lines(bufnr, 0, -1, false, {
+      'foo',
+      'bar',
+    })
+    require('guard.format').do_fmt(bufnr)
+    vim.wait(500)
+    local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    assert.are.same({ 'abc' }, lines)
+
+    vim.g.some_flag_idk = true
+
+    require('guard.format').do_fmt(bufnr)
+    vim.wait(500)
+    lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    assert.are.same({ 'def' }, lines)
   end)
 end)

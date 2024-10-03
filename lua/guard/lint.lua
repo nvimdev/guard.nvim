@@ -29,6 +29,8 @@ function M.do_lint(buf)
     end
   end
 
+  linters = util.eval(linters)
+
   -- check run condition
   local fname, startpath, root_dir, cwd = util.buf_get_info(buf)
   linters = vim.tbl_filter(function(config)

@@ -70,7 +70,7 @@ local function do_fmt(buf)
 
   -- init environment
   ---@type FmtConfig[]
-  local fmt_configs = ft_conf.formatter
+  local fmt_configs = util.eval(ft_conf.formatter)
   local fname, startpath, root_dir, cwd = util.buf_get_info(buf)
 
   -- handle execution condition
@@ -155,7 +155,7 @@ local function do_fmt(buf)
     vim.schedule(function()
       -- handle errors
       if errno then
-        if errno.reason == 'exit with errors' then
+        if errno.reason:match('exited with errors$') then
           fail(('%s exited with code %d\n%s'):format(errno.cmd, errno.code, errno.stderr))
         elseif errno.reason == 'buf changed' then
           fail('buffer changed during formatting')

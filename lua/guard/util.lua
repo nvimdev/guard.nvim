@@ -138,6 +138,9 @@ end
 ---@param c (FmtConfig|LintConfig)?
 ---@return (FmtConfig|LintConfig)?
 function M.toolcopy(c)
+  if type(c) == 'function' then
+    return c
+  end
   if not c or vim.tbl_isempty(c) then
     return nil
   end
@@ -196,6 +199,18 @@ function M.open_info_win()
   api.nvim_set_option_value('conceallevel', 3, { win = win })
   api.nvim_buf_set_keymap(buf, 'n', '<Esc>', '<cmd>quit!<cr>', {})
   api.nvim_buf_set_keymap(buf, 'n', 'q', '<cmd>quit!<cr>', {})
+end
+
+---@param xs (FmtConfig | LintConfig)[]
+---@return (FmtConfigTable | LintConfigTable)[]
+function M.eval(xs)
+  return vim.tbl_map(function(x)
+    if type(x) == 'function' then
+      return x()
+    else
+      return x
+    end
+  end, xs)
 end
 
 return M

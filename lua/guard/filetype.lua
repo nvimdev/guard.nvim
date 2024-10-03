@@ -23,7 +23,14 @@ local function get_tool(tool_type, tool_name)
 end
 ---@return FmtConfig|LintConfig
 local function try_as(tool_type, config)
-  return type(config) == 'table' and config or get_tool(tool_type, config)
+  if type(config) == 'function' then
+    return config
+  end
+  if type(config) == 'table' then
+    return config
+  else
+    return get_tool(tool_type, config)
+  end
 end
 ---@param val any
 ---@param expected string[]
@@ -53,7 +60,7 @@ local function box(ft)
   end
 
   function tbl:fmt(config)
-    if not check_type(config, { 'table', 'string' }) then
+    if not check_type(config, { 'table', 'string', 'function' }) then
       return
     end
     current = 'formatter'
@@ -73,7 +80,7 @@ local function box(ft)
   end
 
   function tbl:lint(config)
-    if not check_type(config, { 'table', 'string' }) then
+    if not check_type(config, { 'table', 'string', 'function' }) then
       return
     end
     current = 'linter'
@@ -97,7 +104,7 @@ local function box(ft)
   end
 
   function tbl:append(config)
-    if not check_type(config, { 'table', 'string' }) then
+    if not check_type(config, { 'table', 'string', 'function' }) then
       return
     end
     self[current][#self[current] + 1] = try_as(current, config)
