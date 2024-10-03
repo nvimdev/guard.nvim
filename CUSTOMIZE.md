@@ -28,6 +28,8 @@ A tool is specified as follows:
 
 guard also tries to require them if you have `guard-collection`.
 
+You can also pass in a function that evaluates to the table above, it will be evaluated every time you call format.
+
 ## Examples: formatters
 Let's see a few formatters from `guard-collection`:
 
