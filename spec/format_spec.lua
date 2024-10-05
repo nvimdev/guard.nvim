@@ -100,5 +100,12 @@ describe('format module', function()
     vim.wait(500)
     lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
     assert.are.same({ 'abc' }, lines)
+
+    vim.g.some_flag_idk = false
+
+    require('guard.format').do_fmt(bufnr)
+    vim.wait(500)
+    lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    assert.are.same({ 'def' }, lines)
   end)
 end)
