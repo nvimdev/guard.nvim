@@ -197,6 +197,8 @@ function M.open_info_win()
   vim.bo.ft = 'markdown'
   api.nvim_set_option_value('bufhidden', 'wipe', { buf = buf })
   api.nvim_set_option_value('conceallevel', 3, { win = win })
+  api.nvim_set_option_value('relativenumber', false, { win = win })
+  api.nvim_set_option_value('number', false, { win = win })
   api.nvim_buf_set_keymap(buf, 'n', '<Esc>', '<cmd>quit!<cr>', {})
   api.nvim_buf_set_keymap(buf, 'n', 'q', '<cmd>quit!<cr>', {})
 end
