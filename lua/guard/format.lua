@@ -79,7 +79,7 @@ local function do_fmt(buf)
   end, fmt_configs)
 
   -- check if all cmds executable again, since user can call format manually
-  local all_executable = iter(fmt_configs):any(function(config)
+  local all_executable = not iter(fmt_configs):any(function(config)
     if config.cmd and vim.fn.executable(config.cmd) ~= 1 then
       report_error(config.cmd .. ' not executable')
       return true
