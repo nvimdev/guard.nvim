@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/nvimdev/guard.nvim/compare/v1.0.0...v1.0.1) (2024-10-10)
+
+
+### Bug Fixes
+
+* don't use error(...) ([#165](https://github.com/nvimdev/guard.nvim/issues/165)) ([c54adb4](https://github.com/nvimdev/guard.nvim/commit/c54adb49588fa37fd28db0b31fa9ed38ee0480ac))
+
 ## 1.0.0 (2024-10-05)
 
 
