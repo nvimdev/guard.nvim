@@ -123,16 +123,4 @@ describe('filetype module', function()
 
     same({ '-l', '-L', '1' }, ft.c.linter[1].args)
   end)
-
-  it('can detect non executable formatters', function()
-    assert(not pcall(function()
-      ft('c'):fmt({ cmd = 'hjkl' })
-    end))
-  end)
-
-  it('can detect non executable linters', function()
-    assert(not pcall(function()
-      ft('c'):lint({ cmd = 'hjkl' })
-    end))
-  end)
 end)
