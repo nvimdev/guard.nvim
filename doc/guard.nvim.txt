@@ -1,4 +1,4 @@
-*guard.nvim.txt*          For NVIM v0.8.0         Last change: 2024 October 10
+*guard.nvim.txt*          For NVIM v0.8.0         Last change: 2024 October 11
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -45,6 +45,8 @@ For lazy.nvim
 >lua
     {
         "nvimdev/guard.nvim",
+        -- lazy load by ft
+        ft = { "lua", "c", "markdown" },
         -- Builtin configuration, optional
         dependencies = {
             "nvimdev/guard-collection",
