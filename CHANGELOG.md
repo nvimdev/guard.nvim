@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/nvimdev/guard.nvim/compare/v1.0.1...v1.0.2) (2024-10-24)
+
+
+### Bug Fixes
+
+* cmd not reflected in pure formatter errno ([4f6ecbe](https://github.com/nvimdev/guard.nvim/commit/4f6ecbe7bc653b589c1a7332fcd373601704f863))
+
 ## [1.0.1](https://github.com/nvimdev/guard.nvim/compare/v1.0.0...v1.0.1) (2024-10-10)
 
 
