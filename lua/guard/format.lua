@@ -147,6 +147,7 @@ local function do_fmt(buf)
           -- indicates error
           errno = result
           errno.reason = config.cmd .. ' exited with errors'
+          errno.cmd = config.cmd
           return ''
         else
           ---@diagnostic disable-next-line: return-type-mismatch
