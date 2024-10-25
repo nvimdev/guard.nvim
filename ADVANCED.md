@@ -232,3 +232,36 @@ vim.api.nvim_create_autocmd("User", {
 [demo](https://github.com/xiaoshihou514/guard.nvim/assets/108414369/339ff4ff-288c-49e4-8ab1-789a6175d201)
 
 You can do the similar for your statusline plugin of choice as long as you "refresh" it on `GuardFmt`.
+
+## Dynamic formatters
+
+A formatter can be a function that returns a config, using this you can implement some pretty interesting behaviour, in [#168](https://github.com/nvimdev/guard.nvim/issues/168), one of the users asked for a particular formatter to respect editor space/tab settings. It's achievable by using `fn`, but using function configs are easier and more straight forward, let's see how we can cook up the behaviour we want:
+
+```lua
+local ft = require("guard.filetype")
+
+ft("c"):fmt(function()
+  if vim.uv.fs_stat(".clang-format") then
+    return {
+      cmd = "clang-format",
+      stdin = true,
+    }
+  else
+    return {
+      cmd = "clang-format",
+      args = {
+        ("--style={BasedOnStyle: llvm, IndentWidth: %d, TabWidth: %d, UseTab: %s}"):format(
+          vim.bo.shiftwidth,
+          vim.bo.tabstop,
+          vim.bo.expandtab and "Never" or "Always"
+        ),
+      },
+      stdin = true,
+    }
+  end
+end)
+```
+
+What we are doing here is try look for a `.clang-format` configuration file, if found, great, just use that. Otherwise, we want `clang-format` to respect the editor's settings, here I am using space/tab settings as an example, but you can easily tell that this can extend to anything.
+
+By using this config, we get a formatting behaviour that respects our _live input_, you can run `set sw=16` and the next time `clang-format` will give you a file that uses 16 spaces as indent (please do not try this at home :smile:).
