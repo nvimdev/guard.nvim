@@ -13,6 +13,7 @@ Table of Contents                               *guard.nvim-table-of-contents*
   - Special case formatting logic|guard.nvim-advanced-tips-special-case-formatting-logic|
   - Custom logic with linters|guard.nvim-advanced-tips-custom-logic-with-linters|
   - Take advantage of autocmd events|guard.nvim-advanced-tips-take-advantage-of-autocmd-events|
+  - Dynamic formatters           |guard.nvim-advanced-tips-dynamic-formatters|
 4. Links                                                    |guard.nvim-links|
 
 ==============================================================================
@@ -154,7 +155,8 @@ A tool is specified as follows:
 guard also tries to require them if you have `guard-collection`.
 
 You can also pass in a function that evaluates to the table above, it will be
-evaluated every time you call format.
+evaluated every time you call format. See more here
+<https://github.com/nvimdev/guard.nvim/blob/main/ADVANCED.md#dynamic-formatters>
 
 
 EXAMPLES: FORMATTERS*guard.nvim-creating-new-configurations-examples:-formatters*
@@ -644,6 +646,50 @@ demo
 
 You can do the similar for your statusline plugin of choice as long as you
 "refresh" it on `GuardFmt`.
+
+
+DYNAMIC FORMATTERS               *guard.nvim-advanced-tips-dynamic-formatters*
+
+A formatter can be a function that returns a config, using this you can
+implement some pretty interesting behaviour, in #168
+<https://github.com/nvimdev/guard.nvim/issues/168>, one of the users asked for
+a particular formatter to respect editor space/tab settings. It’s achievable
+by using `fn`, but using function configs are easier and more straight forward,
+let’s see how we can cook up the behaviour we want:
+
+>lua
+    local ft = require("guard.filetype")
+    
+    ft("c"):fmt(function()
+      if vim.uv.fs_stat(".clang-format") then
+        return {
+          cmd = "clang-format",
+          stdin = true,
+        }
+      else
+        return {
+          cmd = "clang-format",
+          args = {
+            ("--style={BasedOnStyle: llvm, IndentWidth: %d, TabWidth: %d, UseTab: %s}"):format(
+              vim.bo.shiftwidth,
+              vim.bo.tabstop,
+              vim.bo.expandtab and "Never" or "Always"
+            ),
+          },
+          stdin = true,
+        }
+      end
+    end)
+<
+
+What we are doing here is try look for a `.clang-format` configuration file, if
+found, great, just use that. Otherwise, we want `clang-format` to respect the
+editor’s settings, here I am using space/tab settings as an example, but you
+can easily tell that this can extend to anything.
+
+By using this config, we get a formatting behaviour that respects our _live
+input_, you can run `set sw=16` and the next time `clang-format` will give you
+a file that uses 16 spaces as indent (please do not try this at home :smile:).
 
 ==============================================================================
 4. Links                                                    *guard.nvim-links*
