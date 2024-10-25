@@ -1,4 +1,5 @@
 # Creating new configurations
+
 A tool is specified as follows:
 
 ```lua
@@ -28,9 +29,10 @@ A tool is specified as follows:
 
 guard also tries to require them if you have `guard-collection`.
 
-You can also pass in a function that evaluates to the table above, it will be evaluated every time you call format.
+You can also pass in a function that evaluates to the table above, it will be evaluated every time you call format. See more [here](https://github.com/nvimdev/guard.nvim/blob/main/ADVANCED.md#dynamic-formatters)
 
 ## Examples: formatters
+
 Let's see a few formatters from `guard-collection`:
 
 ```lua
@@ -40,6 +42,7 @@ rustfmt = {
   stdin = true,
 }
 ```
+
 NB: Sometimes you may wish to run multiple formatters sequentially, this is only possible if you have `stdin` set ([or if you are using fn](./ADVANCED.md)) for all your formatters. This design is intentional for keeping buffer contents "valid". However, if you only wish to use one formatter, then letting the tool itself to do the IO _may be_ faster.
 
 ```lua
@@ -58,14 +61,17 @@ black = {
 ```
 
 ## Examples: linters
+
 In addition to all the formatter fields, a linter needs to provide a `parse` function that takes the linter output and turns it into neovim diagnostics (`:h vim.Diagnostic`).
 
 This sounds very cumbersome! Fortunately guard provides some api to make it smoother.
 
 Let's see an example: clang-tidy
+
 ```bash
 clang-tidy /tmp/test.c
 ```
+
 <details>
 <summary>Output</summary>
 
@@ -89,15 +95,17 @@ Running without flags.
       |                  ~~^~~
 
 ```
-</details>
 
+</details>
 
 In this case we are most interested in this line:
 
 ```
 /tmp/test.c:6:20: warning: Division by zero [clang-analyzer-core.DivideZero]
 ```
+
 And we can identify some elements:
+
 ```
 lnum = 6
 col = 20
@@ -105,7 +113,9 @@ severity = warning
 message = Division by zero
 code = clang-analyzer-core.DivideZero
 ```
+
 The following regex will give us the elements, and we just need them in a table
+
 ```lua
 local xs = { line:match(":(%d+):(%d+):%s+(%w+):%s+(.-)%s+%[(.-)%]") }
 local lookup = { ... } -- omitted
@@ -137,7 +147,9 @@ clang_tidy = {
   }),
 }
 ```
+
 Another example:
+
 ```lua
 ktlint = {
   cmd = 'ktlint',
@@ -151,12 +163,15 @@ ktlint = {
   }),
 }
 ```
+
 Figuring out the patterns can take a while, so for tools that support json output, it's usually easier to take the json, put it into a table, and get the respective key.
 
 This pattern is encapsulated by `require("guard.lint").from_json`, an example:
+
 ```bash
 cat /tmp/test.py | pylint --from-stdin true --output-format json
 ```
+
 <details>
 <summary>Output</summary>
     
@@ -190,7 +205,7 @@ cat /tmp/test.py | pylint --from-stdin true --output-format json
     }
 ]
 
-```
+````
 </details>
 
 ```lua
@@ -212,9 +227,10 @@ pylint = {
     source = 'pylint',
   }),
 }
-```
+````
 
 Another example:
+
 ```lua
 ruff = {
   cmd = 'ruff',
