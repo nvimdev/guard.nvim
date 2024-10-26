@@ -64,7 +64,7 @@ end
 ---@param ft string
 ---@param buf number
 function M.maybe_default_to_lsp(config, ft, buf)
-  if config and config.formatter then
+  if config.formatter then
     return
   end
   config:fmt('lsp')
@@ -98,7 +98,7 @@ function M.create_lspattach_autocmd()
       end
       local ft_handler = require('guard.filetype')
       local ft = vim.bo[args.buf].filetype
-      M.maybe_default_to_lsp(ft_handler[ft], ft, args.buf)
+      M.maybe_default_to_lsp(ft_handler(ft), ft, args.buf)
     end,
   })
 end
