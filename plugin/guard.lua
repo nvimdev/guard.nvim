@@ -124,7 +124,7 @@ for _, buf in ipairs(api.nvim_list_bufs()) do
       end)
     then
       local ft = vim.bo[buf].ft
-      events.maybe_default_to_lsp(ft_handler[ft], ft, buf)
+      events.maybe_default_to_lsp(ft_handler(ft), ft, buf)
     end
   end
 end

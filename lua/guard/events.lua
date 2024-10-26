@@ -90,7 +90,10 @@ function M.create_lspattach_autocmd()
         return
       end
       local client = vim.lsp.get_client_by_id(args.data.client_id)
-      if client and not client.supports_method('textDocument/formatting') then
+      if
+        not client
+        or not client.supports_method('textDocument/formatting', { bufnr = args.data.buf })
+      then
         return
       end
       local ft_handler = require('guard.filetype')
