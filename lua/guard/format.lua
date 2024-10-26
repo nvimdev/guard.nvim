@@ -1,9 +1,7 @@
-local api = vim.api
 local spawn = require('guard.spawn')
 local util = require('guard.util')
-local report_error = util.report_error
 local filetype = require('guard.filetype')
-local iter, filter = vim.iter, vim.tbl_filter
+local api, iter, filter = vim.api, vim.iter, vim.tbl_filter
 
 local function save_views(bufnr)
   local views = {}
@@ -53,8 +51,9 @@ end
 local function do_fmt(buf)
   buf = buf or api.nvim_get_current_buf()
   local ft_conf = filetype[vim.bo[buf].filetype]
+
   if not ft_conf or not ft_conf.formatter then
-    report_error('missing config for filetype ' .. vim.bo[buf].filetype)
+    util.report_error('missing config for filetype ' .. vim.bo[buf].filetype)
     return
   end
 
@@ -81,7 +80,7 @@ local function do_fmt(buf)
   -- check if all cmds executable again, since user can call format manually
   local all_executable = not iter(fmt_configs):any(function(config)
     if config.cmd and vim.fn.executable(config.cmd) ~= 1 then
-      report_error(config.cmd .. ' not executable')
+      util.report_error(config.cmd .. ' not executable')
       return true
     end
     return false
@@ -101,8 +100,8 @@ local function do_fmt(buf)
 
   -- error if one of the formatters is impure and the user requested range formatting
   if range and #impure:totable() > 0 then
-    report_error('Cannot apply range formatting for filetype ' .. vim.bo[buf].filetype)
-    report_error(impure
+    util.report_error('Cannot apply range formatting for filetype ' .. vim.bo[buf].filetype)
+    util.report_error(impure
       :map(function(config)
         return config.cmd
       end)
@@ -214,7 +213,7 @@ local function do_fmt(buf)
     end
 
     -- refresh buffer
-    if impure and #impure > 0 then
+    if impure and #impure:totable() > 0 then
       vim.schedule(function()
         api.nvim_buf_call(buf, function()
           local views = save_views(buf)
