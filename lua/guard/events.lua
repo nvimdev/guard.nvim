@@ -60,6 +60,28 @@ function M.watch_ft(ft)
   })
 end
 
+---@param config table
+---@param ft string
+---@param buf number
+function M.maybe_default_to_lsp(config, ft, buf)
+  if config and config.formatter then
+    return
+  end
+  config:fmt('lsp')
+  if getopt('fmt_on_save') then
+    if
+      #api.nvim_get_autocmds({
+        group = M.group,
+        event = 'FileType',
+        pattern = ft,
+      }) == 0
+    then
+      M.watch_ft(ft)
+    end
+    M.try_attach_to_buf(buf)
+  end
+end
+
 function M.create_lspattach_autocmd()
   au('LspAttach', {
     group = M.group,
@@ -68,27 +90,12 @@ function M.create_lspattach_autocmd()
         return
       end
       local client = vim.lsp.get_client_by_id(args.data.client_id)
-      ---@diagnostic disable-next-line: need-check-nil
-      if not client.supports_method('textDocument/formatting') then
+      if client and not client.supports_method('textDocument/formatting') then
         return
       end
       local ft_handler = require('guard.filetype')
       local ft = vim.bo[args.buf].filetype
-      if not (ft_handler[ft] and ft_handler[ft].formatter) then
-        ft_handler(ft):fmt('lsp')
-      end
-      if getopt('fmt_on_save') then
-        if
-          #api.nvim_get_autocmds({
-            group = M.group,
-            event = 'FileType',
-            pattern = ft,
-          }) == 0
-        then
-          M.watch_ft(ft)
-        end
-        M.try_attach_to_buf(args.buf)
-      end
+      M.maybe_default_to_lsp(ft_handler[ft], ft, args.buf)
     end,
   })
 end

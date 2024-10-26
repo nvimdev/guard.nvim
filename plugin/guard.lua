@@ -6,6 +6,7 @@ loaded = true
 
 local api = vim.api
 local events = require('guard.events')
+local ft_handler = require('guard.filetype')
 
 local cmds = {
   fmt = function()
@@ -114,3 +115,16 @@ end, {
 })
 
 events.create_lspattach_autocmd()
+
+for _, buf in ipairs(api.nvim_list_bufs()) do
+  if api.nvim_buf_is_loaded(buf) then
+    if
+      vim.iter(vim.lsp.get_clients({ bufnr = buf })):any(function(c)
+        return c.supports_method('textDocument/formatting')
+      end)
+    then
+      local ft = vim.bo[buf].ft
+      events.maybe_default_to_lsp(ft_handler[ft], ft, buf)
+    end
+  end
+end
