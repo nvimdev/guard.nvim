@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/nvimdev/guard.nvim/compare/v1.0.2...v1.0.3) (2024-10-26)
+
+
+### Bug Fixes
+
+* impure formatting, lsp fallback not applied on load ([#171](https://github.com/nvimdev/guard.nvim/issues/171)) ([f439a46](https://github.com/nvimdev/guard.nvim/commit/f439a4620d7672089dcb76ec985a94c351575a6f))
+
 ## [1.0.2](https://github.com/nvimdev/guard.nvim/compare/v1.0.1...v1.0.2) (2024-10-24)
 
 
