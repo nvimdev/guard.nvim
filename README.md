@@ -96,9 +96,10 @@ You can also easily create your own configuration that's not in `guard-collectio
 
 For more niche use cases, [ADVANCED.md](./ADVANCED.md) demonstrates how to:
 
-- Write your own formatting logic using the `fn` field
-- Write your own linting logic using the `fn` field
-- leverage guard's autocmds to create a status line component
+- Write your own formatting logic using the `fn` field.
+- Write your own linting logic using the `fn` field.
+- Leverage guard's autocmds to create a formatting status indicator.
+- Creating a dynamic formatter that respects neovom tab/space settings.
 
 ```{.include}
 CUSTOMIZE.md
