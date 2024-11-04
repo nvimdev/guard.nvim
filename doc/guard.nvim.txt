@@ -1,4 +1,4 @@
-*guard.nvim.txt*          For NVIM v0.8.0         Last change: 2024 October 26
+*guard.nvim.txt*         For NVIM v0.8.0         Last change: 2024 November 04
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -117,9 +117,10 @@ You can also easily create your own configuration that’s not in
 
 For more niche use cases, ADVANCED.md <./ADVANCED.md> demonstrates how to:
 
-- Write your own formatting logic using the `fn` field
-- Write your own linting logic using the `fn` field
-- leverage guard’s autocmds to create a status line component
+- Write your own formatting logic using the `fn` field.
+- Write your own linting logic using the `fn` field.
+- Leverage guard’s autocmds to create a formatting status indicator.
+- Creating a dynamic formatter that respects neovom tab/space settings.
 
 
 ==============================================================================
