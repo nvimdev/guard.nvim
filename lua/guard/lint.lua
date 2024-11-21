@@ -32,9 +32,9 @@ function M.do_lint(buf)
   linters = util.eval(linters)
 
   -- check run condition
-  local fname, startpath, root_dir, cwd = util.buf_get_info(buf)
+  local fname, cwd = util.buf_get_info(buf)
   linters = vim.tbl_filter(function(config)
-    return util.should_run(config, buf, startpath, root_dir)
+    return util.should_run(config, buf)
   end, linters)
 
   local prev_lines = api.nvim_buf_get_lines(buf, 0, -1, false)

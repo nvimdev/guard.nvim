@@ -80,18 +80,25 @@ function M.get_cmd(config, fname)
   return cmd
 end
 
----@param startpath string
+--- @param filename string
+--- @return string|false
+local function exists(filename)
+  local stat = vim.uv.fs_stat(filename)
+  return stat and stat.type or false
+end
+
+---@param bufnr integer
 ---@param patterns string[]|string?
----@param root_dir string?
 ---@return boolean
-local function find(startpath, patterns, root_dir)
-  return iter(M.as_table(patterns)):any(function(pattern)
-    return #vim.fs.find(pattern, {
-      upward = true,
-      stop = root_dir and vim.fn.fnamemodify(root_dir, ':h') or vim.env.HOME,
-      path = startpath,
-    }) > 0
-  end)
+local function find(bufnr, patterns)
+  for dir in vim.fs.parents(vim.api.nvim_buf_get_name(bufnr)) do
+    for _, p in ipairs(M.as_table(patterns)) do
+      if exists(vim.fs.joinpath(dir, p)) then
+        return true
+      end
+    end
+  end
+  return false
 end
 
 ---@param buf number
@@ -110,29 +117,22 @@ end
 
 ---@param config FmtConfig|LintConfig
 ---@param buf integer
----@param startpath string
----@param root_dir string?
 ---@return boolean
-function M.should_run(config, buf, startpath, root_dir)
+function M.should_run(config, buf)
   if config.ignore_patterns and ignored(buf, config.ignore_patterns) then
     return false
   elseif config.ignore_error and #vim.diagnostic.get(buf, { severity = 1 }) ~= 0 then
     return false
-  elseif config.find and not find(startpath, config.find, root_dir) then
+  elseif config.find and not find(buf, config.find) then
     return false
   end
   return true
 end
 
----@return string, string, string?, string
+---@return string, string?
 function M.buf_get_info(buf)
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
-  local startpath = vim.fn.fnamemodify(fname, ':p:h')
-  local root_dir = M.get_lsp_root()
-  ---@diagnostic disable-next-line: undefined-field
-  local cwd = root_dir or vim.uv.cwd()
-  ---@diagnostic disable-next-line: return-type-mismatch
-  return fname, startpath, root_dir, cwd
+  return fname, M.get_lsp_root() or vim.uv.cwd()
 end
 
 ---@param c (FmtConfig|LintConfig)?
