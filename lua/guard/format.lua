@@ -70,7 +70,7 @@ local function do_fmt(buf)
   -- init environment
   ---@type FmtConfig[]
   local fmt_configs = util.eval(ft_conf.formatter)
-  local fname, startpath, root_dir, cwd = util.buf_get_info(buf)
+  local fname, cwd = util.buf_get_info(buf)
 
   -- handle execution condition
   fmt_configs = filter(function(config)
