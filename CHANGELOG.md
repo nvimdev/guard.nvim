@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/nvimdev/guard.nvim/compare/v1.0.3...v1.0.4) (2024-12-03)
+
+
+### Bug Fixes
+
+* **util:** wrong cmd value ([d3bf16f](https://github.com/nvimdev/guard.nvim/commit/d3bf16f11bd3e58f0c89a3b46942e69cfa646caf))
+
 ## [1.0.3](https://github.com/nvimdev/guard.nvim/compare/v1.0.2...v1.0.3) (2024-10-26)
 
 
