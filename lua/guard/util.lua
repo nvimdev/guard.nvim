@@ -221,7 +221,7 @@ end
 ---@return boolean
 function M.check_should_attach(buf)
   local bo = vim.bo[buf]
-  -- check if it's already attached or has no underlying file
+  -- check if it's not attached already and has an underlying file
   return #api.nvim_get_autocmds({
     group = M.group,
     event = 'BufWritePre',
