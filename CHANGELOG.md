@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5](https://github.com/nvimdev/guard.nvim/compare/v1.0.4...v1.0.5) (2024-12-07)
+
+
+### Bug Fixes
+
+* attaching to nofile buffers ([#175](https://github.com/nvimdev/guard.nvim/issues/175)) ([246b7dc](https://github.com/nvimdev/guard.nvim/commit/246b7dcbc376efd749a94b24a2080af3de2ff733))
+
 ## [1.0.4](https://github.com/nvimdev/guard.nvim/compare/v1.0.3...v1.0.4) (2024-12-03)
 
 
