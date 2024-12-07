@@ -83,6 +83,7 @@ end
 --- @param filename string
 --- @return string|false
 local function exists(filename)
+  ---@diagnostic disable-next-line: undefined-field
   local stat = vim.uv.fs_stat(filename)
   return stat and stat.type or false
 end
@@ -132,6 +133,7 @@ end
 ---@return string, string?
 function M.buf_get_info(buf)
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
+  ---@diagnostic disable-next-line: undefined-field
   return fname, M.get_lsp_root() or vim.uv.cwd()
 end
 
@@ -213,6 +215,18 @@ function M.eval(xs)
       return x
     end
   end, xs)
+end
+
+---@param buf number
+---@return boolean
+function M.check_should_attach(buf)
+  local bo = vim.bo[buf]
+  -- check if it's already attached or has no underlying file
+  return #api.nvim_get_autocmds({
+    group = M.group,
+    event = 'BufWritePre',
+    buffer = buf,
+  }) == 0 and bo.buftype ~= 'nofile'
 end
 
 return M
