@@ -8,14 +8,7 @@ local M = {}
 M.group = api.nvim_create_augroup('Guard', { clear = true })
 
 function M.try_attach_to_buf(buf)
-  if
-    #api.nvim_get_autocmds({
-      group = M.group,
-      event = 'BufWritePre',
-      buffer = buf,
-    }) > 0
-  then
-    -- already attached
+  if not util.check_should_attach(buf) then
     return
   end
   au('BufWritePre', {
