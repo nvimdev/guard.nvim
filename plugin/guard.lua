@@ -12,7 +12,12 @@ local cmds = {
   fmt = function()
     require('guard.format').do_fmt()
   end,
-  enable = function(opts)
+
+  lint = function()
+    require('guard.lint').do_lint()
+  end,
+
+  ['enable-fmt'] = function(opts)
     local group = events.group
     local arg = opts.args
     local bufnr = (#opts.fargs == 1) and api.nvim_get_current_buf() or tonumber(arg)
@@ -24,7 +29,8 @@ local cmds = {
       require('guard.events').try_attach_to_buf(bufnr)
     end
   end,
-  disable = function(opts)
+
+  ['disable-fmt'] = function(opts)
     local group = events.group
     local arg = opts.args
     local bufnr = (#opts.fargs == 1) and api.nvim_get_current_buf() or tonumber(arg)
@@ -36,6 +42,15 @@ local cmds = {
       api.nvim_del_autocmd(bufau[1].id)
     end
   end,
+
+  ['enable-lint'] = function()
+    print('TODO')
+  end,
+
+  ['disable-lint'] = function()
+    print('TODO')
+  end,
+
   info = function()
     local util = require('guard.util')
     local group = events.group
