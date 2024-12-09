@@ -95,11 +95,10 @@ local cmds = {
 
 api.nvim_create_user_command('Guard', function(opts)
   local f = cmds[opts.args]
-  if f then
-    f(opts)
-  else
-    vim.notify('[Guard]: Invalid subcommand: ' .. opts.args)
-  end
+    or function(_opts)
+      vim.notify('[Guard]: Invalid subcommand: ' .. _opts.args)
+    end
+  f(opts)
 end, {
   nargs = '+',
   complete = function(arg_lead, cmdline, _)
