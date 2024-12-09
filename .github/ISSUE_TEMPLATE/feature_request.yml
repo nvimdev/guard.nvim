@@ -3,7 +3,6 @@ name: Feature request
 description: Request an enhancement for guard.nvim
 labels: [enhancement]
 body:
-
   - type: markdown
     attributes:
       value: |
@@ -11,6 +10,30 @@ body:
 
   - type: textarea
     attributes:
-      label: "Feature description"
+      label: "Problem X you are solving:"
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: "Problems encountered under the status quo:"
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: "Suggested feature Y:"
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: "How to solve X now:"
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: "How can X be solved after feature Y is implmented:"
     validations:
       required: true
