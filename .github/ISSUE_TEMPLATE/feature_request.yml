@@ -6,7 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Maybe checkout `:h guard.nvim-advanced-tips`?
+        Please post tool request at the [guard-collection](https://github.com/nvimdev/guard-collection/issues) repo
+        Also maybe checkout `:h guard.nvim-advanced-tips`?
 
   - type: textarea
     attributes:
