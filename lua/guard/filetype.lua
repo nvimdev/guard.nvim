@@ -73,7 +73,7 @@ local function box(ft)
         M[it] = box(it)
         M[it].formatter = self.formatter
       end
-      events.watch_ft(it)
+      events.fmt_watch_ft(it)
       events.fmt_attach_to_existing(it)
     end
     return self
@@ -88,17 +88,14 @@ local function box(ft)
       util.toolcopy(try_as('linter', config)),
     }
     local events = require('guard.events')
-    local evs = { 'User GuardFmt', 'BufWritePost', 'BufEnter' }
-    if config.stdin then
-      table.insert(events, 'TextChanged')
-      table.insert(events, 'InsertLeave')
-    end
+    -- TODO: the events might not be correct if we add more linters later
+    local evs = util.linter_events(config)
     for _, it in ipairs(self:ft()) do
       if it ~= ft then
         M[it] = box(it)
         M[it].linter = self.linter
       end
-      events.register_lint(it, evs)
+      events.lint_watch_ft(it, evs)
     end
     return self
   end
