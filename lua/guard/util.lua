@@ -196,8 +196,9 @@ function M.open_info_win()
     width = math.ceil(width * 0.6),
     border = 'single',
   })
-  vim.bo.ft = 'markdown'
+  api.nvim_set_option_value('filetype', 'markdown', { buf = buf })
   api.nvim_set_option_value('bufhidden', 'wipe', { buf = buf })
+  api.nvim_set_option_value('buftype', 'nofile', { buf = buf })
   api.nvim_set_option_value('conceallevel', 3, { win = win })
   api.nvim_set_option_value('relativenumber', false, { win = win })
   api.nvim_set_option_value('number', false, { win = win })
@@ -217,16 +218,15 @@ function M.eval(xs)
   end, xs)
 end
 
----@param buf number
----@return boolean
-function M.check_should_attach(buf)
-  local bo = vim.bo[buf]
-  -- check if it's not attached already and has an underlying file
-  return #api.nvim_get_autocmds({
-    group = M.group,
-    event = 'BufWritePre',
-    buffer = buf,
-  }) == 0 and bo.buftype ~= 'nofile'
+---@param config LintConfig
+---@return string[]
+function M.linter_events(config)
+  local events = { 'User GuardFmt', 'BufWritePost', 'BufEnter' }
+  if config.stdin then
+    table.insert(events, 'TextChanged')
+    table.insert(events, 'InsertLeave')
+  end
+  return events
 end
 
 return M

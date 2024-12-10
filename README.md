@@ -61,8 +61,7 @@ vim.g.guard_config = {
 ```
 
 - Use `Guard fmt` to manually call format, when there is a visual selection only the selection is formatted. **NOTE**: Regional formatting just sends your selection to the formatter, if there's not enough context incoherent formatting might occur (e.g. indent being erased)
-- `Guard disable` disables auto format for the current buffer, you can also `Guard disable 16` (the buffer number)
-- Use `Guard enable` to re-enable auto format, usage is the same as `Guard disable`
+- `enable-fmt`, `disable-fmt` turns auto formatting on and off for the current buffer.
 
 Format c files with clang-format and lint with clang-tidy:
 
@@ -91,6 +90,9 @@ Lint all your files with `codespell`
 -- NB: this does not work with formatters
 ft('*'):lint('codespell')
 ```
+
+- Use `Guard Lint` to lint manually.
+- `enable-lint` and `disable-lint` controls auto linting for the current buffer.
 
 You can also easily create your own configuration that's not in `guard-collection`, see [CUSTOMIZE.md](./CUSTOMIZE.md).
 
