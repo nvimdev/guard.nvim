@@ -45,7 +45,8 @@ body:
       required: true
   - type: checkboxes
     attributes:
-      - options:
+      label: Are you sure this is a min repro?
+      options:
         - label: I understand that if my repro step is too complicated (e.g. here is my 1k+ line config and please help me), developers might not be able to help.
           required: true
         - label: I can confirm that my reproduction step only involves `vim.opt.rtp` and configuration themselves
