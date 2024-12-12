@@ -13,6 +13,7 @@ describe('lint module', function()
       ft[k] = nil
     end
 
+    vim.diagnostic.reset(ns, bufnr)
     bufnr = api.nvim_create_buf(true, false)
     vim.bo[bufnr].filetype = 'lua'
     api.nvim_set_current_buf(bufnr)
@@ -36,13 +37,41 @@ describe('lint module', function()
     }),
   }
 
-  local mock_linter_json = {}
+  local mock_linter_json = {
+    fn = function()
+      return vim.json.encode({
+        source = 'mock_linter_json',
+        bufnr = bufnr,
+        col = 1,
+        end_col = 9,
+        lnum = 1,
+        end_lnum = 0,
+        message = 'Very important error message',
+        namespace = ns,
+        severity = 'warning',
+      })
+    end,
+    parse = lint.from_json({
+      get_diagnostics = function(...)
+        return { vim.json.decode(...) }
+      end,
+      attributes = {
+        lnum = 'lnum',
+        end_lnum = 'end_lnum',
+        col = 'col',
+        end_col = 'end_col',
+        message = 'message',
+        code = 'severity',
+      },
+      source = 'mock_linter_json',
+    }),
+  }
 
   it('can lint with single linter', function()
     ft('lua'):lint(mock_linter_regex)
 
     gapi.lint()
-    vim.wait(1000)
+    vim.wait(100)
 
     same({
       {
@@ -55,6 +84,38 @@ describe('lint module', function()
         message = 'Very important error message[error code 114514]',
         namespace = ns,
         severity = 2,
+      },
+    }, vim.diagnostic.get())
+  end)
+
+  it('can lint with multiple linters', function()
+    ft('lua'):lint(mock_linter_regex):append(mock_linter_json)
+
+    gapi.lint()
+    vim.wait(100)
+
+    same({
+      {
+        source = 'mock_linter_regex',
+        bufnr = bufnr,
+        col = 1,
+        end_col = 1,
+        lnum = 1,
+        end_lnum = 1,
+        message = 'Very important error message[error code 114514]',
+        namespace = ns,
+        severity = 2,
+      },
+      {
+        bufnr = bufnr,
+        col = 0,
+        end_col = 0,
+        end_lnum = 0,
+        lnum = 0,
+        message = 'Very important error message[warning]',
+        namespace = ns,
+        severity = 2,
+        source = 'mock_linter_json',
       },
     }, vim.diagnostic.get())
   end)

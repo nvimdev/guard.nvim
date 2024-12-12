@@ -210,13 +210,15 @@ end
 ---@param xs (FmtConfig | LintConfig)[]
 ---@return (FmtConfigTable | LintConfigTable)[]
 function M.eval(xs)
-  return vim.tbl_map(function(x)
-    if type(x) == 'function' then
-      return x()
-    else
-      return x
-    end
-  end, xs)
+  return xs
+      and vim.tbl_map(function(x)
+        if type(x) == 'function' then
+          return x()
+        else
+          return x
+        end
+      end, xs)
+    or {}
 end
 
 ---@param config LintConfig
