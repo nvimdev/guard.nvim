@@ -2,6 +2,7 @@
 local api = vim.api
 local equal = assert.equal
 local ft = require('guard.filetype')
+local gapi = require('guard.api')
 
 describe('format module', function()
   local bufnr
@@ -26,7 +27,7 @@ describe('format module', function()
       'local a',
       '          = "test"',
     })
-    require('guard.format').do_fmt(bufnr)
+    gapi.fmt()
     vim.wait(500)
     local line = api.nvim_buf_get_lines(bufnr, 0, -1, false)[1]
     equal([[local a = 'test']], line)
@@ -46,7 +47,7 @@ describe('format module', function()
       'local a',
       '          = "test"',
     })
-    require('guard.format').do_fmt(bufnr)
+    gapi.fmt()
     vim.wait(500)
     local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
     assert.are.same({ "'test'", '= a local ' }, lines)
@@ -62,7 +63,7 @@ describe('format module', function()
       'local a',
       '          = "test"',
     })
-    require('guard.format').do_fmt(bufnr)
+    gapi.fmt()
     vim.wait(500)
     local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
     assert.are.same({ 'local a          = "test"nil' }, lines)
@@ -89,21 +90,21 @@ describe('format module', function()
       'foo',
       'bar',
     })
-    require('guard.format').do_fmt(bufnr)
+    gapi.fmt()
     vim.wait(500)
     local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
     assert.are.same({ 'def' }, lines)
 
     vim.g.some_flag_idk = true
 
-    require('guard.format').do_fmt(bufnr)
+    gapi.fmt()
     vim.wait(500)
     lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
     assert.are.same({ 'abc' }, lines)
 
     vim.g.some_flag_idk = false
 
-    require('guard.format').do_fmt(bufnr)
+    gapi.fmt()
     vim.wait(500)
     lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
     assert.are.same({ 'def' }, lines)

@@ -51,7 +51,6 @@ function M.get_lint_autocmds(bufnr)
       group = M.group,
       event = 'User',
       pattern = 'GuardFmt',
-      buffer = bufnr,
     })
   )
 end
