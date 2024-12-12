@@ -44,13 +44,26 @@ function M.do_lint(buf)
     local results = {}
 
     for _, lint in ipairs(linters) do
+      ---@type string
       local data
+
       if lint.cmd then
         lint.cwd = lint.cwd or cwd
-        data = spawn.transform(util.get_cmd(lint, fname), lint, prev_lines)
+        local out = spawn.transform(util.get_cmd(lint, fname), lint, prev_lines)
+
+        -- TODO: unify this error handling logic with formatter
+        if type(out) == 'table' then
+          -- indicates error
+          vim.notify(
+            '[Guard]: ' .. ('%s exited with code %d\n%s'):format(out.cmd, out.code, out.stderr),
+            vim.log.levels.WARN
+          )
+          data = ''
+        end
       else
         data = lint.fn(prev_lines)
       end
+
       if #data > 0 then
         vim.list_extend(results, lint.parse(data, buf))
       end
