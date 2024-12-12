@@ -40,8 +40,16 @@ body:
         git clone https://github.com/nvimdev/guard-collection /tmp
         echo "vim.opt.rtp:append('/tmp/guard.nvim')" >> /tmp/repro.lua
         echo "vim.opt.rtp:append('/tmp/guard-collection')" >> /tmp/repro.lua
+        nvim --clean -u /tmp/repro.lua
     validations:
       required: true
+  - type: checkboxes
+    attributes:
+      - options:
+        - label: I understand that if my repro step is too complicated (e.g. here is my 1k+ line config and please help me), developers might not be able to help.
+          required: true
+        - label: I can confirm that my reproduction step only involves `vim.opt.rtp` and configuration themselves
+          required: true
   - type: textarea
     attributes:
       label: "Expected behaviour"
@@ -51,18 +59,5 @@ body:
   - type: textarea
     attributes:
       label: "Actual behaviour"
-    validations:
-      required: true
-  - type: textarea
-    attributes:
-      label: "The minimal config used to reproduce this issue."
-      description: |
-        Run with `nvim -u /tmp/repro.lua`
-      placeholder: |
-        vim.opt.rtp:append('/tmp/guard.nvim')
-        vim.opt.rtp:append('/tmp/guard-collection')
-        -- do anything else you need to do to reproduce the issue
-
-      render: "Lua"
     validations:
       required: true
