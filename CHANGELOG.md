@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.6](https://github.com/nvimdev/guard.nvim/compare/v1.0.5...v1.0.6) (2024-12-13)
+
+
+### Bug Fixes
+
+* remove unused param in should_run ([0f24f76](https://github.com/nvimdev/guard.nvim/commit/0f24f7613e31322250198e0a3d11d93d6c5b5a46))
+
 ## [1.0.5](https://github.com/nvimdev/guard.nvim/compare/v1.0.4...v1.0.5) (2024-12-07)
 
 
