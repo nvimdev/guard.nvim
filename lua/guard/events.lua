@@ -105,8 +105,9 @@ end
 
 ---@param buf number
 ---@param events string[]
-function M.try_attach_lint_to_buf(buf, events)
-  if not M.check_lint_should_attach(buf) then
+---@param skip_check boolean
+function M.try_attach_lint_to_buf(buf, events, skip_check)
+  if not skip_check and not M.check_lint_should_attach(buf) then
     return
   end
 
@@ -215,7 +216,7 @@ function M.lint_watch_ft(ft, events)
     pattern = ft,
     group = M.group,
     callback = function(args)
-      M.try_attach_lint_to_buf(args.buf, events)
+      M.try_attach_lint_to_buf(args.buf, events, ft == '*')
     end,
   })
 end

@@ -74,7 +74,7 @@ local function box(ft)
         M[it].formatter = self.formatter
       end
 
-      if type(config) == 'table' and type(config.events) == 'table' then
+      if config and config.events then
         -- use user's custom events
         events.attach_custom(it, config.events)
       else
@@ -94,7 +94,6 @@ local function box(ft)
       util.toolcopy(try_as('linter', config)),
     }
     local events = require('guard.events')
-    -- TODO: the events might not be correct if we add more linters later
     local evs = util.linter_events(config)
     for _, it in ipairs(self:ft()) do
       if it ~= ft then

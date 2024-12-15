@@ -9,28 +9,11 @@ local M = {}
 function M.do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
   ---@type LintConfig[]
-  local linters, generic_linters
 
   local ft_handler = require('guard.filetype')
-  local generic_config = ft_handler['*']
-  local buf_config = ft_handler[vim.bo[buf].filetype]
-
-  if generic_config and generic_config.linter then
-    generic_linters = generic_config.linter
-  end
-
-  if not buf_config or not buf_config.linter then
-    -- pre: do_lint only triggers inside autocmds, which ensures generic_config and buf_config are not *both* nil
-    linters = generic_linters
-  else
-    -- buf_config exists, we want both
-    linters = vim.tbl_map(util.toolcopy, buf_config.linter)
-    if generic_linters then
-      vim.list_extend(linters, generic_linters)
-    end
-  end
-
-  linters = util.eval(linters)
+  local linters = util.eval(
+    vim.tbl_map(util.toolcopy, (ft_handler[vim.bo[buf].filetype] or ft_handler['*'] or {}).linter)
+  )
 
   -- check run condition
   local fname, cwd = util.buf_get_info(buf)
@@ -71,7 +54,7 @@ function M.do_lint(buf)
     end
 
     vim.schedule(function()
-      if not api.nvim_buf_is_valid(buf) or not results or #results == 0 then
+      if not api.nvim_buf_is_valid(buf) or #results == 0 then
         return
       end
       vd.set(ns, buf, results)
