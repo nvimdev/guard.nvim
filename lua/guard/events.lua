@@ -44,13 +44,17 @@ local function maybe_fill_auoption(opt, cb)
 end
 
 ---@param bufnr number
----@return vim.api.keyset.get_autocmds.ret[]
+---@return number[]
 function M.get_format_autocmds(bufnr)
   if not api.nvim_buf_is_valid(bufnr) then
     return {}
   end
   return M.user_fmt_autocmds[vim.bo[bufnr].ft]
-    or api.nvim_get_autocmds({ group = M.group, event = 'BufWritePre', buffer = bufnr })
+    or iter(api.nvim_get_autocmds({ group = M.group, event = 'BufWritePre', buffer = bufnr })):map(
+      function(it)
+        return it.id
+      end
+    )
 end
 
 ---@param bufnr number
@@ -224,7 +228,12 @@ function M.attach_custom(ft, events)
   iter(events):each(function(event)
     table.insert(
       M.user_fmt_autocmds[ft],
-      api.nvim_create_autocmd(event.name, maybe_fill_auoption(event.opt or {}, lazy_fmt))
+      api.nvim_create_autocmd(
+        event.name,
+        maybe_fill_auoption(event.opt or {}, function(opt)
+          require('guard.format').do_fmt(opt.buf)
+        end)
+      )
     )
   end)
 end

@@ -18,16 +18,23 @@ end
 ---Enable format for bufnr or current buffer
 ---@param bufnr number?
 function M.enable_fmt(bufnr)
-  require('guard.events').try_attach_fmt_to_buf(bufnr or api.nvim_get_current_buf())
+  local buf = bufnr or api.nvim_get_current_buf()
+  local ft_handler = require('guard.filetype')
+  local ft = vim.bo[buf].ft
+  local head = vim.tbl_get(ft_handler, ft, 'formatter', 1)
+  if type(head) == 'table' and type(head.events) == 'table' then
+    events.attach_custom(ft, head.events)
+  else
+    events.try_attach_fmt_to_buf(buf)
+  end
 end
 
 ---Disable format for bufnr or current buffer
 ---@param bufnr number?
 function M.disable_fmt(bufnr)
   local buf = bufnr or api.nvim_get_current_buf()
-  local aus = events.get_format_autocmds(buf)
-  vim.iter(aus):each(function(au)
-    api.nvim_del_autocmd(au.id)
+  vim.iter(events.get_format_autocmds(buf)):each(function(x)
+    api.nvim_del_autocmd(x)
   end)
   events.user_fmt_autocmds[vim.bo[buf].ft] = {}
 end
@@ -74,40 +81,39 @@ function M.info()
     ('- %s linter autocmds attached'):format(#lintau),
     '- formatters:',
     '',
-    '```lua',
   }
 
-  vim.list_extend(
-    lines,
-    vim
-      .iter(formatters)
-      :map(function(formatter)
-        return vim.split(vim.inspect(formatter), '\n', { trimempty = true })
-      end)
-      :flatten()
-      :totable()
-  )
+  if #formatters > 0 then
+    vim.list_extend(lines, { '', '```lua' })
+    vim.list_extend(
+      lines,
+      vim
+        .iter(formatters)
+        :map(function(formatter)
+          return vim.split(vim.inspect(formatter), '\n', { trimempty = true })
+        end)
+        :flatten()
+        :totable()
+    )
+    vim.list_extend(lines, { '```', '' })
+  end
 
-  vim.list_extend(lines, {
-    '```',
-    '',
-    '- linters:',
-    '',
-    '```lua',
-  })
+  vim.list_extend(lines, { '- linters:' })
 
-  vim.list_extend(
-    lines,
-    vim
-      .iter(linters)
-      :map(function(linter)
-        return vim.split(vim.inspect(linter), '\n', { trimempty = true })
-      end)
-      :flatten()
-      :totable()
-  )
-
-  vim.list_extend(lines, { '```' })
+  if #linters > 0 then
+    vim.list_extend(lines, { '', '```lua' })
+    vim.list_extend(
+      lines,
+      vim
+        .iter(linters)
+        :map(function(linter)
+          return vim.split(vim.inspect(linter), '\n', { trimempty = true })
+        end)
+        :flatten()
+        :totable()
+    )
+    vim.list_extend(lines, { '```' })
+  end
 
   api.nvim_buf_set_lines(0, 0, -1, true, lines)
   api.nvim_set_option_value('modifiable', false, { buf = 0 })

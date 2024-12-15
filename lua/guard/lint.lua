@@ -1,16 +1,17 @@
 local api = vim.api
-local ft_handler = require('guard.filetype')
 local util = require('guard.util')
 local ns = api.nvim_create_namespace('Guard')
 local spawn = require('guard.spawn')
 local vd = vim.diagnostic
 local M = {}
 
+---@param buf number?
 function M.do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
   ---@type LintConfig[]
   local linters, generic_linters
 
+  local ft_handler = require('guard.filetype')
   local generic_config = ft_handler['*']
   local buf_config = ft_handler[vim.bo[buf].filetype]
 
@@ -76,6 +77,12 @@ function M.do_lint(buf)
       vd.set(ns, buf, results)
     end)
   end))
+end
+
+---@param buf number
+---@param config LintConfig
+local function do_lint_single(buf, config)
+  -- TODO
 end
 
 ---@param buf number

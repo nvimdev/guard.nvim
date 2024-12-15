@@ -152,6 +152,7 @@ function M.toolcopy(c)
     fname = c.fname,
     stdin = c.stdin,
     fn = c.fn,
+    events = c.events,
     ignore_patterns = c.ignore_patterns,
     ignore_error = c.ignore_error,
     find = c.find,

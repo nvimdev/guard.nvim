@@ -4,6 +4,7 @@
 ---@field fname boolean?
 ---@field stdin boolean?
 ---@field fn function?
+---@field events EventOption[]
 ---@field ignore_patterns string|string[]?
 ---@field ignore_error boolean?
 ---@field find string|string[]?
@@ -18,6 +19,7 @@
 ---@field fname boolean?
 ---@field stdin boolean?
 ---@field fn function?
+---@field events EventOption[]
 ---@field parse function
 ---@field ignore_patterns string|string[]?
 ---@field ignore_error boolean?
