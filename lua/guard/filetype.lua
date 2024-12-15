@@ -74,7 +74,7 @@ local function box(ft)
         M[it].formatter = self.formatter
       end
 
-      if config and config.events then
+      if type(config) == 'table' and config.events then
         -- use user's custom events
         events.attach_custom(it, config.events)
       else
