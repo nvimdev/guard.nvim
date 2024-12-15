@@ -73,8 +73,14 @@ local function box(ft)
         M[it] = box(it)
         M[it].formatter = self.formatter
       end
-      events.fmt_watch_ft(it)
-      events.fmt_attach_to_existing(it)
+
+      if type(config) == 'table' and type(config.events) == 'table' then
+        -- use user's custom events
+        events.attach_custom(it, config.events)
+      else
+        events.fmt_watch_ft(it, self.formatter)
+        events.fmt_attach_to_existing(it)
+      end
     end
     return self
   end

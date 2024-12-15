@@ -26,3 +26,9 @@
 ---@field timeout integer?
 
 ---@alias LintConfig LintConfigTable|fun(): LintConfigTable
+
+---@alias AuOption vim.api.keyset.create_autocmd
+
+---@class EventOption
+---@field name string
+---@field opt AuOption?

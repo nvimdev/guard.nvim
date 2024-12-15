@@ -74,7 +74,7 @@ local function do_fmt(buf)
 
   -- handle execution condition
   fmt_configs = filter(function(config)
-    return util.should_run(config, buf, startpath, root_dir)
+    return util.should_run(config, buf)
   end, fmt_configs)
 
   -- check if all cmds executable again, since user can call format manually

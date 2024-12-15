@@ -24,10 +24,12 @@ end
 ---Disable format for bufnr or current buffer
 ---@param bufnr number?
 function M.disable_fmt(bufnr)
-  local aus = events.get_format_autocmds(bufnr or api.nvim_get_current_buf())
+  local buf = bufnr or api.nvim_get_current_buf()
+  local aus = events.get_format_autocmds(buf)
   vim.iter(aus):each(function(au)
     api.nvim_del_autocmd(au.id)
   end)
+  events.user_fmt_autocmds[vim.bo[buf].ft] = {}
 end
 
 ---Enable lint for bufnr or current buffer

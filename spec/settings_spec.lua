@@ -4,6 +4,7 @@ local api = vim.api
 local same = assert.are.same
 local ft = require('guard.filetype')
 local util = require('guard.util')
+local gapi = require('guard.api')
 
 describe('settings', function()
   local bufnr
@@ -91,7 +92,8 @@ describe('settings', function()
       '          =42',
     })
     vim.cmd('silent! write')
-    vim.cmd('Guard fmt')
+    vim.wait(100)
+    gapi.fmt()
     vim.wait(500)
     same(true, vim.bo[bufnr].modified)
   end)
@@ -108,7 +110,7 @@ describe('settings', function()
       '          =42',
     })
     same(true, util.getopt('save_on_fmt'))
-    vim.cmd('Guard fmt')
+    gapi.fmt()
     vim.wait(500)
     same(false, vim.bo[bufnr].modified)
 
@@ -120,8 +122,8 @@ describe('settings', function()
       '      =42',
     })
     vim.cmd('silent! write')
-
-    vim.cmd('Guard fmt')
+    vim.wait(100)
+    gapi.fmt()
     vim.wait(500)
     same(true, vim.bo[bufnr].modified)
 
@@ -129,7 +131,7 @@ describe('settings', function()
       'local a',
       '      =42',
     })
-    vim.cmd('Guard fmt')
+    gapi.fmt()
     vim.wait(500)
     same(true, vim.bo[bufnr].modified)
   end)

@@ -7,6 +7,8 @@ local iter = vim.iter
 local M = {}
 M.group = api.nvim_create_augroup('Guard', { clear = true })
 
+M.user_fmt_autocmds = {}
+
 local debounce_timer = nil
 local debounced_lint = function(opt)
   if debounce_timer then
@@ -25,13 +27,30 @@ local debounced_lint = function(opt)
   end)
 end
 
+local function lazy_fmt(opt)
+  if vim.bo[opt.buf].modified and getopt('fmt_on_save') then
+    require('guard.format').do_fmt(opt.buf)
+  end
+end
+
+---@param opt AuOption
+---@param cb function
+---@return AuOption
+local function maybe_fill_auoption(opt, cb)
+  local result = vim.deepcopy(opt, false)
+  result.callback = (not result.command and not result.callback) and cb or result.callback
+  result.group = M.group
+  return result
+end
+
 ---@param bufnr number
 ---@return vim.api.keyset.get_autocmds.ret[]
 function M.get_format_autocmds(bufnr)
   if not api.nvim_buf_is_valid(bufnr) then
     return {}
   end
-  return api.nvim_get_autocmds({ group = M.group, event = 'BufWritePre', buffer = bufnr })
+  return M.user_fmt_autocmds[vim.bo[bufnr].ft]
+    or api.nvim_get_autocmds({ group = M.group, event = 'BufWritePre', buffer = bufnr })
 end
 
 ---@param bufnr number
@@ -76,11 +95,7 @@ function M.try_attach_fmt_to_buf(buf)
   au('BufWritePre', {
     group = M.group,
     buffer = buf,
-    callback = function(opt)
-      if vim.bo[opt.buf].modified and getopt('fmt_on_save') then
-        require('guard.format').do_fmt(opt.buf)
-      end
-    end,
+    callback = lazy_fmt,
   })
 end
 
@@ -123,9 +138,10 @@ function M.fmt_attach_to_existing(ft)
 end
 
 ---@param ft string
-function M.fmt_watch_ft(ft)
+---@param formatters FmtConfig[]
+function M.fmt_watch_ft(ft, formatters)
   -- check if all cmds executable before registering formatter
-  iter(require('guard.filetype')[ft].formatter):any(function(config)
+  iter(formatters):any(function(config)
     if type(config) == 'table' and config.cmd and vim.fn.executable(config.cmd) ~= 1 then
       report_error(config.cmd .. ' not executable')
       return false
@@ -159,7 +175,7 @@ function M.maybe_default_to_lsp(config, ft, buf)
         pattern = ft,
       }) == 0
     then
-      M.fmt_watch_ft(ft)
+      M.fmt_watch_ft(ft, config.formatter)
     end
     M.try_attach_fmt_to_buf(buf)
   end
@@ -173,10 +189,7 @@ function M.create_lspattach_autocmd()
         return
       end
       local client = vim.lsp.get_client_by_id(args.data.client_id)
-      if
-        not client
-        or not client.supports_method('textDocument/formatting', { bufnr = args.data.buf })
-      then
+      if not client or not client:supports_method('textDocument/formatting', args.data.buf) then
         return
       end
       local ft_handler = require('guard.filetype')
@@ -201,6 +214,19 @@ function M.lint_watch_ft(ft, events)
       M.try_attach_lint_to_buf(args.buf, events)
     end,
   })
+end
+
+---@param events EventOption[]
+---@param ft string
+function M.attach_custom(ft, events)
+  M.user_fmt_autocmds[ft] = {}
+  -- we don't know what autocmds are passed in, so these are attached asap
+  iter(events):each(function(event)
+    table.insert(
+      M.user_fmt_autocmds[ft],
+      api.nvim_create_autocmd(event.name, maybe_fill_auoption(event.opt or {}, lazy_fmt))
+    )
+  end)
 end
 
 return M
