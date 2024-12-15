@@ -10,7 +10,7 @@ M.group = api.nvim_create_augroup('Guard', { clear = true })
 M.user_fmt_autocmds = {}
 
 local debounce_timer = nil
-local debounced_lint = function(opt)
+local function debounced_lint(opt)
   if debounce_timer then
     debounce_timer:stop()
     debounce_timer = nil
@@ -25,6 +25,12 @@ local debounced_lint = function(opt)
       require('guard.lint').do_lint(opt.buf)
     end)
   end)
+end
+
+local function lazy_debounced_lint(opt)
+  if getopt('auto_lint') == true then
+    debounced_lint(opt)
+  end
 end
 
 local function lazy_fmt(opt)
