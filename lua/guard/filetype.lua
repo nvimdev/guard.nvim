@@ -73,8 +73,14 @@ local function box(ft)
         M[it] = box(it)
         M[it].formatter = self.formatter
       end
-      events.watch_ft(it)
-      events.fmt_attach_to_existing(it)
+
+      if type(config) == 'table' and config.events then
+        -- use user's custom events
+        events.fmt_attach_custom(it, config.events)
+      else
+        events.fmt_watch_ft(it, self.formatter)
+        events.fmt_attach_to_existing(it)
+      end
     end
     return self
   end
@@ -88,17 +94,19 @@ local function box(ft)
       util.toolcopy(try_as('linter', config)),
     }
     local events = require('guard.events')
-    local evs = { 'User GuardFmt', 'BufWritePost', 'BufEnter' }
-    if config.stdin then
-      table.insert(events, 'TextChanged')
-      table.insert(events, 'InsertLeave')
-    end
+    local evs = util.linter_events(config)
     for _, it in ipairs(self:ft()) do
       if it ~= ft then
         M[it] = box(it)
         M[it].linter = self.linter
       end
-      events.register_lint(it, evs)
+
+      if type(config) == 'table' and config.events then
+        -- use user's custom events
+        events.lint_attach_custom(it, config.events)
+      else
+        events.lint_watch_ft(it, evs)
+      end
     end
     return self
   end
@@ -107,7 +115,15 @@ local function box(ft)
     if not check_type(config, { 'table', 'string', 'function' }) then
       return
     end
-    self[current][#self[current] + 1] = try_as(current, config)
+    local c = try_as(current, config)
+    self[current][#self[current] + 1] = c
+
+    if current == 'linter' and type(c) == 'table' and c.events then
+      for _, it in ipairs(self:ft()) do
+        require('guard.events').lint_attach_custom(it, config.events)
+      end
+    end
+
     return self
   end
 

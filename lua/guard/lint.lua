@@ -1,35 +1,19 @@
 local api = vim.api
-local ft_handler = require('guard.filetype')
 local util = require('guard.util')
 local ns = api.nvim_create_namespace('Guard')
 local spawn = require('guard.spawn')
 local vd = vim.diagnostic
 local M = {}
 
+---@param buf number?
 function M.do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
   ---@type LintConfig[]
-  local linters, generic_linters
 
-  local generic_config = ft_handler['*']
-  local buf_config = ft_handler[vim.bo[buf].filetype]
-
-  if generic_config and generic_config.linter then
-    generic_linters = generic_config.linter
-  end
-
-  if not buf_config or not buf_config.linter then
-    -- pre: do_lint only triggers inside autocmds, which ensures generic_config and buf_config are not *both* nil
-    linters = generic_linters
-  else
-    -- buf_config exists, we want both
-    linters = vim.tbl_map(util.toolcopy, buf_config.linter)
-    if generic_linters then
-      vim.list_extend(linters, generic_linters)
-    end
-  end
-
-  linters = util.eval(linters)
+  local ft_handler = require('guard.filetype')
+  local linters = util.eval(
+    vim.tbl_map(util.toolcopy, (ft_handler[vim.bo[buf].filetype] or ft_handler['*'] or {}).linter)
+  )
 
   -- check run condition
   local fname, cwd = util.buf_get_info(buf)
@@ -44,25 +28,44 @@ function M.do_lint(buf)
     local results = {}
 
     for _, lint in ipairs(linters) do
+      ---@type string
       local data
+
       if lint.cmd then
         lint.cwd = lint.cwd or cwd
-        data = spawn.transform(util.get_cmd(lint, fname), lint, prev_lines)
+        local out = spawn.transform(util.get_cmd(lint, fname), lint, prev_lines)
+
+        -- TODO: unify this error handling logic with formatter
+        if type(out) == 'table' then
+          -- indicates error
+          vim.notify(
+            '[Guard]: ' .. ('%s exited with code %d\n%s'):format(out.cmd, out.code, out.stderr),
+            vim.log.levels.WARN
+          )
+          data = ''
+        end
       else
         data = lint.fn(prev_lines)
       end
+
       if #data > 0 then
         vim.list_extend(results, lint.parse(data, buf))
       end
     end
 
     vim.schedule(function()
-      if not api.nvim_buf_is_valid(buf) or not results or #results == 0 then
+      if not api.nvim_buf_is_valid(buf) or #results == 0 then
         return
       end
       vd.set(ns, buf, results)
     end)
   end))
+end
+
+---@param buf number
+---@param config LintConfig
+local function do_lint_single(buf, config)
+  -- TODO
 end
 
 ---@param buf number
