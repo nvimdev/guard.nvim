@@ -45,7 +45,7 @@ function M.enable_lint(bufnr)
   local buf = bufnr or api.nvim_get_current_buf()
   local ft = require('guard.filetype')[vim.bo[buf].ft] or {}
   if ft.linter and #ft.linter > 0 then
-    events.try_attach_lint_to_buf(buf, require('guard.util').linter_events(ft.linter[1]))
+    events.try_attach_lint_to_buf(buf, require('guard.util').linter_events(ft.linter[1]), ft)
   end
 end
 

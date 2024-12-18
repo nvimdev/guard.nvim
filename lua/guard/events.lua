@@ -8,6 +8,7 @@ local M = {}
 M.group = api.nvim_create_augroup('Guard', { clear = true })
 
 M.user_fmt_autocmds = {}
+M.user_lint_autocmds = {}
 
 local debounce_timer = nil
 local function debounced_lint(opt)
@@ -92,9 +93,22 @@ function M.check_fmt_should_attach(buf)
 end
 
 ---@param buf number
+---@param ft string
 ---@return boolean
-function M.check_lint_should_attach(buf)
-  return #M.get_lint_autocmds(buf) == 0 and vim.bo[buf].buftype ~= 'nofile'
+function M.check_lint_should_attach(buf, ft)
+  if vim.bo[buf].buftype == 'nofile' then
+    return false
+  end
+
+  local aus = M.get_lint_autocmds(buf)
+
+  return #iter(aus)
+    :filter(ft == '*' and function(it)
+      return it.pattern == '*'
+    end or function(it)
+      return it.pattern ~= '*'
+    end)
+    :totable() == 0
 end
 
 ---@param buf number
@@ -111,9 +125,9 @@ end
 
 ---@param buf number
 ---@param events string[]
----@param skip_check boolean
-function M.try_attach_lint_to_buf(buf, events, skip_check)
-  if not skip_check and not M.check_lint_should_attach(buf) then
+---@param ft string
+function M.try_attach_lint_to_buf(buf, events, ft)
+  if not M.check_lint_should_attach(buf, ft) then
     return
   end
 
@@ -124,7 +138,7 @@ function M.try_attach_lint_to_buf(buf, events, skip_check)
         pattern = 'GuardFmt',
         callback = function(opt)
           if opt.data.status == 'done' then
-            debounced_lint(opt)
+            lazy_debounced_lint(opt)
           end
         end,
       })
@@ -132,7 +146,7 @@ function M.try_attach_lint_to_buf(buf, events, skip_check)
       au(ev, {
         group = M.group,
         buffer = buf,
-        callback = debounced_lint,
+        callback = lazy_debounced_lint,
       })
     end
   end
@@ -222,14 +236,14 @@ function M.lint_watch_ft(ft, events)
     pattern = ft,
     group = M.group,
     callback = function(args)
-      M.try_attach_lint_to_buf(args.buf, events, ft == '*')
+      M.try_attach_lint_to_buf(args.buf, events, ft)
     end,
   })
 end
 
 ---@param events EventOption[]
 ---@param ft string
-function M.attach_custom(ft, events)
+function M.fmt_attach_custom(ft, events)
   M.user_fmt_autocmds[ft] = {}
   -- we don't know what autocmds are passed in, so these are attached asap
   iter(events):each(function(event)
@@ -239,6 +253,24 @@ function M.attach_custom(ft, events)
         event.name,
         maybe_fill_auoption(event.opt or {}, function(opt)
           require('guard.format').do_fmt(opt.buf)
+        end)
+      )
+    )
+  end)
+end
+
+---@param events EventOption[]
+---@param ft string
+function M.lint_attach_custom(ft, events)
+  M.user_lint_autocmds[ft] = {}
+  -- we don't know what autocmds are passed in, so these are attached asap
+  iter(events):each(function(event)
+    table.insert(
+      M.user_fmt_autocmds[ft],
+      api.nvim_create_autocmd(
+        event.name,
+        maybe_fill_auoption(event.opt or {}, function(opt)
+          -- TODO
         end)
       )
     )

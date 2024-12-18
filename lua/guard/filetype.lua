@@ -76,7 +76,7 @@ local function box(ft)
 
       if type(config) == 'table' and config.events then
         -- use user's custom events
-        events.attach_custom(it, config.events)
+        events.fmt_attach_custom(it, config.events)
       else
         events.fmt_watch_ft(it, self.formatter)
         events.fmt_attach_to_existing(it)
@@ -100,7 +100,13 @@ local function box(ft)
         M[it] = box(it)
         M[it].linter = self.linter
       end
-      events.lint_watch_ft(it, evs)
+
+      if type(config) == 'table' and config.events then
+        -- use user's custom events
+        events.lint_attach_custom(it, config.events)
+      else
+        events.lint_watch_ft(it, evs)
+      end
     end
     return self
   end
@@ -109,7 +115,15 @@ local function box(ft)
     if not check_type(config, { 'table', 'string', 'function' }) then
       return
     end
-    self[current][#self[current] + 1] = try_as(current, config)
+    local c = try_as(current, config)
+    self[current][#self[current] + 1] = c
+
+    if current == 'linter' and type(c) == 'table' and c.events then
+      for _, it in ipairs(self:ft()) do
+        require('guard.events').lint_attach_custom(it, config.events)
+      end
+    end
+
     return self
   end
 
