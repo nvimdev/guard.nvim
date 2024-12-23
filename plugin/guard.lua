@@ -31,6 +31,7 @@ local cmds = {
 
   ['disable-lint'] = function()
     require('guard.api').disable_lint()
+    vim.diagnostic.reset(api.nvim_get_namespaces()['Guard'])
   end,
 
   info = function()
