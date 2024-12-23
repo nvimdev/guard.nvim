@@ -18,7 +18,7 @@ local function debounced_lint(opt)
   end
   ---@diagnostic disable-next-line: undefined-field
   debounce_timer = assert(uv.new_timer()) --[[uv_timer_t]]
-  debounce_timer:start(500, 0, function()
+  debounce_timer:start(util.getopt('lint_interval'), 0, function()
     debounce_timer:stop()
     debounce_timer:close()
     debounce_timer = nil
@@ -172,7 +172,7 @@ end
 
 ---@param ft string
 ---@param formatters FmtConfig[]
-function M.fmt_watch_ft(ft, formatters)
+function M.fmt_on_ft(ft, formatters)
   -- check if all cmds executable before registering formatter
   iter(formatters):any(function(config)
     if type(config) == 'table' and config.cmd and vim.fn.executable(config.cmd) ~= 1 then
@@ -208,7 +208,7 @@ function M.maybe_default_to_lsp(config, ft, buf)
         pattern = ft,
       }) == 0
     then
-      M.fmt_watch_ft(ft, config.formatter)
+      M.fmt_on_ft(ft, config.formatter)
     end
     M.try_attach_fmt_to_buf(buf)
   end
@@ -234,7 +234,7 @@ end
 
 ---@param ft string
 ---@param events string[]
-function M.lint_watch_ft(ft, events)
+function M.lint_on_ft(ft, events)
   iter(require('guard.filetype')[ft].linter):any(function(config)
     if config.cmd and vim.fn.executable(config.cmd) ~= 1 then
       report_error(config.cmd .. ' not executable')

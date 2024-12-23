@@ -49,7 +49,7 @@ ft('lang'):fmt('format-tool-1')
           :lint('lint-tool-1')
           :extra(extra_args)
 
--- change this anywhere in your config, these are the defaults
+-- change this anywhere in your config (or not), these are the defaults
 vim.g.guard_config = {
     -- format on write to buffer
     fmt_on_save = true,
@@ -58,7 +58,9 @@ vim.g.guard_config = {
     -- whether or not to save the buffer after formatting
     save_on_fmt = true,
     -- automatic linting
-    auto_lint = true
+    auto_lint = true,
+    -- how frequently can linters be called
+    lint_interval = 500
 }
 ```
 

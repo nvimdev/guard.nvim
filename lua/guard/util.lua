@@ -174,6 +174,7 @@ function M.getopt(opt)
     lsp_as_default_formatter = false,
     save_on_fmt = true,
     auto_lint = true,
+    lint_interval = 500,
   }
   if
     not vim.g.guard_config

@@ -78,7 +78,7 @@ local function box(ft)
         -- use user's custom events
         events.fmt_attach_custom(it, config.events)
       else
-        events.fmt_watch_ft(it, self.formatter)
+        events.fmt_on_ft(it, self.formatter)
         events.fmt_attach_to_existing(it)
       end
     end
@@ -105,7 +105,7 @@ local function box(ft)
         -- use user's custom events
         events.lint_attach_custom(it, config)
       else
-        events.lint_watch_ft(it, evs)
+        events.lint_on_ft(it, evs)
         events.lint_attach_to_existing(it, evs)
       end
     end
