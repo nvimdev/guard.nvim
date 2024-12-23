@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/nvimdev/guard.nvim/compare/v1.0.6...v2.0.0) (2024-12-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* event API ([#181](https://github.com/nvimdev/guard.nvim/issues/181))
+
+### Features
+
+* event API ([#181](https://github.com/nvimdev/guard.nvim/issues/181)) ([25ba07f](https://github.com/nvimdev/guard.nvim/commit/25ba07f8ce72b3ba7cd585046182127c85ccc2cb))
+
 ## [1.0.6](https://github.com/nvimdev/guard.nvim/compare/v1.0.5...v1.0.6) (2024-12-13)
 
 
