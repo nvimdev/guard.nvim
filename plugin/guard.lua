@@ -10,96 +10,41 @@ local ft_handler = require('guard.filetype')
 
 local cmds = {
   fmt = function()
-    require('guard.format').do_fmt()
+    require('guard.api').fmt()
   end,
-  enable = function(opts)
-    local group = events.group
-    local arg = opts.args
-    local bufnr = (#opts.fargs == 1) and api.nvim_get_current_buf() or tonumber(arg)
-    if not bufnr or not api.nvim_buf_is_valid(bufnr) then
-      return
-    end
-    local bufau = api.nvim_get_autocmds({ group = group, event = 'BufWritePre', buffer = bufnr })
-    if #bufau == 0 then
-      require('guard.events').try_attach_to_buf(bufnr)
-    end
+
+  lint = function()
+    require('guard.api').lint()
   end,
-  disable = function(opts)
-    local group = events.group
-    local arg = opts.args
-    local bufnr = (#opts.fargs == 1) and api.nvim_get_current_buf() or tonumber(arg)
-    if not bufnr or not api.nvim_buf_is_valid(bufnr) then
-      return
-    end
-    local bufau = api.nvim_get_autocmds({ group = group, event = 'BufWritePre', buffer = bufnr })
-    if #bufau ~= 0 then
-      api.nvim_del_autocmd(bufau[1].id)
-    end
+
+  ['enable-fmt'] = function()
+    require('guard.api').enable_fmt()
   end,
+
+  ['disable-fmt'] = function()
+    require('guard.api').disable_fmt()
+  end,
+
+  ['enable-lint'] = function()
+    require('guard.api').enable_lint()
+  end,
+
+  ['disable-lint'] = function()
+    require('guard.api').disable_lint()
+    vim.diagnostic.reset(api.nvim_get_namespaces()['Guard'])
+  end,
+
   info = function()
-    local util = require('guard.util')
-    local group = events.group
-    local buf = api.nvim_get_current_buf()
-    local ft = require('guard.filetype')[vim.bo[buf].ft] or {}
-    local formatters = ft.formatter or {}
-    local linters = ft.linter or {}
-    local fmtau = api.nvim_get_autocmds({ group = group, event = 'BufWritePre', buffer = buf })
-    local lintau = api.nvim_get_autocmds({ group = group, event = 'BufWritePost', buffer = buf })
-    util.open_info_win()
-    local lines = {
-      '# Guard info (press Esc or q to close)',
-      '## Settings:',
-      ('- `fmt_on_save`: %s'):format(util.getopt('fmt_on_save')),
-      ('- `lsp_as_default_formatter`: %s'):format(util.getopt('lsp_as_default_formatter')),
-      ('- `save_on_fmt`: %s'):format(util.getopt('save_on_fmt')),
-      '',
-      ('## Current buffer has filetype %s:'):format(vim.bo[buf].ft),
-      ('- %s formatter autocmds attached'):format(#fmtau),
-      ('- %s linter autocmds attached'):format(#lintau),
-      '- formatters:',
-      '',
-      '```lua',
-    }
-    vim.list_extend(
-      lines,
-      vim
-        .iter(formatters)
-        :map(function(formatter)
-          return vim.split(vim.inspect(formatter), '\n', { trimempty = true })
-        end)
-        :flatten()
-        :totable()
-    )
-    vim.list_extend(lines, {
-      '```',
-      '',
-      '- linters:',
-      '',
-      '```lua',
-    })
-    vim.list_extend(
-      lines,
-      vim
-        .iter(linters)
-        :map(function(linter)
-          return vim.split(vim.inspect(linter), '\n', { trimempty = true })
-        end)
-        :flatten()
-        :totable()
-    )
-    vim.list_extend(lines, { '```' })
-    api.nvim_buf_set_lines(0, 0, -1, true, lines)
-    api.nvim_set_option_value('modifiable', false, { buf = 0 })
+    require('guard.api').info()
   end,
 }
 
 api.nvim_create_user_command('Guard', function(opts)
   local f = cmds[opts.args]
-  if f then
-    f(opts)
-  else
-    vim.notify('[Guard]: Invalid subcommand: ' .. opts.args)
-  end
+    or function()
+      vim.notify('[Guard]: Invalid subcommand: ' .. opts.args)
+    end
+  f()
 end, {
   nargs = '+',
   complete = function(arg_lead, cmdline, _)

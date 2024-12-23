@@ -130,7 +130,7 @@ function M.should_run(config, buf)
   return true
 end
 
----@return string, string?
+---@return string, string
 function M.buf_get_info(buf)
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   ---@diagnostic disable-next-line: undefined-field
@@ -152,6 +152,7 @@ function M.toolcopy(c)
     fname = c.fname,
     stdin = c.stdin,
     fn = c.fn,
+    events = c.events,
     ignore_patterns = c.ignore_patterns,
     ignore_error = c.ignore_error,
     find = c.find,
@@ -172,6 +173,8 @@ function M.getopt(opt)
     fmt_on_save = true,
     lsp_as_default_formatter = false,
     save_on_fmt = true,
+    auto_lint = true,
+    lint_interval = 500,
   }
   if
     not vim.g.guard_config
@@ -196,8 +199,9 @@ function M.open_info_win()
     width = math.ceil(width * 0.6),
     border = 'single',
   })
-  vim.bo.ft = 'markdown'
+  api.nvim_set_option_value('filetype', 'markdown', { buf = buf })
   api.nvim_set_option_value('bufhidden', 'wipe', { buf = buf })
+  api.nvim_set_option_value('buftype', 'nofile', { buf = buf })
   api.nvim_set_option_value('conceallevel', 3, { win = win })
   api.nvim_set_option_value('relativenumber', false, { win = win })
   api.nvim_set_option_value('number', false, { win = win })
@@ -205,28 +209,29 @@ function M.open_info_win()
   api.nvim_buf_set_keymap(buf, 'n', 'q', '<cmd>quit!<cr>', {})
 end
 
+function M.eval1(x)
+  if type(x) == 'function' then
+    return x()
+  else
+    return x
+  end
+end
+
 ---@param xs (FmtConfig | LintConfig)[]
 ---@return (FmtConfigTable | LintConfigTable)[]
 function M.eval(xs)
-  return vim.tbl_map(function(x)
-    if type(x) == 'function' then
-      return x()
-    else
-      return x
-    end
-  end, xs)
+  return xs and vim.tbl_map(M.eval1, xs) or {}
 end
 
----@param buf number
----@return boolean
-function M.check_should_attach(buf)
-  local bo = vim.bo[buf]
-  -- check if it's not attached already and has an underlying file
-  return #api.nvim_get_autocmds({
-    group = M.group,
-    event = 'BufWritePre',
-    buffer = buf,
-  }) == 0 and bo.buftype ~= 'nofile'
+---@param config LintConfig
+---@return string[]
+function M.linter_events(config)
+  local events = { 'User GuardFmt', 'BufWritePost', 'BufEnter' }
+  if config.stdin then
+    table.insert(events, 'TextChanged')
+    table.insert(events, 'InsertLeave')
+  end
+  return events
 end
 
 return M

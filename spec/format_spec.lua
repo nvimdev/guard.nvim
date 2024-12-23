@@ -1,10 +1,16 @@
 ---@diagnostic disable: undefined-field, undefined-global
 local api = vim.api
-local equal = assert.equal
+local same = assert.are.same
 local ft = require('guard.filetype')
+local gapi = require('guard.api')
 
 describe('format module', function()
   local bufnr
+  local ill_lua = {
+    'local a',
+    '          = "test"',
+  }
+
   before_each(function()
     for k, _ in pairs(ft) do
       ft[k] = nil
@@ -16,20 +22,24 @@ describe('format module', function()
     vim.cmd('silent! write! /tmp/fmt_spec_test.lua')
   end)
 
+  local function getlines()
+    return api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  end
+
+  local function setlines(lines)
+    api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  end
+
   it('can format with single formatter', function()
     ft('lua'):fmt({
       cmd = 'stylua',
       args = { '-' },
       stdin = true,
     })
-    api.nvim_buf_set_lines(bufnr, 0, -1, false, {
-      'local a',
-      '          = "test"',
-    })
-    require('guard.format').do_fmt(bufnr)
+    setlines(ill_lua)
+    gapi.fmt()
     vim.wait(500)
-    local line = api.nvim_buf_get_lines(bufnr, 0, -1, false)[1]
-    equal([[local a = 'test']], line)
+    same({ "local a = 'test'" }, getlines())
   end)
 
   it('can format with multiple formatters', function()
@@ -42,14 +52,10 @@ describe('format module', function()
       args = { '-s', ' ' },
       stdin = true,
     })
-    api.nvim_buf_set_lines(bufnr, 0, -1, false, {
-      'local a',
-      '          = "test"',
-    })
-    require('guard.format').do_fmt(bufnr)
+    setlines(ill_lua)
+    gapi.fmt()
     vim.wait(500)
-    local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    assert.are.same({ "'test'", '= a local ' }, lines)
+    same({ "'test'", '= a local ' }, getlines())
   end)
 
   it('can format with function', function()
@@ -58,14 +64,10 @@ describe('format module', function()
         return table.concat(vim.split(acc, '\n'), '') .. vim.inspect(range)
       end,
     })
-    api.nvim_buf_set_lines(bufnr, 0, -1, false, {
-      'local a',
-      '          = "test"',
-    })
-    require('guard.format').do_fmt(bufnr)
+    setlines(ill_lua)
+    gapi.fmt()
     vim.wait(500)
-    local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    assert.are.same({ 'local a          = "test"nil' }, lines)
+    same({ 'local a          = "test"nil' }, getlines())
   end)
 
   it('can format with dynamic formatters', function()
@@ -85,27 +87,50 @@ describe('format module', function()
       end
     end)
 
-    api.nvim_buf_set_lines(bufnr, 0, -1, false, {
-      'foo',
-      'bar',
-    })
-    require('guard.format').do_fmt(bufnr)
+    setlines({ 'foo', 'bar' })
+    gapi.fmt()
     vim.wait(500)
-    local lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local lines = getlines()
     assert.are.same({ 'def' }, lines)
 
     vim.g.some_flag_idk = true
 
-    require('guard.format').do_fmt(bufnr)
+    gapi.fmt()
     vim.wait(500)
-    lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    lines = getlines()
     assert.are.same({ 'abc' }, lines)
 
     vim.g.some_flag_idk = false
 
-    require('guard.format').do_fmt(bufnr)
+    gapi.fmt()
     vim.wait(500)
-    lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    lines = getlines()
     assert.are.same({ 'def' }, lines)
+  end)
+
+  it('can format on custom user events', function()
+    ft('lua'):fmt({
+      fn = function()
+        return 'abc'
+      end,
+      -- I don't know why anyone would do this but hey
+      events = { { name = 'ColorScheme', opt = { pattern = 'blue' } } },
+    })
+
+    setlines(ill_lua)
+
+    -- should have been overridden
+    vim.cmd('silent! write!')
+    vim.wait(500)
+    same(ill_lua, getlines())
+
+    -- did not match pattern
+    vim.cmd('colorscheme vim')
+    vim.wait(500)
+    same(ill_lua, getlines())
+
+    vim.cmd('colorscheme blue')
+    vim.wait(500)
+    same({ 'abc' }, getlines())
   end)
 end)

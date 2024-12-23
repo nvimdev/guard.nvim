@@ -140,8 +140,7 @@ local function do_fmt(buf)
       if config.fn then
         return config.fn(buf, range, acc)
       else
-        config.cwd = config.cwd or cwd
-        local result = spawn.transform(util.get_cmd(config, fname), config, acc)
+        local result = spawn.transform(util.get_cmd(config, fname), cwd, config, acc)
         if type(result) == 'table' then
           -- indicates error
           errno = result

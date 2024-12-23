@@ -24,6 +24,7 @@ A tool is specified as follows:
 
     -- special
     parse            -- function: linter only, parses linter output to neovim diagnostic
+    events           -- { name: string, opt: autocmd options }: override default events, for formatter autocmds only the first one is used (passed in from `:fmt`)
 }
 ```
 

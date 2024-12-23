@@ -1,68 +1,91 @@
 local api = vim.api
-local ft_handler = require('guard.filetype')
 local util = require('guard.util')
-local ns = api.nvim_create_namespace('Guard')
 local spawn = require('guard.spawn')
 local vd = vim.diagnostic
-local M = {}
+local ft = require('guard.filetype')
 
+local M = {}
+local ns = api.nvim_create_namespace('Guard')
+local custom_ns = {}
+
+---@param buf number?
 function M.do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
   ---@type LintConfig[]
-  local linters, generic_linters
 
-  local generic_config = ft_handler['*']
-  local buf_config = ft_handler[vim.bo[buf].filetype]
+  local linters = util.eval(
+    vim.tbl_map(
+      util.toolcopy,
+      (vim.tbl_get(ft, vim.bo[buf].filetype, 'linter') or vim.tbl_get(ft, '*', 'linter'))
+    )
+  )
 
-  if generic_config and generic_config.linter then
-    generic_linters = generic_config.linter
-  end
-
-  if not buf_config or not buf_config.linter then
-    -- pre: do_lint only triggers inside autocmds, which ensures generic_config and buf_config are not *both* nil
-    linters = generic_linters
-  else
-    -- buf_config exists, we want both
-    linters = vim.tbl_map(util.toolcopy, buf_config.linter)
-    if generic_linters then
-      vim.list_extend(linters, generic_linters)
-    end
-  end
-
-  linters = util.eval(linters)
-
-  -- check run condition
-  local fname, cwd = util.buf_get_info(buf)
   linters = vim.tbl_filter(function(config)
     return util.should_run(config, buf)
   end, linters)
 
-  local prev_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
-  vd.reset(ns, buf)
-
   coroutine.resume(coroutine.create(function()
-    local results = {}
-
-    for _, lint in ipairs(linters) do
-      local data
-      if lint.cmd then
-        lint.cwd = lint.cwd or cwd
-        data = spawn.transform(util.get_cmd(lint, fname), lint, prev_lines)
-      else
-        data = lint.fn(prev_lines)
-      end
-      if #data > 0 then
-        vim.list_extend(results, lint.parse(data, buf))
-      end
-    end
-
-    vim.schedule(function()
-      if not api.nvim_buf_is_valid(buf) or not results or #results == 0 then
-        return
-      end
-      vd.set(ns, buf, results)
+    vd.reset(ns, buf)
+    vim.iter(linters):each(function(linter)
+      M.do_lint_single(buf, linter)
     end)
   end))
+end
+
+---@param buf number
+---@param config LintConfig
+function M.do_lint_single(buf, config)
+  local lint = util.eval1(config)
+  local custom = config.events ~= nil
+
+  -- check run condition
+  local fname, cwd = util.buf_get_info(buf)
+  if not util.should_run(lint, buf) then
+    return
+  end
+
+  local prev_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
+  if custom and not custom_ns[config] then
+    custom_ns[config] = api.nvim_create_namespace(tostring(config))
+  end
+  local cns = custom and custom_ns[config] or ns
+
+  if custom then
+    vd.reset(cns, buf)
+  end
+
+  local results = {}
+  ---@type string
+  local data
+
+  if lint.cmd then
+    local out = spawn.transform(util.get_cmd(lint, fname), cwd, lint, prev_lines)
+
+    -- TODO: unify this error handling logic with formatter
+    if type(out) == 'table' then
+      -- indicates error
+      vim.notify(
+        '[Guard]: ' .. ('%s exited with code %d\n%s'):format(out.cmd, out.code, out.stderr),
+        vim.log.levels.WARN
+      )
+      data = ''
+    end
+  else
+    data = lint.fn(prev_lines)
+  end
+
+  if #data > 0 then
+    results = lint.parse(data, buf)
+  end
+
+  vim.schedule(function()
+    if api.nvim_buf_is_valid(buf) and #results ~= 0 then
+      if not custom then
+        vim.list_extend(results, vd.get(buf))
+      end
+      vd.set(cns, buf, results)
+    end
+  end)
 end
 
 ---@param buf number
