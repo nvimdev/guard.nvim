@@ -208,7 +208,7 @@ function M.maybe_default_to_lsp(config, ft, buf)
         pattern = ft,
       }) == 0
     then
-      M.fmt_on_ft(ft, config.formatter)
+      M.fmt_on_filetype(ft, config.formatter)
     end
     M.try_attach_fmt_to_buf(buf)
   end
