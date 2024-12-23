@@ -266,12 +266,12 @@ function M.lint_attach_custom(ft, config)
   -- we don't know what autocmds are passed in, so these are attached asap
   iter(config.events):each(function(event)
     table.insert(
-      M.user_fmt_autocmds[ft],
+      M.user_lint_autocmds[ft],
       api.nvim_create_autocmd(
         event.name,
         maybe_fill_auoption(event.opt or {}, function(opt)
           coroutine.resume(coroutine.create(function()
-            require('guard.lint').do_lint_single(opt.buf, config, true)
+            require('guard.lint').do_lint_single(opt.buf, config)
           end))
         end)
       )

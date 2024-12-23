@@ -24,16 +24,16 @@ function M.do_lint(buf)
   coroutine.resume(coroutine.create(function()
     vd.reset(ns, buf)
     vim.iter(linters):each(function(linter)
-      M.do_lint_single(buf, linter, false)
+      M.do_lint_single(buf, linter)
     end)
   end))
 end
 
 ---@param buf number
 ---@param config LintConfig
----@param custom boolean
-function M.do_lint_single(buf, config, custom)
+function M.do_lint_single(buf, config)
   local lint = util.eval1(config)
+  local custom = config.events ~= nil
 
   -- check run condition
   local fname, cwd = util.buf_get_info(buf)
@@ -43,9 +43,10 @@ function M.do_lint_single(buf, config, custom)
 
   local prev_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
   if custom and not custom_ns[config] then
-    custom_ns[config] = custom_ns[config] or api.nvim_create_namespace('')
+    custom_ns[config] = api.nvim_create_namespace(tostring(config))
   end
   local cns = custom and custom_ns[config] or ns
+
   if custom then
     vd.reset(cns, buf)
   end

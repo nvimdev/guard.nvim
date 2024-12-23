@@ -5,6 +5,7 @@ local ft = require('guard.filetype')
 local lint = require('guard.lint')
 local gapi = require('guard.api')
 local ns = api.nvim_get_namespaces()['Guard']
+local vd = vim.diagnostic
 
 describe('lint module', function()
   local bufnr
@@ -13,7 +14,10 @@ describe('lint module', function()
       ft[k] = nil
     end
 
-    vim.diagnostic.reset(ns, bufnr)
+    vd.reset(ns, bufnr)
+    vim.iter(api.nvim_get_autocmds({ group = 'Guard' })):each(function(it)
+      api.nvim_del_autocmd(it.id)
+    end)
     bufnr = api.nvim_create_buf(true, false)
     vim.bo[bufnr].filetype = 'lua'
     api.nvim_set_current_buf(bufnr)
@@ -67,6 +71,27 @@ describe('lint module', function()
     }),
   }
 
+  local mock_linter = {
+    fn = function()
+      return 'some stuff'
+    end,
+    parse = function()
+      return {
+        {
+          bufnr = bufnr,
+          col = 1,
+          end_col = 1,
+          lnum = 1,
+          end_lnum = 1,
+          message = 'foo',
+          namespace = 42,
+          severity = vd.severity.HINT,
+          source = 'bar',
+        },
+      }
+    end,
+  }
+
   it('can lint with single linter', function()
     if true then
       return
@@ -88,7 +113,7 @@ describe('lint module', function()
         namespace = ns,
         severity = 2,
       },
-    }, vim.diagnostic.get())
+    }, vd.get())
   end)
 
   it('can lint with multiple linters', function()
@@ -123,30 +148,11 @@ describe('lint module', function()
         severity = 2,
         source = 'mock_linter_json',
       },
-    }, vim.diagnostic.get())
+    }, vd.get())
   end)
 
   it('can define a linter for all filetypes', function()
-    ft('*'):lint({
-      fn = function()
-        return 'some stuff'
-      end,
-      parse = function()
-        return {
-          {
-            bufnr = bufnr,
-            col = 1,
-            end_col = 1,
-            lnum = 1,
-            end_lnum = 1,
-            message = 'foo',
-            namespace = 42,
-            severity = vim.diagnostic.severity.HINT,
-            source = 'bar',
-          },
-        }
-      end,
-    })
+    ft('*'):lint(mock_linter)
 
     gapi.lint()
     vim.wait(100)
@@ -159,10 +165,44 @@ describe('lint module', function()
         lnum = 1,
         end_lnum = 1,
         message = 'foo',
-        namespace = api.nvim_get_namespaces().Guard,
-        severity = vim.diagnostic.severity.HINT,
+        namespace = ns,
+        severity = vd.severity.HINT,
         source = 'bar',
       },
-    }, vim.diagnostic.get())
+    }, vd.get())
+  end)
+
+  it('can lint on custom user events', function()
+    local mock_linter_custom = vim.deepcopy(mock_linter, true)
+    mock_linter_custom.events = {
+      { name = 'ColorScheme', opt = { pattern = 'blue' } },
+    }
+    ft('*'):lint(mock_linter_custom)
+
+    -- should have been overridden
+    vim.cmd('silent! write!')
+    vim.wait(100)
+    same({}, vd.get())
+
+    -- did not match pattern
+    vim.cmd('colorscheme vim')
+    vim.wait(100)
+    same({}, vd.get())
+
+    vim.cmd('colorscheme blue')
+    vim.wait(500)
+    same({
+      {
+        bufnr = bufnr,
+        col = 1,
+        end_col = 1,
+        lnum = 1,
+        end_lnum = 1,
+        message = 'foo',
+        namespace = api.nvim_get_namespaces()[tostring(mock_linter_custom)],
+        severity = vd.severity.HINT,
+        source = 'bar',
+      },
+    }, vd.get())
   end)
 end)
