@@ -105,7 +105,7 @@ local function box(ft)
         -- use user's custom events
         events.lint_attach_custom(it, config)
       else
-        events.lint_on_ft(it, evs)
+        events.lint_on_filetype(it, evs)
         events.lint_attach_to_existing(it, evs)
       end
     end
