@@ -78,7 +78,7 @@ local function box(ft)
         -- use user's custom events
         events.fmt_attach_custom(it, config.events)
       else
-        events.fmt_on_ft(it, self.formatter)
+        events.fmt_on_filetype(it, self.formatter)
         events.fmt_attach_to_existing(it)
       end
     end
