@@ -234,7 +234,7 @@ end
 
 ---@param ft string
 ---@param events string[]
-function M.lint_on_ft(ft, events)
+function M.lint_on_filetype(ft, events)
   iter(require('guard.filetype')[ft].linter):any(function(config)
     if config.cmd and vim.fn.executable(config.cmd) ~= 1 then
       report_error(config.cmd .. ' not executable')
