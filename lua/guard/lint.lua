@@ -1,9 +1,11 @@
 local api = vim.api
 local util = require('guard.util')
-local ns = api.nvim_create_namespace('Guard')
 local spawn = require('guard.spawn')
 local vd = vim.diagnostic
+
 local M = {}
+local ns = api.nvim_create_namespace('Guard')
+local custom_ns = {}
 
 ---@param buf number?
 function M.do_lint(buf)
@@ -15,57 +17,72 @@ function M.do_lint(buf)
     vim.tbl_map(util.toolcopy, (ft_handler[vim.bo[buf].filetype] or ft_handler['*'] or {}).linter)
   )
 
-  -- check run condition
-  local fname, cwd = util.buf_get_info(buf)
   linters = vim.tbl_filter(function(config)
     return util.should_run(config, buf)
   end, linters)
 
-  local prev_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
-  vd.reset(ns, buf)
-
   coroutine.resume(coroutine.create(function()
-    local results = {}
-
-    for _, lint in ipairs(linters) do
-      ---@type string
-      local data
-
-      if lint.cmd then
-        lint.cwd = lint.cwd or cwd
-        local out = spawn.transform(util.get_cmd(lint, fname), lint, prev_lines)
-
-        -- TODO: unify this error handling logic with formatter
-        if type(out) == 'table' then
-          -- indicates error
-          vim.notify(
-            '[Guard]: ' .. ('%s exited with code %d\n%s'):format(out.cmd, out.code, out.stderr),
-            vim.log.levels.WARN
-          )
-          data = ''
-        end
-      else
-        data = lint.fn(prev_lines)
-      end
-
-      if #data > 0 then
-        vim.list_extend(results, lint.parse(data, buf))
-      end
-    end
-
-    vim.schedule(function()
-      if not api.nvim_buf_is_valid(buf) or #results == 0 then
-        return
-      end
-      vd.set(ns, buf, results)
+    vd.reset(ns, buf)
+    vim.iter(linters):each(function(linter)
+      M.do_lint_single(buf, linter, false)
     end)
   end))
 end
 
 ---@param buf number
 ---@param config LintConfig
-local function do_lint_single(buf, config)
-  -- TODO
+---@param custom boolean
+function M.do_lint_single(buf, config, custom)
+  local lint = util.eval1(config)
+
+  -- check run condition
+  local fname, cwd = util.buf_get_info(buf)
+  if not util.should_run(lint, buf) then
+    return
+  end
+
+  local prev_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
+  if custom and not custom_ns[config] then
+    custom_ns[config] = custom_ns[config] or api.nvim_create_namespace('')
+  end
+  local cns = custom and custom_ns[config] or ns
+  if custom then
+    vd.reset(cns, buf)
+  end
+
+  local results = {}
+
+  ---@type string
+  local data
+
+  if lint.cmd then
+    local out = spawn.transform(util.get_cmd(lint, fname), cwd, lint, prev_lines)
+
+    -- TODO: unify this error handling logic with formatter
+    if type(out) == 'table' then
+      -- indicates error
+      vim.notify(
+        '[Guard]: ' .. ('%s exited with code %d\n%s'):format(out.cmd, out.code, out.stderr),
+        vim.log.levels.WARN
+      )
+      data = ''
+    end
+  else
+    data = lint.fn(prev_lines)
+  end
+
+  if #data > 0 then
+    results = lint.parse(data, buf)
+  end
+
+  vim.schedule(function()
+    if api.nvim_buf_is_valid(buf) and #results ~= 0 then
+      if not custom then
+        vim.list_extend(results, vd.get(buf))
+      end
+      vd.set(cns, buf, results)
+    end
+  end)
 end
 
 ---@param buf number

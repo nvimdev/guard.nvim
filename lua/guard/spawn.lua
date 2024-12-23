@@ -1,11 +1,15 @@
 local M = {}
 
--- @return table | string
-function M.transform(cmd, config, lines)
+---@param cmd string[]
+---@param cwd string
+---@param config FmtConfigTable|LintConfigTable
+---@param lines string|string[]
+---@return table | string
+function M.transform(cmd, cwd, config, lines)
   local co = assert(coroutine.running())
   local handle = vim.system(cmd, {
     stdin = true,
-    cwd = config.cwd,
+    cwd = cwd,
     env = config.env,
     timeout = config.timeout,
   }, function(result)

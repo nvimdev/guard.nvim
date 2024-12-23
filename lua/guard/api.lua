@@ -23,7 +23,7 @@ function M.enable_fmt(bufnr)
   local ft = vim.bo[buf].ft
   local head = vim.tbl_get(ft_handler, ft, 'formatter', 1)
   if type(head) == 'table' and type(head.events) == 'table' then
-    events.attach_custom(ft, head.events)
+    events.fmt_attach_custom(ft, head.events)
   else
     events.try_attach_fmt_to_buf(buf)
   end
@@ -45,7 +45,11 @@ function M.enable_lint(bufnr)
   local buf = bufnr or api.nvim_get_current_buf()
   local ft = require('guard.filetype')[vim.bo[buf].ft] or {}
   if ft.linter and #ft.linter > 0 then
-    events.try_attach_lint_to_buf(buf, require('guard.util').linter_events(ft.linter[1]), ft)
+    events.try_attach_lint_to_buf(
+      buf,
+      require('guard.util').linter_events(ft.linter[1]),
+      vim.bo[buf].ft
+    )
   end
 end
 

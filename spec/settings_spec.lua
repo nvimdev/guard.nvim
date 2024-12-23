@@ -8,6 +8,10 @@ local gapi = require('guard.api')
 
 describe('settings', function()
   local bufnr
+  local ill_lua = {
+    'local a',
+    '          =42',
+  }
   before_each(function()
     if bufnr then
       vim.cmd('bdelete! ' .. bufnr)
@@ -31,10 +35,7 @@ describe('settings', function()
       stdin = true,
     })
 
-    api.nvim_buf_set_lines(bufnr, 0, -1, false, {
-      'local a',
-      '          =42',
-    })
+    api.nvim_buf_set_lines(bufnr, 0, -1, false, ill_lua)
     vim.cmd('silent! write')
     vim.wait(500)
     same({
@@ -50,10 +51,7 @@ describe('settings', function()
       stdin = true,
     })
 
-    api.nvim_buf_set_lines(bufnr, 0, -1, false, {
-      'local a',
-      '          =42',
-    })
+    api.nvim_buf_set_lines(bufnr, 0, -1, false, ill_lua)
     same(true, util.getopt('fmt_on_save'))
     vim.cmd('silent! write')
     vim.wait(500)
@@ -64,16 +62,10 @@ describe('settings', function()
     vim.g.guard_config = { fmt_on_save = false }
 
     same(false, util.getopt('fmt_on_save'))
-    api.nvim_buf_set_lines(bufnr, 0, -1, false, {
-      'local a',
-      '          =42',
-    })
+    api.nvim_buf_set_lines(bufnr, 0, -1, false, ill_lua)
     vim.cmd('silent! write')
     vim.wait(500)
-    same({
-      'local a',
-      '          =42',
-    }, api.nvim_buf_get_lines(bufnr, 0, -1, false))
+    same(ill_lua, api.nvim_buf_get_lines(bufnr, 0, -1, false))
   end)
 
   it('can override save_on_fmt before setting up formatter', function()
@@ -87,10 +79,7 @@ describe('settings', function()
       stdin = true,
     })
 
-    api.nvim_buf_set_lines(bufnr, 0, -1, false, {
-      'local a',
-      '          =42',
-    })
+    api.nvim_buf_set_lines(bufnr, 0, -1, false, ill_lua)
     vim.cmd('silent! write')
     vim.wait(100)
     gapi.fmt()
@@ -105,10 +94,7 @@ describe('settings', function()
       stdin = true,
     })
 
-    api.nvim_buf_set_lines(bufnr, 0, -1, false, {
-      'local a',
-      '          =42',
-    })
+    api.nvim_buf_set_lines(bufnr, 0, -1, false, ill_lua)
     same(true, util.getopt('save_on_fmt'))
     gapi.fmt()
     vim.wait(500)
@@ -127,10 +113,7 @@ describe('settings', function()
     vim.wait(500)
     same(true, vim.bo[bufnr].modified)
 
-    api.nvim_buf_set_lines(bufnr, 0, -1, false, {
-      'local a',
-      '      =42',
-    })
+    api.nvim_buf_set_lines(bufnr, 0, -1, false, ill_lua)
     gapi.fmt()
     vim.wait(500)
     same(true, vim.bo[bufnr].modified)

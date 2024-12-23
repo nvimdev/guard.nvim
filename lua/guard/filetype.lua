@@ -103,7 +103,7 @@ local function box(ft)
 
       if type(config) == 'table' and config.events then
         -- use user's custom events
-        events.lint_attach_custom(it, config.events)
+        events.lint_attach_custom(it, config)
       else
         events.lint_watch_ft(it, evs)
       end

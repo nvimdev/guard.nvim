@@ -130,7 +130,7 @@ function M.should_run(config, buf)
   return true
 end
 
----@return string, string?
+---@return string, string
 function M.buf_get_info(buf)
   local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
   ---@diagnostic disable-next-line: undefined-field
@@ -208,18 +208,18 @@ function M.open_info_win()
   api.nvim_buf_set_keymap(buf, 'n', 'q', '<cmd>quit!<cr>', {})
 end
 
+function M.eval1(x)
+  if type(x) == 'function' then
+    return x()
+  else
+    return x
+  end
+end
+
 ---@param xs (FmtConfig | LintConfig)[]
 ---@return (FmtConfigTable | LintConfigTable)[]
 function M.eval(xs)
-  return xs
-      and vim.tbl_map(function(x)
-        if type(x) == 'function' then
-          return x()
-        else
-          return x
-        end
-      end, xs)
-    or {}
+  return xs and vim.tbl_map(M.eval1, xs) or {}
 end
 
 ---@param config LintConfig
