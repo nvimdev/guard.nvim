@@ -172,7 +172,7 @@ end
 
 ---@param ft string
 ---@param formatters FmtConfig[]
-function M.fmt_on_ft(ft, formatters)
+function M.fmt_on_filetype(ft, formatters)
   -- check if all cmds executable before registering formatter
   iter(formatters):any(function(config)
     if type(config) == 'table' and config.cmd and vim.fn.executable(config.cmd) ~= 1 then
