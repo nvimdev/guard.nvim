@@ -57,6 +57,8 @@ vim.g.guard_config = {
     lsp_as_default_formatter = false,
     -- whether or not to save the buffer after formatting
     save_on_fmt = true,
+    -- automatic linting
+    auto_lint = true
 }
 ```
 

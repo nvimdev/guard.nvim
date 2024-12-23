@@ -5,12 +5,31 @@ local same = assert.are.same
 local ft = require('guard.filetype')
 local util = require('guard.util')
 local gapi = require('guard.api')
+local lint = require('guard.lint')
+local ns = api.nvim_get_namespaces()['Guard']
+local vd = vim.diagnostic
 
 describe('settings', function()
   local bufnr
   local ill_lua = {
     'local a',
     '          =42',
+  }
+  local mock_linter_regex = {
+    fn = function()
+      return '/tmp/lint_spec_test.lua:1:1: warning: Very important error message [error code 114514]'
+    end,
+    parse = lint.from_regex({
+      source = 'mock_linter_regex',
+      regex = ':(%d+):(%d+):%s+(%w+):%s+(.-)%s+%[(.-)%]',
+      groups = { 'lnum', 'col', 'severity', 'message', 'code' },
+      offset = 0,
+      severities = {
+        information = lint.severities.info,
+        hint = lint.severities.info,
+        note = lint.severities.style,
+      },
+    }),
   }
   before_each(function()
     if bufnr then
@@ -22,6 +41,9 @@ describe('settings', function()
     vim.cmd('noautocmd silent! write! /tmp/settings_spec_test.lua')
     vim.cmd('silent! edit!')
     vim.g.guard_config = nil
+    vim.iter(api.nvim_get_autocmds({ group = 'Guard' })):each(function(it)
+      api.nvim_del_autocmd(it.id)
+    end)
   end)
 
   it('can override fmt_on_save before setting up formatter', function()
@@ -117,5 +139,33 @@ describe('settings', function()
     gapi.fmt()
     vim.wait(500)
     same(true, vim.bo[bufnr].modified)
+  end)
+
+  it('can change auto_lint option to control lint behaviour', function()
+    ft('*'):lint(mock_linter_regex)
+
+    same(true, util.getopt('auto_lint'))
+    vim.cmd('silent! write!')
+    vim.wait(500)
+    same({
+      {
+        source = 'mock_linter_regex',
+        bufnr = bufnr,
+        col = 1,
+        end_col = 1,
+        lnum = 1,
+        end_lnum = 1,
+        message = 'Very important error message[error code 114514]',
+        namespace = ns,
+        severity = 2,
+      },
+    }, vd.get())
+
+    vim.g.guard_config = { auto_lint = false }
+    same(false, util.getopt('auto_lint'))
+    vd.reset(ns)
+    vim.cmd('silent! write!')
+    vim.wait(500)
+    same({}, vd.get())
   end)
 end)

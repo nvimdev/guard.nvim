@@ -154,10 +154,18 @@ end
 
 ---@param ft string
 function M.fmt_attach_to_existing(ft)
-  local bufs = api.nvim_list_bufs()
-  for _, buf in ipairs(bufs) do
-    if vim.bo[buf].ft == ft then
+  for _, buf in ipairs(api.nvim_list_bufs()) do
+    if ft == '*' or vim.bo[buf].ft == ft then
       M.try_attach_fmt_to_buf(buf)
+    end
+  end
+end
+
+---@param ft string
+function M.lint_attach_to_existing(ft, events)
+  for _, buf in ipairs(api.nvim_list_bufs()) do
+    if ft == '*' or vim.bo[buf].ft == ft then
+      M.try_attach_lint_to_buf(buf, events, ft)
     end
   end
 end
@@ -224,6 +232,8 @@ function M.create_lspattach_autocmd()
   })
 end
 
+---@param ft string
+---@param events string[]
 function M.lint_watch_ft(ft, events)
   iter(require('guard.filetype')[ft].linter):any(function(config)
     if config.cmd and vim.fn.executable(config.cmd) ~= 1 then

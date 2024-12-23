@@ -3,10 +3,10 @@ require('plugin.guard')
 vim.opt_global.swapfile = false
 local api = vim.api
 local same = assert.are.same
-local ft_handler = require('guard.filetype')
+local ft = require('guard.filetype')
 
 describe('commands', function()
-  ft_handler('lua'):fmt({
+  ft('lua'):fmt({
     cmd = 'stylua',
     args = { '-' },
     stdin = true,
@@ -72,7 +72,7 @@ describe('commands', function()
       api.nvim_del_autocmd(au.id)
     end)
 
-    ft_handler('lua'):fmt({
+    ft('lua'):fmt({
       fn = function()
         return 'test'
       end,

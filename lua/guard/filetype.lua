@@ -106,6 +106,7 @@ local function box(ft)
         events.lint_attach_custom(it, config)
       else
         events.lint_watch_ft(it, evs)
+        events.lint_attach_to_existing(it, evs)
       end
     end
     return self
