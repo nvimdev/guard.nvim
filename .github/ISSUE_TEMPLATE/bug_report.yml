@@ -1,21 +1,35 @@
-# https://github.com/mrcjkb/haskell-tools.nvim/blob/master/.github/ISSUE_TEMPLATE/bug_report.yml
+# Based on https://github.com/mrcjkb/haskell-tools.nvim/blob/master/.github/ISSUE_TEMPLATE/bug_report.yml
 name: Bug Report
 description: Report a problem with guard.nvim
 labels: [bug]
 body:
-
   - type: input
     attributes:
       label: "Neovim version (nvim -v)"
       placeholder: "v0.10.0"
     validations:
       required: true
+
   - type: input
     attributes:
       label: "Operating system/version"
       placeholder: "Fedora Linux 40"
     validations:
       required: true
+
+  - type: textarea
+    attributes:
+      label: "Expected behaviour"
+      description: "Describe the behaviour you expect."
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: "Actual behaviour"
+    validations:
+      required: true
+
   - type: textarea
     attributes:
       label: "Output of :checkhealth guard"
@@ -24,14 +38,7 @@ body:
         Perhaps the tools are not in your $PATH?
     validations:
       required: true
-  - type: textarea
-    attributes:
-      label: "Output of :Guard info"
-      render: "markdown"
-      placeholder: |
-        Are the autocmds attached?
-    validations:
-      required: true
+
   - type: textarea
     attributes:
       label: "How to reproduce the issue"
@@ -43,6 +50,7 @@ body:
         nvim --clean -u /tmp/repro.lua
     validations:
       required: true
+
   - type: checkboxes
     attributes:
       label: Are you sure this is a min repro?
@@ -51,14 +59,3 @@ body:
           required: true
         - label: I can confirm that my reproduction step only involves `vim.opt.rtp` and configuration themselves
           required: true
-  - type: textarea
-    attributes:
-      label: "Expected behaviour"
-      description: "Describe the behaviour you expect."
-    validations:
-      required: true
-  - type: textarea
-    attributes:
-      label: "Actual behaviour"
-    validations:
-      required: true
