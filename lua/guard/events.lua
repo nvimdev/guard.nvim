@@ -51,17 +51,19 @@ local function maybe_fill_auoption(opt, cb)
 end
 
 ---@param bufnr number
----@return number[]
+---@return vim.api.keyset.get_autocmds.ret[]
 function M.get_format_autocmds(bufnr)
   if not api.nvim_buf_is_valid(bufnr) then
     return {}
   end
-  return M.user_fmt_autocmds[vim.bo[bufnr].ft]
-    or iter(api.nvim_get_autocmds({ group = M.group, event = 'BufWritePre', buffer = bufnr })):map(
-      function(it)
-        return it.id
-      end
-    )
+  local caus = M.user_fmt_autocmds[vim.bo[bufnr].ft]
+  return caus
+      and iter(api.nvim_get_autocmds({ group = M.group }))
+        :filter(function(it)
+          return vim.tbl_contains(caus, it.id)
+        end)
+        :totable()
+    or api.nvim_get_autocmds({ group = M.group, event = 'BufWritePre', buffer = bufnr })
 end
 
 ---@param bufnr number
