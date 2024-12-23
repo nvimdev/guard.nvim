@@ -23,6 +23,9 @@ describe('lint module', function()
     api.nvim_set_current_buf(bufnr)
     vim.cmd('silent! write! /tmp/lint_spec_test.lua')
   end)
+  teardown(function()
+    vd.reset()
+  end)
 
   local mock_linter_regex = {
     fn = function()
