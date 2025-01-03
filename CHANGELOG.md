@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/nvimdev/guard.nvim/compare/v2.0.0...v2.1.0) (2025-01-03)
+
+
+### Features
+
+* best effort indent preservation ([#186](https://github.com/nvimdev/guard.nvim/issues/186)) ([7a4fc3a](https://github.com/nvimdev/guard.nvim/commit/7a4fc3a5b9b2e8bca80a17a4c4e3737734a1a6c1))
+
 ## [2.0.0](https://github.com/nvimdev/guard.nvim/compare/v1.0.6...v2.0.0) (2024-12-23)
 
 
