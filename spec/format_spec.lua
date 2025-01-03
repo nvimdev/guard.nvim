@@ -1,4 +1,5 @@
 ---@diagnostic disable: undefined-field, undefined-global
+require('plugin.guard')
 local api = vim.api
 local same = assert.are.same
 local ft = require('guard.filetype')
@@ -142,11 +143,13 @@ describe('format module', function()
     })
     setlines({
       'if foo then',
-      ' bar  (  )  ',
+      '  bar  (  )  ',
       'end',
     })
     vim.cmd('2')
-    vim.cmd([[silent! norm V:GuardFmt <cr>]])
-    same({ 'if foo then', ' bar  (  )  ', 'end' }, getlines())
+    api.nvim_input('V')
+    vim.cmd('Guard fmt')
+    vim.wait(500)
+    same({ 'if foo then', '  bar()', 'end' }, getlines())
   end)
 end)
