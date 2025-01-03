@@ -133,4 +133,20 @@ describe('format module', function()
     vim.wait(500)
     same({ 'abc' }, getlines())
   end)
+
+  it('tries its best to preserve indent', function()
+    ft('lua'):fmt({
+      cmd = 'stylua',
+      args = { '-' },
+      stdin = true,
+    })
+    setlines({
+      'if foo then',
+      ' bar  (  )  ',
+      'end',
+    })
+    vim.cmd('2')
+    vim.cmd([[silent! norm V:GuardFmt <cr>]])
+    same({ 'if foo then', ' bar  (  )  ', 'end' }, getlines())
+  end)
 end)
