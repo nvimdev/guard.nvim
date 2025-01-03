@@ -1,4 +1,5 @@
 ---@diagnostic disable: undefined-field, undefined-global
+require('plugin.guard')
 local api = vim.api
 local same = assert.are.same
 local ft = require('guard.filetype')
@@ -132,5 +133,23 @@ describe('format module', function()
     vim.cmd('colorscheme blue')
     vim.wait(500)
     same({ 'abc' }, getlines())
+  end)
+
+  it('tries its best to preserve indent', function()
+    ft('lua'):fmt({
+      cmd = 'stylua',
+      args = { '-' },
+      stdin = true,
+    })
+    setlines({
+      'if foo then',
+      '  bar  (  )  ',
+      'end',
+    })
+    vim.cmd('2')
+    api.nvim_input('V')
+    vim.cmd('Guard fmt')
+    vim.wait(500)
+    same({ 'if foo then', '  bar()', 'end' }, getlines())
   end)
 end)
