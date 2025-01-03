@@ -19,7 +19,7 @@ local function restore_views(views)
   end
 end
 
-local function update_buffer(bufnr, prev_lines, new_lines, srow, erow)
+local function update_buffer(bufnr, prev_lines, new_lines, srow, erow, old_indent)
   if not new_lines or #new_lines == 0 then
     return
   end
@@ -35,6 +35,9 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow, erow)
     api.nvim_buf_set_lines(bufnr, srow, erow, false, new_lines)
     if util.getopt('save_on_fmt') then
       api.nvim_command('silent! noautocmd write!')
+    end
+    if old_indent then
+      vim.cmd(('silent %d,%dleft'):format(srow + 1, erow))
     end
     restore_views(views)
   end
@@ -65,6 +68,13 @@ local function do_fmt(buf)
     range = util.range_from_selection(buf, mode)
     srow = range.start[1] - 1
     erow = range['end'][1]
+  end
+
+  -- best effort indent preserving
+  ---@type number?
+  local old_indent
+  if mode == 'V' then
+    old_indent = vim.fn.indent(srow + 1)
   end
 
   -- init environment
@@ -176,7 +186,7 @@ local function do_fmt(buf)
         fail('buffer no longer valid')
         return
       end
-      update_buffer(buf, prev_lines, new_lines, srow, erow)
+      update_buffer(buf, prev_lines, new_lines, srow, erow, old_indent)
       coroutine.resume(co)
     end)
 
