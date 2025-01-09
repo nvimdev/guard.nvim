@@ -175,22 +175,48 @@ end
 ---@param ft string
 ---@param formatters FmtConfig[]
 function M.fmt_on_filetype(ft, formatters)
-  -- check if all cmds executable before registering formatter
-  iter(formatters):any(function(config)
-    if type(config) == 'table' and config.cmd and vim.fn.executable(config.cmd) ~= 1 then
-      report_error(config.cmd .. ' not executable')
-      return false
-    end
-    return true
-  end)
+  -- safely check do we need?
+  if #formatters == 0 then
+    return
+  end
 
   au('FileType', {
     group = M.group,
     pattern = ft,
     callback = function(args)
-      M.try_attach_fmt_to_buf(args.buf)
+      coroutine.resume(coroutine.create(function()
+        local co = assert(coroutine.running())
+        local it = iter(formatters)
+        local ok = true
+        while true do
+          local config = it:next()
+          if not config then
+            break
+          end
+          if type(config) == 'table' and config.cmd then
+            vim.uv.fs_stat(vim.fn.exepath(config.cmd), function(err, stat)
+              if err or not stat or stat.type ~= 'file' then
+                ok = false
+              end
+              coroutine.resume(co)
+            end)
+            coroutine.yield()
+            if not ok then
+              vim.schedule(function()
+                report_error(('%s not executable'):format(config.cmd))
+                api.nvim_del_autocmd(args.id)
+              end)
+              return
+            end
+          end
+        end
+
+        vim.schedule(function()
+          M.try_attach_fmt_to_buf(args.buf)
+        end)
+      end))
     end,
-    desc = 'guard',
+    desc = '[Guard] register BufWritePre for auto format when save',
   })
 end
 
