@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/nvimdev/guard.nvim/compare/v2.1.0...v2.1.1) (2025-01-13)
+
+
+### Bug Fixes
+
+* **api:** disable-fmt should set cache to nil ([eb9c55b](https://github.com/nvimdev/guard.nvim/commit/eb9c55b3771fa609a8fb480fbb446b646cdf62fa))
+
 ## [2.1.0](https://github.com/nvimdev/guard.nvim/compare/v2.0.0...v2.1.0) (2025-01-03)
 
 
