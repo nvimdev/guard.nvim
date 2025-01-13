@@ -36,7 +36,7 @@ function M.disable_fmt(bufnr)
   vim.iter(events.get_format_autocmds(buf)):each(function(it)
     api.nvim_del_autocmd(it.id)
   end)
-  events.user_fmt_autocmds[vim.bo[buf].ft] = {}
+  events.user_fmt_autocmds[vim.bo[buf].ft] = nil
 end
 
 ---Enable lint for bufnr or current buffer
