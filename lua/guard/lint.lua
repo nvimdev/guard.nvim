@@ -69,6 +69,8 @@ function M.do_lint_single(buf, config)
         vim.log.levels.WARN
       )
       data = ''
+    else
+      data = out
     end
   else
     data = lint.fn(prev_lines)
