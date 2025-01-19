@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.2](https://github.com/nvimdev/guard.nvim/compare/v2.1.1...v2.1.2) (2025-01-19)
+
+
+### Bug Fixes
+
+* **lint:** handle linter output correctly ([#192](https://github.com/nvimdev/guard.nvim/issues/192)) ([a125905](https://github.com/nvimdev/guard.nvim/commit/a1259051fa336f70f1040ef2aaf6015a7760d172))
+
 ## [2.1.1](https://github.com/nvimdev/guard.nvim/compare/v2.1.0...v2.1.1) (2025-01-13)
 
 
