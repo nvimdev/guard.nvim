@@ -3,30 +3,25 @@
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
 
-1. guard.nvim                                          |guard.nvim-guard.nvim|
-  - Features                                  |guard.nvim-guard.nvim-features|
-  - TLDR                                          |guard.nvim-guard.nvim-tldr|
-  - Usage                                        |guard.nvim-guard.nvim-usage|
-  - Further configuration        |guard.nvim-guard.nvim-further-configuration|
-2. Creating new configurations        |guard.nvim-creating-new-configurations|
+  - Features                                             |guard.nvim-features|
+  - TLDR                                                     |guard.nvim-tldr|
+  - Usage                                                   |guard.nvim-usage|
+  - Further configuration                   |guard.nvim-further-configuration|
+1. Creating new configurations        |guard.nvim-creating-new-configurations|
   - Examples: formatters|guard.nvim-creating-new-configurations-examples:-formatters|
   - Examples: linters|guard.nvim-creating-new-configurations-examples:-linters|
-3. Advanced tips                                    |guard.nvim-advanced-tips|
+2. Advanced tips                                    |guard.nvim-advanced-tips|
   - Special case formatting logic|guard.nvim-advanced-tips-special-case-formatting-logic|
   - Custom logic with linters|guard.nvim-advanced-tips-custom-logic-with-linters|
   - Take advantage of autocmd events|guard.nvim-advanced-tips-take-advantage-of-autocmd-events|
   - Dynamic formatters           |guard.nvim-advanced-tips-dynamic-formatters|
-4. Links                                                    |guard.nvim-links|
-
-==============================================================================
-1. guard.nvim                                          *guard.nvim-guard.nvim*
-
+3. Links                                                    |guard.nvim-links|
 <https://luarocks.org/modules/xiaoshihou514/guard.nvim>
 
 Async formatting and linting utility for neovim `0.10+`.
 
 
-FEATURES                                      *guard.nvim-guard.nvim-features*
+FEATURES                                                 *guard.nvim-features*
 
 - Async and blazingly fast
 - Builtin support for popular formatters and linters
@@ -34,7 +29,7 @@ FEATURES                                      *guard.nvim-guard.nvim-features*
 - Light-weight
 
 
-TLDR                                              *guard.nvim-guard.nvim-tldr*
+TLDR                                                         *guard.nvim-tldr*
 
 - Install with your favorite package manager
 
@@ -107,7 +102,7 @@ demo
 <
 
 
-USAGE                                            *guard.nvim-guard.nvim-usage*
+USAGE                                                       *guard.nvim-usage*
 
 Some presets can be configured via `vim.g.guard_config`
 
@@ -150,7 +145,7 @@ Here are all the `Guard` subcommands
    disable-lint  
   ------------------------------------------------------------------------
 
-FURTHER CONFIGURATION            *guard.nvim-guard.nvim-further-configuration*
+FURTHER CONFIGURATION                       *guard.nvim-further-configuration*
 
 You can easily create your own configuration that’s not in
 `guard-collection`, see CUSTOMIZE.md <./CUSTOMIZE.md>.
@@ -164,7 +159,7 @@ For more niche use cases, ADVANCED.md <./ADVANCED.md> demonstrates how to:
 
 
 ==============================================================================
-2. Creating new configurations        *guard.nvim-creating-new-configurations*
+1. Creating new configurations        *guard.nvim-creating-new-configurations*
 
 A tool is specified as follows:
 
@@ -432,7 +427,7 @@ Another example:
 
 
 ==============================================================================
-3. Advanced tips                                    *guard.nvim-advanced-tips*
+2. Advanced tips                                    *guard.nvim-advanced-tips*
 
 
 SPECIAL CASE FORMATTING LOGIC*guard.nvim-advanced-tips-special-case-formatting-logic*
@@ -734,7 +729,7 @@ input_, you can run `set sw=16` and the next time `clang-format` will give you
 a file that uses 16 spaces as indent (please do not try this at home :smile:).
 
 ==============================================================================
-4. Links                                                    *guard.nvim-links*
+3. Links                                                    *guard.nvim-links*
 
 1. *LuaRocks*: https://img.shields.io/luarocks/v/xiaoshihou514/guard.nvim?logo=lua&color=green
 2. *GitHub Actions Workflow Status*: https://img.shields.io/github/actions/workflow/status/nvimdev/guard.nvim/test.yml?label=tests
