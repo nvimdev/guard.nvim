@@ -1,31 +1,27 @@
-*guard.nvim.txt*          For NVIM v0.8.0         Last change: 2025 January 19
+*guard.nvim.txt*         For NVIM v0.8.0         Last change: 2025 February 22
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
 
-1. guard.nvim                                          |guard.nvim-guard.nvim|
-  - Features                                  |guard.nvim-guard.nvim-features|
-  - Usage                                        |guard.nvim-guard.nvim-usage|
-  - Examples                                  |guard.nvim-guard.nvim-examples|
-2. Creating new configurations        |guard.nvim-creating-new-configurations|
+  - Features                                             |guard.nvim-features|
+  - TLDR                                                     |guard.nvim-tldr|
+  - Usage                                                   |guard.nvim-usage|
+  - Further configuration                   |guard.nvim-further-configuration|
+1. Creating new configurations        |guard.nvim-creating-new-configurations|
   - Examples: formatters|guard.nvim-creating-new-configurations-examples:-formatters|
   - Examples: linters|guard.nvim-creating-new-configurations-examples:-linters|
-3. Advanced tips                                    |guard.nvim-advanced-tips|
+2. Advanced tips                                    |guard.nvim-advanced-tips|
   - Special case formatting logic|guard.nvim-advanced-tips-special-case-formatting-logic|
   - Custom logic with linters|guard.nvim-advanced-tips-custom-logic-with-linters|
   - Take advantage of autocmd events|guard.nvim-advanced-tips-take-advantage-of-autocmd-events|
   - Dynamic formatters           |guard.nvim-advanced-tips-dynamic-formatters|
-4. Links                                                    |guard.nvim-links|
-
-==============================================================================
-1. guard.nvim                                          *guard.nvim-guard.nvim*
-
+3. Links                                                    |guard.nvim-links|
 <https://luarocks.org/modules/xiaoshihou514/guard.nvim>
 
 Async formatting and linting utility for neovim `0.10+`.
 
 
-FEATURES                                      *guard.nvim-guard.nvim-features*
+FEATURES                                                 *guard.nvim-features*
 
 - Async and blazingly fast
 - Builtin support for popular formatters and linters
@@ -33,42 +29,89 @@ FEATURES                                      *guard.nvim-guard.nvim-features*
 - Light-weight
 
 
-USAGE                                            *guard.nvim-guard.nvim-usage*
+TLDR                                                         *guard.nvim-tldr*
 
-For rocks.nvim
+|guard.nvim-`help-guard.nvim-tldr`|
 
->vim
-    Rocks install guard.nvim
+- Install with your favorite package manager
+
+>
+    nvimdev/guard.nvim
 <
 
-For lazy.nvim
-
->lua
-    {
-        "nvimdev/guard.nvim",
-        -- lazy load by ft
-        ft = { "lua", "c", "markdown" },
-        -- Builtin configuration, optional
-        dependencies = {
-            "nvimdev/guard-collection",
-        },
-    }
-<
-
-To register formatters and linters:
+- Register formatters:
 
 >lua
     local ft = require('guard.filetype')
-    
-    -- Assuming you have guard-collection
-    -- Put this in your ftplugin/lang.lua to lazy load guard
-    ft('lang'):fmt('format-tool-1')
-              :append('format-tool-2')
-              :env(env_table)
-              :lint('lint-tool-1')
-              :extra(extra_args)
-    
-    -- change this anywhere in your config (or not), these are the defaults
+    ft('c'):fmt('clang-format')
+<
+
+demo
+<https://github.com/user-attachments/assets/3160f979-6683-4288-870d-2447ee445431>
+
+- Register linters
+
+>lua
+    local ft = require('guard.filetype')
+    ft('lua'):lint('selene')
+<
+
+demo
+<https://github.com/user-attachments/assets/2ee2fdaa-42b2-41b3-80ad-26a53bf16809>
+
+- They can also be chained together:
+
+>lua
+    local ft = require('guard.filetype')
+    ft('haskell'):fmt('ormolu')
+                 :lint('hlint')
+<
+
+- Formatters and linters can also be chained:
+
+>lua
+    local ft = require('guard.filetype')
+    ft('python'):fmt('isort')
+                :append('black')
+                :lint('mypy')
+                :append('mypyc')
+                :append('dmypy')
+<
+
+- You can register the same formatter for multiple filetypes:
+
+>lua
+    local ft = require('guard.filetype')
+    ft('typescript,javascript,typescriptreact'):fmt('prettier')
+<
+
+- Lint all your files with `codespell`
+
+>lua
+    -- this does not work with formatters
+    ft('*'):lint('codespell')
+<
+
+- Custom formatters:
+
+>lua
+    -- always use 4 spaces for c files
+    ft('c'):fmt({
+        cmd = "clang-format",
+        args = { "--style={IndentWidth: 4}" },
+        stdin = true,
+    })
+<
+
+
+USAGE                                                       *guard.nvim-usage*
+
+|guard.nvim-`help-guard.nvim-usage`|
+
+Some presets can be configured via `vim.g.guard_config`
+
+>lua
+    -- defaults
     vim.g.guard_config = {
         -- format on write to buffer
         fmt_on_save = true,
@@ -83,47 +126,37 @@ To register formatters and linters:
     }
 <
 
-- Use `Guard fmt` to manually call format, when there is a visual selection only the selection is formatted. **NOTE**: Regional formatting is best-effort, expect inconsistencies.
-- `enable-fmt`, `disable-fmt` turns auto formatting on and off for the current buffer.
-- Use `Guard Lint` to lint manually.
-- `enable-lint` and `disable-lint` controls auto linting for the current buffer.
+Here are all the `Guard` subcommands
 
+  ------------------------------------------------------------------------
+       Name                                Desc
+  -------------- ---------------------------------------------------------
+    Guard fmt     Manually call format, also works with visual mode (best
+                                 effort range formatting)
 
-EXAMPLES                                      *guard.nvim-guard.nvim-examples*
+    Guard lint                   Manually request for lint
 
-Format c files with clang-format and lint with clang-tidy:
+      Guard           Turns auto formatting on for the current buffer
+    enable-fmt   
 
->lua
-    ft('c'):fmt('clang-format')
-           :lint('clang-tidy')
-<
+      Guard          Turns auto formatting off for the current buffer
+   disable-fmt   
 
-Or use lsp to format lua files first, then format with stylua, then lint with
-selene:
+      Guard               Turns linting on for the current buffer
+   enable-lint   
 
->lua
-    ft('lua'):fmt('lsp')
-            :append('stylua')
-            :lint('selene')
-<
+      Guard              Turns linting off for the current buffer
+   disable-lint  
+  ------------------------------------------------------------------------
 
-Register multiple filetypes to a single linter or formatter:
+FURTHER CONFIGURATION                       *guard.nvim-further-configuration*
 
->lua
-    ft('typescript,javascript,typescriptreact'):fmt('prettier')
-<
+You can easily create your own configuration that’s not in
+`guard-collection`, see `help guard.nvim-creating-new-configurations`
+<./CUSTOMIZE.md>.
 
-Lint all your files with `codespell`
-
->lua
-    -- NB: this does not work with formatters
-    ft('*'):lint('codespell')
-<
-
-You can also easily create your own configuration that’s not in
-`guard-collection`, see CUSTOMIZE.md <./CUSTOMIZE.md>.
-
-For more niche use cases, ADVANCED.md <./ADVANCED.md> demonstrates how to:
+For more niche use cases, `help guard.nvim-advanced-tips` <./ADVANCED.md>
+demonstrates how to:
 
 - Write your own formatting logic using the `fn` field.
 - Write your own linting logic using the `fn` field.
@@ -132,7 +165,7 @@ For more niche use cases, ADVANCED.md <./ADVANCED.md> demonstrates how to:
 
 
 ==============================================================================
-2. Creating new configurations        *guard.nvim-creating-new-configurations*
+1. Creating new configurations        *guard.nvim-creating-new-configurations*
 
 A tool is specified as follows:
 
@@ -400,7 +433,7 @@ Another example:
 
 
 ==============================================================================
-3. Advanced tips                                    *guard.nvim-advanced-tips*
+2. Advanced tips                                    *guard.nvim-advanced-tips*
 
 
 SPECIAL CASE FORMATTING LOGIC*guard.nvim-advanced-tips-special-case-formatting-logic*
@@ -702,7 +735,7 @@ input_, you can run `set sw=16` and the next time `clang-format` will give you
 a file that uses 16 spaces as indent (please do not try this at home :smile:).
 
 ==============================================================================
-4. Links                                                    *guard.nvim-links*
+3. Links                                                    *guard.nvim-links*
 
 1. *LuaRocks*: https://img.shields.io/luarocks/v/xiaoshihou514/guard.nvim?logo=lua&color=green
 2. *GitHub Actions Workflow Status*: https://img.shields.io/github/actions/workflow/status/nvimdev/guard.nvim/test.yml?label=tests
