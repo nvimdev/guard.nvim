@@ -13,6 +13,8 @@ Async formatting and linting utility for neovim `0.10+`.
 
 ## TLDR
 
+[`help guard.nvim-tldr`](#tldr)
+
 - Install with your favorite package manager
 
 ```
@@ -83,6 +85,8 @@ ft('c'):fmt({
 
 ## Usage
 
+[`help guard.nvim-usage`](#usage)
+
 Some presets can be configured via `vim.g.guard_config`
 
 ```lua
@@ -114,9 +118,9 @@ Here are all the `Guard` subcommands
 
 ## Further configuration
 
-You can easily create your own configuration that's not in `guard-collection`, see [CUSTOMIZE.md](./CUSTOMIZE.md).
+You can easily create your own configuration that's not in `guard-collection`, see [`help guard.nvim-creating-new-configurations`](./CUSTOMIZE.md).
 
-For more niche use cases, [ADVANCED.md](./ADVANCED.md) demonstrates how to:
+For more niche use cases, [`help guard.nvim-advanced-tips`](./ADVANCED.md) demonstrates how to:
 
 - Write your own formatting logic using the `fn` field.
 - Write your own linting logic using the `fn` field.
