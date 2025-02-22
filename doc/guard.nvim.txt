@@ -31,6 +31,8 @@ FEATURES                                                 *guard.nvim-features*
 
 TLDR                                                         *guard.nvim-tldr*
 
+|guard.nvim-`help-guard.nvim-tldr`|
+
 - Install with your favorite package manager
 
 >
@@ -104,6 +106,8 @@ demo
 
 USAGE                                                       *guard.nvim-usage*
 
+|guard.nvim-`help-guard.nvim-usage`|
+
 Some presets can be configured via `vim.g.guard_config`
 
 >lua
@@ -148,9 +152,11 @@ Here are all the `Guard` subcommands
 FURTHER CONFIGURATION                       *guard.nvim-further-configuration*
 
 You can easily create your own configuration that’s not in
-`guard-collection`, see CUSTOMIZE.md <./CUSTOMIZE.md>.
+`guard-collection`, see `help guard.nvim-creating-new-configurations`
+<./CUSTOMIZE.md>.
 
-For more niche use cases, ADVANCED.md <./ADVANCED.md> demonstrates how to:
+For more niche use cases, `help guard.nvim-advanced-tips` <./ADVANCED.md>
+demonstrates how to:
 
 - Write your own formatting logic using the `fn` field.
 - Write your own linting logic using the `fn` field.
