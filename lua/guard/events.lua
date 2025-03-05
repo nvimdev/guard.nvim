@@ -139,7 +139,7 @@ function M.try_attach_lint_to_buf(buf, events, ft)
         group = M.group,
         pattern = 'GuardFmt',
         callback = function(opt)
-          if opt.data.status == 'done' then
+          if opt.buf == buf and opt.data.status == 'done' then
             lazy_debounced_lint(opt)
           end
         end,

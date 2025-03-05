@@ -64,7 +64,7 @@ local function dump_tools(buf)
   end
 
   if #linters > 0 then
-    info('formatters:')
+    info('linters:')
     vim.iter(linters):map(vim.inspect):each(info)
   end
 end
