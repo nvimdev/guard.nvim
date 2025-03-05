@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.3](https://github.com/nvimdev/guard.nvim/compare/v2.1.2...v2.1.3) (2025-03-05)
+
+
+### Bug Fixes
+
+* guard fmt autocmd lint trigger ([#198](https://github.com/nvimdev/guard.nvim/issues/198)) ([3f5a7b3](https://github.com/nvimdev/guard.nvim/commit/3f5a7b30be83b59b8a7883fe8e8ee479f3bc865e))
+
 ## [2.1.2](https://github.com/nvimdev/guard.nvim/compare/v2.1.1...v2.1.2) (2025-01-19)
 
 
