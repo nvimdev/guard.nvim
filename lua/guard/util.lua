@@ -130,9 +130,15 @@ function M.should_run(config, buf)
   return true
 end
 
+---@param fname string
+---@return string
+local function resolve_symlink(fname)
+  return vim.uv.fs_realpath(fname) or fname
+end
+
 ---@return string, string
 function M.buf_get_info(buf)
-  local fname = vim.fn.fnameescape(api.nvim_buf_get_name(buf))
+  local fname = vim.fn.fnameescape(resolve_symlink(api.nvim_buf_get_name(buf)))
   ---@diagnostic disable-next-line: undefined-field
   return fname, M.get_lsp_root() or vim.uv.cwd()
 end
