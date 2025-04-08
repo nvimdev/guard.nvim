@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.4](https://github.com/nvimdev/guard.nvim/compare/v2.1.3...v2.1.4) (2025-04-08)
+
+
+### Bug Fixes
+
+* resolve symlinks ([#201](https://github.com/nvimdev/guard.nvim/issues/201)) ([dfb3dd4](https://github.com/nvimdev/guard.nvim/commit/dfb3dd403704398c998a920a80f12746d42011a7))
+
 ## [2.1.3](https://github.com/nvimdev/guard.nvim/compare/v2.1.2...v2.1.3) (2025-03-05)
 
 
