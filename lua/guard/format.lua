@@ -51,6 +51,18 @@ local function fail(msg)
   vim.notify('[Guard]: ' .. msg, vim.log.levels.WARN)
 end
 
+--- Error handler
+---@param errno table
+local function err_handler(errno)
+  if errno.reason:match('exited with errors$') then
+    fail(('%s exited with code %d\n%s'):format(errno.cmd, errno.code, errno.stderr))
+  elseif errno.reason == 'buf changed' then
+    fail('buffer changed during formatting')
+  else
+    fail(errno.reason)
+  end
+end
+
 local function do_fmt(buf)
   buf = buf or api.nvim_get_current_buf()
   local ft_conf = filetype[vim.bo[buf].filetype]
@@ -169,18 +181,11 @@ local function do_fmt(buf)
     vim.schedule(function()
       -- handle errors
       if errno then
-        if errno.reason:match('exited with errors$') then
-          fail(('%s exited with code %d\n%s'):format(errno.cmd, errno.code, errno.stderr))
-        elseif errno.reason == 'buf changed' then
-          fail('buffer changed during formatting')
-        else
-          fail(errno.reason)
-        end
-        return
+        return err_handler(errno)
       end
       -- check buffer one last time
       if api.nvim_buf_get_changedtick(buf) ~= changedtick then
-        fail('buffer changed during formatting')
+        return fail('buffer changed during formatting')
       end
       if not api.nvim_buf_is_valid(buf) then
         fail('buffer no longer valid')
