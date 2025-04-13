@@ -65,7 +65,7 @@ for _, buf in ipairs(api.nvim_list_bufs()) do
   if api.nvim_buf_is_loaded(buf) then
     if
       vim.iter(vim.lsp.get_clients({ bufnr = buf })):any(function(c)
-        return c.supports_method('textDocument/formatting')
+        return c:supports_method('textDocument/formatting')
       end)
     then
       local ft = vim.bo[buf].ft
