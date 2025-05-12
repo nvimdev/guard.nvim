@@ -82,6 +82,10 @@ local function box(ft)
         events.fmt_attach_to_existing(it)
       end
     end
+
+    if ft:find(',') then
+      M[ft] = nil
+    end
     return self
   end
 
