@@ -90,8 +90,21 @@ end
 ---@param buf number
 ---@return boolean
 function M.check_fmt_should_attach(buf)
+  local fmts = require('guard.filetype')[vim.bo[buf].filetype].formatter
+  local bufname = api.nvim_buf_get_name(buf)
   -- check if it's not attached already and has an underlying file
-  return #M.get_format_autocmds(buf) == 0 and vim.bo[buf].buftype ~= 'nofile'
+  return #M.get_format_autocmds(buf) == 0
+    and vim.bo[buf].buftype ~= 'nofile'
+    and iter(fmts):any(function(item)
+      if type(item) == 'table' then
+        for _, pat in ipairs(util.as_table(item.ignore_patterns) or {}) do
+          if bufname:find(pat) then
+            return false
+          end
+        end
+      end
+      return true
+    end)
 end
 
 ---@param buf number
