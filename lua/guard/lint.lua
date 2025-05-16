@@ -156,7 +156,11 @@ end
 ---@param nr any?
 ---@param off number
 local function normalize(nr, off)
-  return tonumber(nr or off) - off
+  if not nr or nr == '' then
+    return 0
+  else
+    return tonumber(nr) - off
+  end
 end
 
 local function json_get_offset(mes, attr, off)
