@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/nvimdev/guard.nvim/compare/v2.3.0...v2.3.1) (2025-05-16)
+
+
+### Bug Fixes
+
+* diag_fmt fallback logic, revert early formatter check ([#208](https://github.com/nvimdev/guard.nvim/issues/208)) ([55bbf64](https://github.com/nvimdev/guard.nvim/commit/55bbf64684414ad22f0e5f946c723b4e7ddc402c))
+
 ## [2.3.0](https://github.com/nvimdev/guard.nvim/compare/v2.2.0...v2.3.0) (2025-05-16)
 
 
