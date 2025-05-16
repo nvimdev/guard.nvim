@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/nvimdev/guard.nvim/compare/v2.2.0...v2.3.0) (2025-05-16)
+
+
+### Features
+
+* add refresh_diagnostic option ([#188](https://github.com/nvimdev/guard.nvim/issues/188)) ([6e0e8e5](https://github.com/nvimdev/guard.nvim/commit/6e0e8e5f27d9ed951675e022944c57b66191afc4))
+
 ## [2.2.0](https://github.com/nvimdev/guard.nvim/compare/v2.1.4...v2.2.0) (2025-05-16)
 
 
