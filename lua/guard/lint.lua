@@ -101,9 +101,9 @@ end
 function M.diag_fmt(buf, lnum_start, col_start, message, severity, source, lnum_end, col_end)
   return {
     bufnr = buf,
-    col = col_start or 0,
+    col = col_start,
     end_col = col_end or col_start,
-    lnum = lnum_start or 0,
+    lnum = lnum_start,
     end_lnum = lnum_end or lnum_start,
     message = message or '',
     namespace = ns,
@@ -153,6 +153,16 @@ local function attr_value(mes, attribute)
   return type(attribute) == 'function' and attribute(mes) or mes[attribute]
 end
 
+---@param nr any?
+---@param off number
+local function normalize(nr, off)
+  return tonumber(nr or off) - off
+end
+
+local function json_get_offset(mes, attr, off)
+  return normalize(attr_value(mes, attr), off)
+end
+
 function M.from_json(opts)
   opts = vim.tbl_deep_extend('force', from_opts, opts or {})
   opts = vim.tbl_deep_extend('force', json_opts, opts)
@@ -165,26 +175,30 @@ function M.from_json(opts)
       vim.tbl_map(function(line)
         local offence = opts.get_diagnostics(line)
         if offence then
-          offences[#offences + 1] = offence
+          table.insert(offences, offence)
         end
       end, vim.split(result, '\r?\n', { trimempty = true }))
     else
       offences = opts.get_diagnostics(result)
     end
 
+    local attr = opts.attributes
+    local off = opts.offset
     vim.tbl_map(function(mes)
-      local attr = opts.attributes
       local message = attr_value(mes, attr.message)
       local code = attr_value(mes, attr.code)
-      diags[#diags + 1] = M.diag_fmt(
-        buf,
-        tonumber(attr_value(mes, attr.lnum)) - opts.offset,
-        tonumber(attr_value(mes, attr.col)) - opts.offset,
-        formulate_msg(message, code),
-        opts.severities[attr_value(mes, attr.severity)],
-        opts.source,
-        tonumber(attr_value(mes, attr.lnum_end or attr.lnum)) - opts.offset,
-        tonumber(attr_value(mes, attr.col_end or attr.lnum)) - opts.offset
+      table.insert(
+        diags,
+        M.diag_fmt(
+          buf,
+          json_get_offset(mes, attr.lnum, off),
+          json_get_offset(mes, attr.col, off),
+          formulate_msg(message, code),
+          opts.severities[attr_value(mes, attr.severity)],
+          opts.source,
+          json_get_offset(mes, attr.lnum_end or attr.lnum, off),
+          json_get_offset(mes, attr.col_end or attr.col, off)
+        )
       )
     end, offences or {})
 
@@ -212,20 +226,24 @@ function M.from_regex(opts)
           offence[opts.groups[i]] = matches[i]
         end
 
-        offences[#offences + 1] = offence
+        table.insert(offences, offence)
       end
     end
 
+    local off = opts.offset
     vim.tbl_map(function(mes)
-      diags[#diags + 1] = M.diag_fmt(
-        buf,
-        tonumber(mes.lnum) - opts.offset,
-        tonumber(mes.col) - opts.offset,
-        formulate_msg(mes.message, mes.code),
-        opts.severities[mes.severity],
-        opts.source,
-        tonumber(mes.lnum_end or mes.lnum) - opts.offset,
-        tonumber(mes.col_end or mes.col) - opts.offset
+      table.insert(
+        diags,
+        M.diag_fmt(
+          buf,
+          normalize(mes.lnum, off),
+          normalize(mes.col, off),
+          formulate_msg(mes.message, mes.code),
+          opts.severities[mes.severity],
+          opts.source,
+          normalize(mes.lnum_end or mes.lnum, off),
+          normalize(mes.col_end or mes.lnum, off)
+        )
       )
     end, offences)
 

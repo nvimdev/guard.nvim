@@ -20,7 +20,7 @@ function M.as_table(t)
   return vim.islist(t) and t or { t }
 end
 
----@source runtime/lua/vim/lsp/buf.lua
+---@see runtime/lua/vim/lsp/buf.lua
 ---@param bufnr integer
 ---@param mode "v"|"V"
 ---@return table {start={row,col}, end={row,col}} using (1, 0) indexing

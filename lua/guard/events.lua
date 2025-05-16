@@ -18,7 +18,9 @@ local function debounced_lint(opt)
   end
   ---@diagnostic disable-next-line: undefined-field
   debounce_timer = assert(uv.new_timer()) --[[uv_timer_t]]
-  debounce_timer:start(util.getopt('lint_interval'), 0, function()
+  ---@type integer
+  local interval = assert(tonumber(util.getopt('lint_interval')))
+  debounce_timer:start(interval, 0, function()
     debounce_timer:stop()
     debounce_timer:close()
     debounce_timer = nil
@@ -89,22 +91,14 @@ end
 
 ---@param buf number
 ---@return boolean
+--- We don't check ignore patterns here because users might expect
+--- other formatters in the same group to run even if another
+--- might ignore this file
 function M.check_fmt_should_attach(buf)
-  local fmts = require('guard.filetype')[vim.bo[buf].filetype].formatter
-  local bufname = api.nvim_buf_get_name(buf)
-  -- check if it's not attached already and has an underlying file
+  -- check if it's not attached already
   return #M.get_format_autocmds(buf) == 0
+    --  and has an underlying file
     and vim.bo[buf].buftype ~= 'nofile'
-    and iter(fmts):any(function(item)
-      if type(item) == 'table' then
-        for _, pat in ipairs(util.as_table(item.ignore_patterns) or {}) do
-          if bufname:find(pat) then
-            return false
-          end
-        end
-      end
-      return true
-    end)
 end
 
 ---@param buf number
