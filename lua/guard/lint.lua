@@ -91,19 +91,19 @@ function M.do_lint_single(buf, config)
 end
 
 ---@param buf number
----@param lnum_start number
----@param lnum_end number
----@param col_start number
----@param col_end number
----@param message string
----@param severity number
----@param source string
+---@param lnum_start number?
+---@param lnum_end number?
+---@param col_start number?
+---@param col_end number?
+---@param message string?
+---@param severity number?
+---@param source string?
 function M.diag_fmt(buf, lnum_start, col_start, message, severity, source, lnum_end, col_end)
   return {
     bufnr = buf,
-    col = col_start,
+    col = col_start or 0,
     end_col = col_end or col_start,
-    lnum = lnum_start,
+    lnum = lnum_start or 0,
     end_lnum = lnum_end or lnum_start,
     message = message or '',
     namespace = ns,
