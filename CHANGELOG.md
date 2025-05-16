@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/nvimdev/guard.nvim/compare/v2.1.4...v2.2.0) (2025-05-16)
+
+
+### Features
+
+* make all diag_fmt params optional ([e02c358](https://github.com/nvimdev/guard.nvim/commit/e02c358dcab402a74a87135cc107104f2df83eeb))
+
 ## [2.1.4](https://github.com/nvimdev/guard.nvim/compare/v2.1.3...v2.1.4) (2025-04-13)
 
 
