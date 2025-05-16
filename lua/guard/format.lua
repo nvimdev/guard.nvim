@@ -235,6 +235,9 @@ local function do_fmt(buf)
     util.doau('GuardFmt', {
       status = 'done',
     })
+    if util.getopt('refresh_diagnostic') then
+      vim.diagnostic.show()
+    end
   end))
 end
 

@@ -102,6 +102,8 @@ vim.g.guard_config = {
     auto_lint = true,
     -- how frequently can linters be called
     lint_interval = 500
+    -- show diagnostic after format done
+    refresh_diagnostic = true,
 }
 ```
 
