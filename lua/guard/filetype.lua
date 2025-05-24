@@ -186,6 +186,18 @@ local function box(ft)
     end
   end
 
+  function tbl:valid_buf(buf)
+    return vim.iter(self.formatter):any(function(item)
+      local bufname = vim.api.nvim_buf_get_name(buf)
+      for _, p in ipairs(item.ignore_patterns and util.as_table(item.ignore_patterns) or {}) do
+        if bufname:find(p) then
+          return false
+        end
+      end
+      return true
+    end)
+  end
+
   return setmetatable({}, tbl)
 end
 
