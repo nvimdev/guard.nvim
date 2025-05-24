@@ -1,300 +1,569 @@
-local api, uv = vim.api, vim.uv
+local lib = require('guard.lib')
+local Result = lib.Result
+local Async = lib.Async
 local util = require('guard.util')
-local getopt = util.getopt
-local report_error = util.report_error
-local au = api.nvim_create_autocmd
-local iter = vim.iter
+local api = vim.api
+local uv = vim.uv
+
 local M = {}
+
+-- Autocmd group
 M.group = api.nvim_create_augroup('Guard', { clear = true })
 
-M.user_fmt_autocmds = {}
-M.user_lint_autocmds = {}
+-- Track user-defined custom autocmds
+M.custom_autocmds = {
+  formatter = {},
+  linter = {},
+}
 
-local debounce_timer = nil
-local function debounced_lint(opt)
-  if debounce_timer then
-    debounce_timer:stop()
-    debounce_timer = nil
-  end
-  ---@diagnostic disable-next-line: undefined-field
-  debounce_timer = assert(uv.new_timer()) --[[uv_timer_t]]
-  ---@type integer
-  local interval = assert(tonumber(util.getopt('lint_interval')))
-  debounce_timer:start(interval, 0, function()
-    debounce_timer:stop()
-    debounce_timer:close()
-    debounce_timer = nil
-    vim.schedule(function()
-      require('guard.lint').do_lint(opt.buf)
+-- Debounce manager for lint operations
+local DebounceManager = {}
+DebounceManager.__index = DebounceManager
+
+function DebounceManager.new()
+  return setmetatable({
+    timers = {}, -- bufnr -> timer
+  }, DebounceManager)
+end
+
+function DebounceManager:debounce(bufnr, callback, delay)
+  return Async.try(function()
+    -- Cancel existing timer for this buffer
+    self:cancel(bufnr)
+
+    -- Create new timer
+    local timer = uv.new_timer()
+    if not timer then
+      return Result.err('Failed to create timer')
+    end
+
+    self.timers[bufnr] = timer
+
+    timer:start(delay, 0, function()
+      timer:stop()
+      timer:close()
+      self.timers[bufnr] = nil
+
+      vim.schedule(function()
+        callback()
+      end)
     end)
+
+    return Result.ok(timer)
   end)
 end
 
-local function lazy_debounced_lint(opt)
-  if getopt('auto_lint') == true then
-    debounced_lint(opt)
+function DebounceManager:cancel(bufnr)
+  local timer = self.timers[bufnr]
+  if timer then
+    timer:stop()
+    timer:close()
+    self.timers[bufnr] = nil
   end
 end
 
-local function lazy_fmt(opt)
-  if vim.bo[opt.buf].modified and getopt('fmt_on_save') then
-    require('guard.format').do_fmt(opt.buf)
+function DebounceManager:cancel_all()
+  for bufnr, _ in pairs(self.timers) do
+    self:cancel(bufnr)
   end
 end
 
----@param opt AuOption
----@param cb function
----@return AuOption
-local function maybe_fill_auoption(opt, cb)
-  local result = vim.deepcopy(opt, false)
-  result.callback = (not result.command and not result.callback) and cb or result.callback
-  result.group = M.group
-  return result
+-- Global debounce manager for lint
+local lint_debouncer = DebounceManager.new()
+
+-- Event handlers with Result
+local Handlers = {}
+
+-- Format handler
+function Handlers.format(args)
+  return Async.try(function()
+    if not api.nvim_buf_is_valid(args.buf) then
+      return Result.err('Invalid buffer')
+    end
+
+    if vim.bo[args.buf].modified and util.getopt('fmt_on_save') then
+      require('guard.format').do_fmt(args.buf)
+      return Result.ok('Formatted')
+    end
+
+    return Result.ok('Skipped')
+  end)
 end
 
----@param bufnr number
----@return vim.api.keyset.get_autocmds.ret[]
-function M.get_format_autocmds(bufnr)
+-- Lint handler with debounce
+function Handlers.lint(args)
+  return Async.try(function()
+    if not api.nvim_buf_is_valid(args.buf) then
+      return Result.err('Invalid buffer')
+    end
+
+    if util.getopt('auto_lint') then
+      local interval = util.getopt('lint_interval') or 500
+      return lint_debouncer:debounce(args.buf, function()
+        require('guard.lint').do_lint(args.buf)
+      end, interval)
+    end
+
+    return Result.ok('Auto lint disabled')
+  end)
+end
+
+-- Enhanced lint handler that triggers after format
+function Handlers.lint_after_format(args)
+  return Async.try(function()
+    if args.buf and args.data and args.data.status == 'done' then
+      return Handlers.lint({ buf = args.buf })
+    end
+    return Result.ok('Not triggered')
+  end)
+end
+
+-- Autocmd management with Result
+local AutocmdManager = {}
+
+-- Validate buffer for autocmd attachment
+function AutocmdManager.validate_buffer(bufnr)
   if not api.nvim_buf_is_valid(bufnr) then
-    return {}
+    return Result.err('Invalid buffer')
   end
-  local caus = M.user_fmt_autocmds[vim.bo[bufnr].ft]
-  return caus
-      and iter(api.nvim_get_autocmds({ group = M.group }))
-        :filter(function(it)
-          return vim.tbl_contains(caus, it.id)
+
+  if vim.bo[bufnr].buftype == 'nofile' then
+    return Result.err('Buffer is nofile type')
+  end
+
+  return Result.ok(bufnr)
+end
+
+-- Get autocmds for a specific tool and buffer
+function AutocmdManager.get_autocmds(tool_type, bufnr, events)
+  return AutocmdManager.validate_buffer(bufnr)
+    :map(function()
+      local ft = vim.bo[bufnr].ft
+      local custom_ids = M.custom_autocmds[tool_type][ft]
+
+      -- If custom autocmds exist, return those
+      if custom_ids and #custom_ids > 0 then
+        return vim
+          .iter(api.nvim_get_autocmds({ group = M.group }))
+          :filter(function(au)
+            return vim.tbl_contains(custom_ids, au.id)
+          end)
+          :totable()
+      end
+
+      -- Otherwise return standard autocmds
+      events = events
+        or (
+          tool_type == 'formatter' and { 'BufWritePre' }
+          or { 'BufWritePost', 'BufEnter', 'TextChanged', 'InsertLeave', 'User' }
+        )
+
+      local autocmds = {}
+      for _, event in ipairs(events) do
+        local opts = {
+          group = M.group,
+          event = event,
+        }
+
+        if event == 'User' then
+          opts.pattern = 'GuardFmt'
+        else
+          opts.buffer = bufnr
+        end
+
+        vim.list_extend(autocmds, api.nvim_get_autocmds(opts))
+      end
+
+      return autocmds
+    end)
+    :unwrap_or({})
+end
+
+-- Check if autocmds should be attached
+function AutocmdManager.should_attach(tool_type, bufnr, ft)
+  return AutocmdManager.validate_buffer(bufnr):and_then(function()
+    -- Check existing autocmds
+    local existing = AutocmdManager.get_autocmds(tool_type, bufnr)
+
+    if tool_type == 'formatter' then
+      if #existing > 0 then
+        return Result.err('Formatter already attached')
+      end
+    else
+      -- For linters, check specific patterns
+      local filtered = vim
+        .iter(existing)
+        :filter(ft == '*' and function(au)
+          return au.pattern == '*'
+        end or function(au)
+          return au.pattern ~= '*'
         end)
         :totable()
-    or api.nvim_get_autocmds({ group = M.group, event = 'BufWritePre', buffer = bufnr })
+
+      if #filtered > 0 then
+        return Result.err('Linter already attached')
+      end
+    end
+
+    return Result.ok(true)
+  end)
 end
 
----@param bufnr number
----@return vim.api.keyset.get_autocmds.ret[]
-function M.get_lint_autocmds(bufnr)
-  if not api.nvim_buf_is_valid(bufnr) then
-    return {}
+-- Create autocmd with proper options
+function AutocmdManager.create_autocmd(event, opts)
+  return Async.try(function()
+    opts = opts or {}
+    opts.group = M.group
+
+    if not opts.callback and not opts.command then
+      return Result.err('Autocmd requires either callback or command')
+    end
+
+    local id = api.nvim_create_autocmd(event, opts)
+    return Result.ok(id)
+  end)
+end
+
+-- Attach formatters with Result
+function M.try_attach_fmt_to_buf(bufnr)
+  local should_attach = AutocmdManager.should_attach('formatter', bufnr)
+
+  if should_attach:is_err() then
+    return should_attach
   end
-  local aus = api.nvim_get_autocmds({
-    group = M.group,
-    event = { 'BufWritePost', 'BufEnter', 'TextChanged', 'InsertLeave' },
+
+  return AutocmdManager.create_autocmd('BufWritePre', {
     buffer = bufnr,
-  })
-  return vim.list_extend(
-    aus,
-    api.nvim_get_autocmds({
-      group = M.group,
-      event = 'User',
-      pattern = 'GuardFmt',
-    })
-  )
-end
-
----@param buf number
----@return boolean
---- We don't check ignore patterns here because users might expect
---- other formatters in the same group to run even if another
---- might ignore this file
-function M.check_fmt_should_attach(buf)
-  -- check if it's not attached already
-  return #M.get_format_autocmds(buf) == 0
-    --  and has an underlying file
-    and vim.bo[buf].buftype ~= 'nofile'
-end
-
----@param buf number
----@param ft string
----@return boolean
-function M.check_lint_should_attach(buf, ft)
-  if vim.bo[buf].buftype == 'nofile' then
-    return false
-  end
-
-  local aus = M.get_lint_autocmds(buf)
-
-  return #iter(aus)
-    :filter(ft == '*' and function(it)
-      return it.pattern == '*'
-    end or function(it)
-      return it.pattern ~= '*'
-    end)
-    :totable() == 0
-end
-
----@param buf number
-function M.try_attach_fmt_to_buf(buf)
-  if not M.check_fmt_should_attach(buf) then
-    return
-  end
-  au('BufWritePre', {
-    group = M.group,
-    buffer = buf,
-    callback = lazy_fmt,
+    callback = function(args)
+      local result = Handlers.format(args)
+      if result:is_err() and vim.g.guard_debug then
+        vim.notify('[Guard Debug] Format failed: ' .. result.error)
+      end
+    end,
+    desc = 'Guard auto-format',
   })
 end
 
----@param buf number
----@param events string[]
----@param ft string
-function M.try_attach_lint_to_buf(buf, events, ft)
-  if not M.check_lint_should_attach(buf, ft) then
-    return
+-- Attach linters with Result
+function M.try_attach_lint_to_buf(bufnr, events, ft)
+  local should_attach = AutocmdManager.should_attach('linter', bufnr, ft)
+
+  if should_attach:is_err() then
+    return should_attach
   end
 
-  for _, ev in ipairs(events) do
-    if ev == 'User GuardFmt' then
-      au('User', {
-        group = M.group,
+  local results = {}
+
+  for _, event in ipairs(events) do
+    local result
+    if event == 'User GuardFmt' then
+      result = AutocmdManager.create_autocmd('User', {
         pattern = 'GuardFmt',
-        callback = function(opt)
-          if opt.buf == buf and opt.data.status == 'done' then
-            lazy_debounced_lint(opt)
+        callback = function(args)
+          local lint_result = Handlers.lint_after_format(args)
+          if lint_result:is_err() and vim.g.guard_debug then
+            vim.notify('[Guard Debug] Lint after format failed: ' .. lint_result.error)
           end
         end,
+        desc = 'Guard lint after format',
       })
     else
-      au(ev, {
-        group = M.group,
-        buffer = buf,
-        callback = lazy_debounced_lint,
+      result = AutocmdManager.create_autocmd(event, {
+        buffer = bufnr,
+        callback = function(args)
+          local lint_result = Handlers.lint(args)
+          if lint_result:is_err() and vim.g.guard_debug then
+            vim.notify('[Guard Debug] Lint failed: ' .. lint_result.error)
+          end
+        end,
+        desc = 'Guard auto-lint',
       })
     end
+
+    table.insert(results, result)
   end
+
+  -- Check if all succeeded
+  local failed = vim.iter(results):find(function(r)
+    return r:is_err()
+  end)
+  if failed then
+    return failed
+  end
+
+  return Result.ok(results)
 end
 
----@param ft string
+-- Attach to existing buffers with Result handling
 function M.fmt_attach_to_existing(ft)
-  for _, buf in ipairs(api.nvim_list_bufs()) do
-    if ft == '*' or vim.bo[buf].ft == ft then
-      M.try_attach_fmt_to_buf(buf)
+  local results = {}
+
+  for _, bufnr in ipairs(api.nvim_list_bufs()) do
+    if api.nvim_buf_is_valid(bufnr) and (ft == '*' or vim.bo[bufnr].ft == ft) then
+      table.insert(results, M.try_attach_fmt_to_buf(bufnr))
     end
   end
+
+  return Result.ok(results)
 end
 
----@param ft string
 function M.lint_attach_to_existing(ft, events)
-  for _, buf in ipairs(api.nvim_list_bufs()) do
-    if ft == '*' or vim.bo[buf].ft == ft then
-      M.try_attach_lint_to_buf(buf, events, ft)
+  local results = {}
+
+  for _, bufnr in ipairs(api.nvim_list_bufs()) do
+    if api.nvim_buf_is_valid(bufnr) and (ft == '*' or vim.bo[bufnr].ft == ft) then
+      table.insert(results, M.try_attach_lint_to_buf(bufnr, events, ft))
     end
   end
+
+  return Result.ok(results)
 end
 
----@param ft string
----@param formatters FmtConfig[]
+-- Validate formatters and setup FileType autocmd
 function M.fmt_on_filetype(ft, formatters)
-  -- check if all cmds executable before registering formatter
-  iter(formatters):any(function(config)
-    if type(config) == 'table' and config.cmd and vim.fn.executable(config.cmd) ~= 1 then
-      report_error(config.cmd .. ' not executable')
-      return false
-    end
-    return true
+  -- Validate formatters
+  local validation_results = vim
+    .iter(formatters)
+    :map(function(config)
+      if type(config) == 'table' and config.cmd then
+        if vim.fn.executable(config.cmd) ~= 1 then
+          return Result.err(config.cmd .. ' not executable')
+        end
+      end
+      return Result.ok(config)
+    end)
+    :totable()
+
+  -- Check if any validation failed
+  local first_error = vim.iter(validation_results):find(function(r)
+    return r:is_err()
   end)
 
-  au('FileType', {
-    group = M.group,
+  if first_error then
+    util.report_error(first_error.error)
+    return first_error
+  end
+
+  return AutocmdManager.create_autocmd('FileType', {
     pattern = ft,
     callback = function(args)
-      M.try_attach_fmt_to_buf(args.buf)
+      local result = M.try_attach_fmt_to_buf(args.buf)
+      if result:is_err() and vim.g.guard_debug then
+        vim.notify('[Guard Debug] Failed to attach formatter: ' .. result.error)
+      end
     end,
-    desc = 'guard',
+    desc = 'Guard formatter setup for ' .. ft,
   })
 end
 
----@param config table
----@param ft string
----@param buf number
-function M.maybe_default_to_lsp(config, ft, buf)
-  if config.formatter then
-    return
+-- Validate linters and setup FileType autocmd
+function M.lint_on_filetype(ft, events)
+  -- Get linter config for validation
+  local ft_config = require('guard.filetype')[ft]
+  if not ft_config or not ft_config.linter then
+    return Result.err('No linter configuration for ' .. ft)
   end
-  config:fmt('lsp')
-  if getopt('fmt_on_save') then
-    if
-      #api.nvim_get_autocmds({
+
+  -- Validate linters
+  local validation_results = vim
+    .iter(ft_config.linter)
+    :map(function(config)
+      if config.cmd and vim.fn.executable(config.cmd) ~= 1 then
+        return Result.err(config.cmd .. ' not executable')
+      end
+      return Result.ok(config)
+    end)
+    :totable()
+
+  -- Report all errors
+  vim
+    .iter(validation_results)
+    :filter(function(r)
+      return r:is_err()
+    end)
+    :each(function(r)
+      util.report_error(r.error)
+    end)
+
+  return AutocmdManager.create_autocmd('FileType', {
+    pattern = ft,
+    callback = function(args)
+      local result = M.try_attach_lint_to_buf(args.buf, events, ft)
+      if result:is_err() and vim.g.guard_debug then
+        vim.notify('[Guard Debug] Failed to attach linter: ' .. result.error)
+      end
+    end,
+    desc = 'Guard linter setup for ' .. ft,
+  })
+end
+
+-- Custom event handling with Result
+function M.fmt_attach_custom(ft, events)
+  return Async.try(function()
+    M.custom_autocmds.formatter[ft] = M.custom_autocmds.formatter[ft] or {}
+
+    local results = {}
+    for _, event in ipairs(events) do
+      local opts = vim.deepcopy(event.opt or {})
+
+      -- Ensure callback
+      if not opts.callback and not opts.command then
+        opts.callback = function(args)
+          require('guard.format').do_fmt(args.buf)
+        end
+      end
+
+      -- Set group and description
+      opts.group = M.group
+      opts.desc = opts.desc or ('Guard custom format for %s'):format(ft)
+
+      local result = AutocmdManager.create_autocmd(event.name, opts)
+
+      result:match({
+        ok = function(id)
+          table.insert(M.custom_autocmds.formatter[ft], id)
+        end,
+        err = function(err)
+          table.insert(results, Result.err(err))
+        end,
+      })
+    end
+
+    -- Return first error if any
+    local first_error = vim.iter(results):find(function(r)
+      return r:is_err()
+    end)
+    return first_error or Result.ok(M.custom_autocmds.formatter[ft])
+  end)
+end
+
+function M.lint_attach_custom(ft, config)
+  return Async.try(function()
+    M.custom_autocmds.linter[ft] = M.custom_autocmds.linter[ft] or {}
+
+    local results = {}
+    for _, event in ipairs(config.events) do
+      local opts = vim.deepcopy(event.opt or {})
+
+      -- Ensure callback
+      if not opts.callback and not opts.command then
+        opts.callback = function(args)
+          Async.async(function()
+            require('guard.lint').do_lint_single(args.buf, config)
+          end)()
+        end
+      end
+
+      -- Set group and description
+      opts.group = M.group
+      opts.desc = opts.desc or ('Guard custom lint for %s'):format(ft)
+
+      local result = AutocmdManager.create_autocmd(event.name, opts)
+
+      result:match({
+        ok = function(id)
+          table.insert(M.custom_autocmds.linter[ft], id)
+        end,
+        err = function(err)
+          table.insert(results, Result.err(err))
+        end,
+      })
+    end
+
+    -- Return first error if any
+    local first_error = vim.iter(results):find(function(r)
+      return r:is_err()
+    end)
+    return first_error or Result.ok(M.custom_autocmds.linter[ft])
+  end)
+end
+
+-- LSP integration with Result
+function M.maybe_default_to_lsp(config, ft, bufnr)
+  if config.formatter then
+    return Result.ok('Formatter already configured')
+  end
+
+  return Async.try(function()
+    config:fmt('lsp')
+
+    if util.getopt('fmt_on_save') then
+      -- Check if FileType autocmd already exists
+      local existing = api.nvim_get_autocmds({
         group = M.group,
         event = 'FileType',
         pattern = ft,
-      }) == 0
-    then
-      M.fmt_on_filetype(ft, config.formatter)
+      })
+
+      if #existing == 0 then
+        local result = M.fmt_on_filetype(ft, config.formatter)
+        if result:is_err() then
+          return result
+        end
+      end
+
+      return M.try_attach_fmt_to_buf(bufnr)
     end
-    M.try_attach_fmt_to_buf(buf)
-  end
+
+    return Result.ok('LSP formatter configured')
+  end)
 end
 
 function M.create_lspattach_autocmd()
-  au('LspAttach', {
-    group = M.group,
+  return AutocmdManager.create_autocmd('LspAttach', {
     callback = function(args)
-      if not getopt('lsp_as_default_formatter') then
+      if not util.getopt('lsp_as_default_formatter') then
         return
       end
-      local client = vim.lsp.get_client_by_id(args.data.client_id)
-      if not client or not client:supports_method('textDocument/formatting', args.data.buf) then
-        return
+
+      local result = Async.try(function()
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        if not client then
+          return Result.err('LSP client not found')
+        end
+
+        if not client:supports_method('textDocument/formatting', args.buf) then
+          return Result.err("LSP client doesn't support formatting")
+        end
+
+        local ft_handler = require('guard.filetype')
+        local ft = vim.bo[args.buf].filetype
+        return M.maybe_default_to_lsp(ft_handler(ft), ft, args.buf)
+      end)
+
+      if result:is_err() and vim.g.guard_debug then
+        vim.notify('[Guard Debug] LSP setup failed: ' .. result.error)
       end
-      local ft_handler = require('guard.filetype')
-      local ft = vim.bo[args.buf].filetype
-      M.maybe_default_to_lsp(ft_handler(ft), ft, args.buf)
     end,
+    desc = 'Guard LSP formatter setup',
   })
 end
 
----@param ft string
----@param events string[]
-function M.lint_on_filetype(ft, events)
-  iter(require('guard.filetype')[ft].linter):any(function(config)
-    if config.cmd and vim.fn.executable(config.cmd) ~= 1 then
-      report_error(config.cmd .. ' not executable')
-    end
-    return true
-  end)
-
-  au('FileType', {
-    pattern = ft,
-    group = M.group,
-    callback = function(args)
-      M.try_attach_lint_to_buf(args.buf, events, ft)
-    end,
-  })
+-- Public API for getting autocmds
+function M.get_format_autocmds(bufnr)
+  return AutocmdManager.get_autocmds('formatter', bufnr, { 'BufWritePre' })
 end
 
----@param events EventOption[]
----@param ft string
-function M.fmt_attach_custom(ft, events)
-  M.user_fmt_autocmds[ft] = {}
-  -- we don't know what autocmds are passed in, so these are attached asap
-  iter(events):each(function(event)
-    table.insert(
-      M.user_fmt_autocmds[ft],
-      api.nvim_create_autocmd(
-        event.name,
-        maybe_fill_auoption(event.opt or {}, function(opt)
-          require('guard.format').do_fmt(opt.buf)
-        end)
-      )
-    )
-  end)
+function M.get_lint_autocmds(bufnr)
+  return AutocmdManager.get_autocmds('linter', bufnr)
 end
 
----@param config LintConfig
----@param ft string
-function M.lint_attach_custom(ft, config)
-  M.user_lint_autocmds[ft] = {}
-  -- we don't know what autocmds are passed in, so these are attached asap
-  iter(config.events):each(function(event)
-    table.insert(
-      M.user_lint_autocmds[ft],
-      api.nvim_create_autocmd(
-        event.name,
-        maybe_fill_auoption(event.opt or {}, function(opt)
-          coroutine.resume(coroutine.create(function()
-            require('guard.lint').do_lint_single(opt.buf, config)
-          end))
-        end)
-      )
-    )
+-- Cleanup on plugin unload
+function M.cleanup()
+  return Async.try(function()
+    -- Cancel all pending lint operations
+    lint_debouncer:cancel_all()
+
+    -- Clear all autocmds in the group
+    api.nvim_clear_autocmds({ group = M.group })
+
+    -- Clear custom autocmd tracking
+    M.custom_autocmds = {
+      formatter = {},
+      linter = {},
+    }
+
+    return Result.ok('Cleanup completed')
   end)
 end
 

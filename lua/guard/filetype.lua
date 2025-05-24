@@ -1,199 +1,260 @@
+local lib = require('guard.lib')
+local Result = lib.Result
 local util = require('guard.util')
+
 local M = {}
 
-local function get_tool(tool_type, tool_name)
+-- Tool loader with Result error handling
+local ToolLoader = {}
+
+function ToolLoader.get(tool_type, tool_name)
   if tool_name == 'lsp' then
-    return { fn = require('guard.lsp').format }
+    return Result.ok({ fn = require('guard.lsp').format })
   end
-  local ok, tbl = pcall(require, 'guard-collection.' .. tool_type)
+
+  local ok, collection = pcall(require, 'guard-collection.' .. tool_type)
   if not ok then
-    vim.notify(
-      ('[Guard]: "%s": needs nvimdev/guard-collection to access builtin configuration'):format(
+    return Result.err(
+      string.format(
+        '"%s" needs nvimdev/guard-collection to access builtin configuration',
         tool_name
-      ),
-      4
-    )
-    return {}
-  end
-  if not tbl[tool_name] then
-    vim.notify(('[Guard]: %s %s has no builtin configuration'):format(tool_type, tool_name), 4)
-    return {}
-  end
-  return tbl[tool_name]
-end
----@return FmtConfig|LintConfig
-local function try_as(tool_type, config)
-  if type(config) == 'function' then
-    return config
-  end
-  if type(config) == 'table' then
-    return config
-  else
-    return get_tool(tool_type, config)
-  end
-end
----@param val any
----@param expected string[]
----@return boolean
-local function check_type(val, expected)
-  if not vim.tbl_contains(expected, type(val)) then
-    vim.notify(
-      ('[guard]: %s is %s, expected %s'):format(
-        vim.inspect(val),
-        type(val),
-        table.concat(expected, '/')
       )
     )
-    return false
   end
-  return true
+
+  if not collection[tool_name] then
+    return Result.err(string.format('%s "%s" has no builtin configuration', tool_type, tool_name))
+  end
+
+  return Result.ok(collection[tool_name])
 end
 
-local function box(ft)
-  local current
-  local tbl = {}
-  local ft_tbl = ft:find(',') and vim.split(ft, ',') or { ft }
-  tbl.__index = tbl
-
-  function tbl:ft()
-    return ft_tbl
+function ToolLoader.resolve(tool_type, config)
+  if type(config) == 'function' then
+    return Result.ok(config)
+  elseif type(config) == 'table' then
+    return Result.ok(config)
+  elseif type(config) == 'string' then
+    return ToolLoader.get(tool_type, config)
+  else
+    return Result.err(
+      string.format(
+        'Invalid %s config type: %s (expected string/table/function)',
+        tool_type,
+        type(config)
+      )
+    )
   end
-
-  function tbl:fmt(config)
-    if not check_type(config, { 'table', 'string', 'function' }) then
-      return
-    end
-    current = 'formatter'
-    self.formatter = {
-      util.toolcopy(try_as('formatter', config)),
-    }
-    local events = require('guard.events')
-    for _, it in ipairs(self:ft()) do
-      if it ~= ft then
-        M[it] = box(it)
-        M[it].formatter = self.formatter
-      end
-
-      if type(config) == 'table' and config.events then
-        -- use user's custom events
-        events.fmt_attach_custom(it, config.events)
-      else
-        events.fmt_on_filetype(it, self.formatter)
-        events.fmt_attach_to_existing(it)
-      end
-    end
-
-    if ft:find(',') then
-      M[ft] = nil
-    end
-    return self
-  end
-
-  function tbl:lint(config)
-    if not check_type(config, { 'table', 'string', 'function' }) then
-      return
-    end
-    current = 'linter'
-    self.linter = {
-      util.toolcopy(try_as('linter', config)),
-    }
-    local events = require('guard.events')
-    local evs = util.linter_events(config)
-    for _, it in ipairs(self:ft()) do
-      if it ~= ft then
-        M[it] = box(it)
-        M[it].linter = self.linter
-      end
-
-      if type(config) == 'table' and config.events then
-        -- use user's custom events
-        events.lint_attach_custom(it, config)
-      else
-        events.lint_on_filetype(it, evs)
-        events.lint_attach_to_existing(it, evs)
-      end
-    end
-    return self
-  end
-
-  function tbl:append(config)
-    if not check_type(config, { 'table', 'string', 'function' }) then
-      return
-    end
-    local c = try_as(current, config)
-    self[current][#self[current] + 1] = c
-
-    if current == 'linter' and type(c) == 'table' and c.events then
-      for _, it in ipairs(self:ft()) do
-        require('guard.events').lint_attach_custom(it, config.events)
-      end
-    end
-
-    return self
-  end
-
-  function tbl:extra(...)
-    local tool = self[current][#self[current]]
-    tool.args = vim.list_extend({ ... }, tool.args or {})
-    return self
-  end
-
-  function tbl:env(env)
-    if not check_type(env, { 'table' }) then
-      return
-    end
-    if vim.tbl_count(env) == 0 then
-      return self
-    end
-    local tool = self[current][#self[current]]
-    tool.env = {}
-    ---@diagnostic disable-next-line: undefined-field
-    env = vim.tbl_extend('force', vim.uv.os_environ(), env or {})
-    for k, v in pairs(env) do
-      tool.env[#tool.env + 1] = ('%s=%s'):format(k, tostring(v))
-    end
-    return self
-  end
-
-  function tbl:key_alias(key)
-    local _t = {
-      ['lint'] = function()
-        self.linter = {}
-        return self.linter
-      end,
-      ['fmt'] = function()
-        self.formatter = {}
-        return self.formatter
-      end,
-    }
-    return _t[key]()
-  end
-
-  function tbl:register(key, cfg)
-    vim.validate({
-      key = {
-        key,
-        function(val)
-          local available = { 'lint', 'fmt' }
-          return vim.tbl_contains(available, val)
-        end,
-      },
-    })
-    local target = self:key_alias(key)
-    local tool_type = key == 'fmt' and 'formatter' or 'linter'
-    for _, item in ipairs(cfg) do
-      target[#target + 1] = util.toolcopy(try_as(tool_type, item))
-    end
-  end
-
-  return setmetatable({}, tbl)
 end
 
+-- Filetype configuration builder
+local FiletypeConfig = {}
+FiletypeConfig.__index = FiletypeConfig
+
+function FiletypeConfig.new(filetypes)
+  local ft_string = type(filetypes) == 'table' and table.concat(filetypes, ',') or filetypes
+  local ft_list = vim.split(ft_string, ',', { trimempty = true })
+
+  return setmetatable({
+    _filetypes = ft_list,
+    _original_ft = ft_string,
+    _current_tool = nil,
+    formatter = {},
+    linter = {},
+  }, FiletypeConfig)
+end
+
+-- Get list of filetypes
+function FiletypeConfig:filetypes()
+  return self._filetypes
+end
+
+-- Generic tool setup
+function FiletypeConfig:_setup_tool(tool_type, config)
+  local result = ToolLoader.resolve(tool_type, config)
+
+  if result:is_err() then
+    vim.notify('[Guard]: ' .. result.error, vim.log.levels.WARN)
+    return self
+  end
+
+  -- Set current tool type and initialize
+  self._current_tool = tool_type
+  self[tool_type] = { util.toolcopy(result.value) }
+
+  -- Setup events
+  self:_attach_events(tool_type, config)
+
+  -- Copy to other filetypes if needed
+  if #self._filetypes > 1 then
+    self:_propagate_to_filetypes(tool_type)
+  end
+
+  return self
+end
+
+-- Attach events for tools
+function FiletypeConfig:_attach_events(tool_type, config)
+  local events = require('guard.events')
+
+  for _, ft in ipairs(self._filetypes) do
+    if type(config) == 'table' and config.events then
+      -- Custom events
+      if tool_type == 'formatter' then
+        events.fmt_attach_custom(ft, config.events)
+      else
+        events.lint_attach_custom(ft, config)
+      end
+    else
+      -- Default events
+      if tool_type == 'formatter' then
+        events.fmt_on_filetype(ft, self.formatter)
+        events.fmt_attach_to_existing(ft)
+      else
+        local evs = util.linter_events(config)
+        events.lint_on_filetype(ft, evs)
+        events.lint_attach_to_existing(ft, evs)
+      end
+    end
+  end
+end
+
+-- Propagate configuration to related filetypes
+function FiletypeConfig:_propagate_to_filetypes(tool_type)
+  for _, ft in ipairs(self._filetypes) do
+    if ft ~= self._original_ft then
+      if not M[ft] then
+        M[ft] = FiletypeConfig.new(ft)
+      end
+      M[ft][tool_type] = self[tool_type]
+    end
+  end
+
+  -- Clean up composite filetype entry
+  if self._original_ft:find(',') then
+    M[self._original_ft] = nil
+  end
+end
+
+-- Public API methods
+function FiletypeConfig:fmt(config)
+  return self:_setup_tool('formatter', config)
+end
+
+function FiletypeConfig:lint(config)
+  return self:_setup_tool('linter', config)
+end
+
+function FiletypeConfig:append(config)
+  if not self._current_tool then
+    vim.notify('[Guard]: No tool selected to append to', vim.log.levels.WARN)
+    return self
+  end
+
+  local result = ToolLoader.resolve(self._current_tool, config)
+  if result:is_err() then
+    vim.notify('[Guard]: ' .. result.error, vim.log.levels.WARN)
+    return self
+  end
+
+  local tool = util.toolcopy(result.value)
+  table.insert(self[self._current_tool], tool)
+
+  -- Handle custom events for linters
+  if self._current_tool == 'linter' and type(config) == 'table' and config.events then
+    for _, ft in ipairs(self._filetypes) do
+      require('guard.events').lint_attach_custom(ft, config)
+    end
+  end
+
+  return self
+end
+
+function FiletypeConfig:extra(...)
+  if not self._current_tool then
+    return self
+  end
+
+  local tools = self[self._current_tool]
+  if #tools == 0 then
+    return self
+  end
+
+  local tool = tools[#tools]
+  tool.args = vim.list_extend(tool.args or {}, { ... })
+  return self
+end
+
+function FiletypeConfig:env(env_table)
+  if type(env_table) ~= 'table' or vim.tbl_count(env_table) == 0 then
+    return self
+  end
+
+  if not self._current_tool then
+    return self
+  end
+
+  local tools = self[self._current_tool]
+  if #tools == 0 then
+    return self
+  end
+
+  local tool = tools[#tools]
+  tool.env = env_table
+  return self
+end
+
+-- Check if buffer is valid for formatting/linting
+function FiletypeConfig:valid_buf(bufnr)
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+
+  -- Check both formatters and linters
+  local check_tools = function(tools)
+    if not tools or #tools == 0 then
+      return true
+    end
+
+    return vim.iter(tools):all(function(tool)
+      if type(tool) ~= 'table' or not tool.ignore_patterns then
+        return true
+      end
+
+      local patterns = util.as_table(tool.ignore_patterns)
+      return not vim.iter(patterns):any(function(pattern)
+        return bufname:find(pattern) ~= nil
+      end)
+    end)
+  end
+
+  return check_tools(self.formatter) and check_tools(self.linter)
+end
+
+-- Check if configuration has any tools
+function FiletypeConfig:has_tools()
+  return (#self.formatter > 0) or (#self.linter > 0)
+end
+
+-- Get all configured tools
+function FiletypeConfig:get_tools(tool_type)
+  if tool_type then
+    return self[tool_type] or {}
+  end
+
+  return {
+    formatter = self.formatter,
+    linter = self.linter,
+  }
+end
+
+-- Module metatable for convenient access
 return setmetatable(M, {
-  __call = function(_self, ft)
-    if not rawget(_self, ft) then
-      rawset(_self, ft, box(ft))
+  __call = function(_, filetypes)
+    local key = type(filetypes) == 'table' and table.concat(filetypes, ',') or filetypes
+
+    if not M[key] then
+      M[key] = FiletypeConfig.new(filetypes)
     end
-    return _self[ft]
+
+    return M[key]
   end,
 })
