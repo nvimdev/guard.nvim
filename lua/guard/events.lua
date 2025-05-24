@@ -95,10 +95,12 @@ end
 --- other formatters in the same group to run even if another
 --- might ignore this file
 function M.check_fmt_should_attach(buf)
+  local fmt = require('guard.filetype')[vim.bo[buf].filetype]
   -- check if it's not attached already
   return #M.get_format_autocmds(buf) == 0
     --  and has an underlying file
     and vim.bo[buf].buftype ~= 'nofile'
+    and fmt:valid_buf(buf)
 end
 
 ---@param buf number
