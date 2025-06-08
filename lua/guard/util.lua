@@ -165,6 +165,7 @@ function M.toolcopy(c)
     env = c.env,
     timeout = c.timeout,
     parse = c.parse,
+    health = c.health,
   }
 end
 

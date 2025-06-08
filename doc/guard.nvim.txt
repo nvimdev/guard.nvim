@@ -1,4 +1,4 @@
-*guard.nvim.txt*            For NVIM v0.8.0           Last change: 2025 May 16
+*guard.nvim.txt*           For NVIM v0.8.0           Last change: 2025 June 08
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -194,6 +194,7 @@ A tool is specified as follows:
         -- special
         parse            -- function: linter only, parses linter output to neovim diagnostic
         events           -- { name: string, opt: autocmd options }: override default events, for formatter autocmds only the first one is used (passed in from `:fmt`)
+        health           -- function: called in health checks
     }
 <
 
