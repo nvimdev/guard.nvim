@@ -140,7 +140,7 @@ end
 function M.buf_get_info(buf)
   local fname = vim.fn.fnameescape(resolve_symlink(api.nvim_buf_get_name(buf)))
   ---@diagnostic disable-next-line: undefined-field
-  return fname, M.get_lsp_root() or vim.uv.cwd()
+  return fname, assert(M.get_lsp_root() or vim.uv.cwd())
 end
 
 ---@param c (FmtConfig|LintConfig)?
