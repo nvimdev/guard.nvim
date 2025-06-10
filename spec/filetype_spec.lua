@@ -100,6 +100,29 @@ describe('filetype module', function()
     }, ft.javascriptreact)
   end)
 
+  it(
+    'can register a formatter for multiple filetypes simultaneously while chaining configs',
+    function()
+      ft('javascript,javascriptreact')
+        :fmt({
+          cmd = 'cat',
+          args = { '-v', '-E' },
+        })
+        :append({ cmd = 'tac' })
+        :lint({ cmd = 'cat' })
+        :append({ cmd = 'tac' })
+
+      same({
+        formatter = { { cmd = 'cat', args = { '-v', '-E' } }, { cmd = 'tac' } },
+        linter = { { cmd = 'cat' }, { cmd = 'tac' } },
+      }, ft.javascript)
+      same({
+        formatter = { { cmd = 'cat', args = { '-v', '-E' } }, { cmd = 'tac' } },
+        linter = { { cmd = 'cat' }, { cmd = 'tac' } },
+      }, ft.javascriptreact)
+    end
+  )
+
   it('can add extra command arguments', function()
     ft('c')
       :fmt({
