@@ -70,7 +70,9 @@ local function box(ft)
     local events = require('guard.events')
     for _, it in ipairs(self:ft()) do
       if it ~= ft then
-        M[it] = box(it)
+        if not getmetatable(M[it]) then
+          M[it] = box(it)
+        end
         M[it].formatter = self.formatter
       end
 
@@ -81,10 +83,6 @@ local function box(ft)
         events.fmt_on_filetype(it, self.formatter)
         events.fmt_attach_to_existing(it)
       end
-    end
-
-    if ft:find(',') then
-      M[ft] = nil
     end
     return self
   end
@@ -101,7 +99,10 @@ local function box(ft)
     local evs = util.linter_events(config)
     for _, it in ipairs(self:ft()) do
       if it ~= ft then
-        M[it] = box(it)
+        if not getmetatable(M[it]) then
+          M[it] = box(it)
+          vim.print('init ' .. it)
+        end
         M[it].linter = self.linter
       end
 

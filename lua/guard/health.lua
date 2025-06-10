@@ -18,7 +18,12 @@ end
 
 local function executable_check()
   local checked = {}
-  for _, item in pairs(filetype) do
+  for ft, item in pairs(filetype) do
+    if ft:find(',') then
+      goto continue
+    end
+
+    -- run executable or custom healt check
     for _, conf in ipairs(item.formatter or {}) do
       if conf.health then
         conf.health()
@@ -33,6 +38,8 @@ local function executable_check()
         check_cmd(conf, checked)
       end
     end
+
+    ::continue::
   end
   if pcall(require, 'mason') then
     health.warn(
