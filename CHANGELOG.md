@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/nvimdev/guard.nvim/compare/v2.3.1...v2.3.2) (2025-06-10)
+
+
+### Bug Fixes
+
+* multi filetype config chaining ([#214](https://github.com/nvimdev/guard.nvim/issues/214)) ([81e0f0a](https://github.com/nvimdev/guard.nvim/commit/81e0f0a781295ddc79d40cd3e549be65b6761edf))
+
 ## [2.3.1](https://github.com/nvimdev/guard.nvim/compare/v2.3.0...v2.3.1) (2025-05-16)
 
 
