@@ -18,6 +18,7 @@ end
 
 local function executable_check()
   local checked = {}
+  local custom_checked = {}
   for ft, item in pairs(filetype) do
     if ft:find(',') then
       goto continue
@@ -25,15 +26,17 @@ local function executable_check()
 
     -- run executable or custom healt check
     for _, conf in ipairs(item.formatter or {}) do
-      if conf.health then
+      if type(conf.health) == 'function' and not vim.tbl_contains(custom_checked, conf.health) then
         conf.health()
+        table.insert(custom_checked, conf.health)
       else
         check_cmd(conf, checked)
       end
     end
     for _, conf in ipairs(item.linter or {}) do
-      if conf.health then
+      if type(conf.health) == 'function' and not vim.tbl_contains(custom_checked, conf.health) then
         conf.health()
+        table.insert(custom_checked, conf.health)
       else
         check_cmd(conf, checked)
       end
