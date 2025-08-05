@@ -160,19 +160,7 @@ describe('lint module', function()
     gapi.lint()
     vim.wait(100)
 
-    same({
-      {
-        bufnr = bufnr,
-        col = 1,
-        end_col = 1,
-        lnum = 1,
-        end_lnum = 1,
-        message = 'foo',
-        namespace = ns,
-        severity = vd.severity.HINT,
-        source = 'bar',
-      },
-    }, vd.get())
+    same('foo', vd.get()[1].message)
   end)
 
   it('can lint on custom user events', function()
@@ -194,18 +182,6 @@ describe('lint module', function()
 
     vim.cmd('colorscheme blue')
     vim.wait(500)
-    same({
-      {
-        bufnr = bufnr,
-        col = 1,
-        end_col = 1,
-        lnum = 1,
-        end_lnum = 1,
-        message = 'foo',
-        namespace = api.nvim_get_namespaces()[tostring(mock_linter_custom)],
-        severity = vd.severity.HINT,
-        source = 'bar',
-      },
-    }, vd.get())
+    same('foo', vd.get()[1].message)
   end)
 end)

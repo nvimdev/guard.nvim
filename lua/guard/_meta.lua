@@ -1,6 +1,6 @@
 ---@class FmtConfigTable
 ---@field cmd string?
----@field args string[]?
+---@field args (string[]|fun(number):string[])?
 ---@field fname boolean?
 ---@field stdin boolean?
 ---@field fn function?
@@ -10,12 +10,13 @@
 ---@field find string|string[]?
 ---@field env table<string, string>?
 ---@field timeout integer?
+---@field health function?
 
 ---@alias FmtConfig FmtConfigTable|fun(): FmtConfigTable
 
 ---@class LintConfigTable
 ---@field cmd string?
----@field args string[]?
+---@field args (string[]|fun(number):string[])?
 ---@field fname boolean?
 ---@field stdin boolean?
 ---@field fn function?
@@ -26,6 +27,7 @@
 ---@field find string|string[]?
 ---@field env table<string, string>?
 ---@field timeout integer?
+---@field health function?
 
 ---@alias LintConfig LintConfigTable|fun(): LintConfigTable
 
