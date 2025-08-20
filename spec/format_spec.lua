@@ -109,6 +109,40 @@ describe('format module', function()
     assert.are.same({ 'def' }, lines)
   end)
 
+  it('can format with dynamic arguments', function()
+    ft('lua'):fmt({
+      cmd = 'cat',
+      args = function(_)
+        if vim.g.blah then
+          return { '-E' }
+        else
+          return nil
+        end
+      end,
+      stdin = true,
+    })
+
+    setlines({ 'foo', 'bar' })
+    gapi.fmt()
+    vim.wait(500)
+    local lines = getlines()
+    assert.are.same({ 'foo', 'bar' }, lines)
+
+    vim.g.blah = true
+
+    gapi.fmt()
+    vim.wait(500)
+    lines = getlines()
+    assert.are.same({ 'foo$', 'bar' }, lines)
+
+    vim.g.blah = false
+
+    gapi.fmt()
+    vim.wait(500)
+    lines = getlines()
+    assert.are.same({ 'foo$', 'bar' }, lines)
+  end)
+
   it('can format on custom user events', function()
     ft('lua'):fmt({
       fn = function()

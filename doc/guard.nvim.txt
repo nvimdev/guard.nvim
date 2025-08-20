@@ -1,4 +1,4 @@
-*guard.nvim.txt*           For NVIM v0.8.0           Last change: 2025 June 11
+*guard.nvim.txt*          For NVIM v0.8.0          Last change: 2025 August 05
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -175,7 +175,7 @@ A tool is specified as follows:
     {
         -- specify an executable
         cmd              -- string: tool command
-        args             -- string[]: command arguments
+        args             -- string[] | fun(number): string[]: command arguments
         fname            -- boolean: insert filename to args tail
         stdin            -- boolean: pass buffer contents into stdin
     
@@ -183,9 +183,9 @@ A tool is specified as follows:
         fn               -- function: write your own logic for formatting / linting, more in ADVANCED.md
     
         -- running condition
-        ignore_patterns  -- string|string[]: don't run formatter when pattern match against file name
+        ignore_patterns  -- string | string[]: don't run formatter when pattern match against file name
         ignore_error     -- boolean: when has lsp error ignore format
-        find             -- string|string[]: format if the file is found in the lsp root dir
+        find             -- string | string[]: format if the file is found in the lsp root dir
     
         -- misc
         env              -- table<string, string>?: environment variables passed to cmd (key value pair)
@@ -198,7 +198,7 @@ A tool is specified as follows:
     }
 <
 
-guard also tries to require them if you have `guard-collection`.
+guard also tries to require them by name if you have `guard-collection`.
 
 You can also pass in a function that evaluates to the table above, it will be
 evaluated every time you call format. See more here

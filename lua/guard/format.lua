@@ -135,7 +135,7 @@ local function do_fmt(buf)
     vim.schedule(function()
       changedtick = api.nvim_buf_get_changedtick(buf)
     end)
-    new_lines = pure:fold(new_lines, function(acc, config, _)
+    new_lines = pure:fold(new_lines, function(acc, config)
       -- check if we are in a valid state
       vim.schedule(function()
         if api.nvim_buf_get_changedtick(buf) ~= changedtick then
@@ -150,7 +150,7 @@ local function do_fmt(buf)
       if config.fn then
         return config.fn(buf, range, acc)
       else
-        local result = spawn.transform(util.get_cmd(config, fname), cwd, config, acc)
+        local result = spawn.transform(util.get_cmd(config, fname, buf), cwd, config, acc)
         if type(result) == 'table' then
           -- indicates error
           errno = result
@@ -193,12 +193,12 @@ local function do_fmt(buf)
     -- wait until substitution is finished
     coroutine.yield()
 
-    impure:fold(nil, function(_, config, _)
+    impure:each(function(config)
       if errno then
         return
       end
 
-      vim.system(util.get_cmd(config, fname), {
+      vim.system(util.get_cmd(config, fname, buf), {
         text = true,
         cwd = cwd,
         env = config.env or {},

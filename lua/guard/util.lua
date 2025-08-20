@@ -25,8 +25,8 @@ end
 ---@param mode "v"|"V"
 ---@return table {start={row,col}, end={row,col}} using (1, 0) indexing
 function M.range_from_selection(bufnr, mode)
-  local start = vim.fn.getpos('v')
-  local end_ = vim.fn.getpos('.')
+  local start = assert(vim.fn.getpos('v'))
+  local end_ = assert(vim.fn.getpos('.'))
   local start_row = start[2]
   local start_col = start[3]
   local end_row = end_[2]
@@ -70,9 +70,17 @@ end
 
 ---@param config FmtConfig|LintConfig
 ---@param fname string
+---@param buf number
 ---@return string[]
-function M.get_cmd(config, fname)
-  local cmd = config.args and vim.deepcopy(config.args) or {}
+function M.get_cmd(config, fname, buf)
+  local args
+  if type(config.args) == 'function' then
+    args = config.args(buf)
+  elseif type(config.args) == 'table' then
+    args = vim.deepcopy(config.args)
+  end
+
+  local cmd = args or {}
   if config.fname then
     table.insert(cmd, fname)
   end
