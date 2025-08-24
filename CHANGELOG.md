@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://github.com/nvimdev/guard.nvim/compare/v2.3.2...v2.4.0) (2025-08-24)
+
+
+### Features
+
+* args can be a function ([#218](https://github.com/nvimdev/guard.nvim/issues/218)) ([d9e705b](https://github.com/nvimdev/guard.nvim/commit/d9e705b803d07eb83484e6220ce50ff076a1e8a8))
+
 ## [2.3.2](https://github.com/nvimdev/guard.nvim/compare/v2.3.1...v2.3.2) (2025-06-10)
 
 
