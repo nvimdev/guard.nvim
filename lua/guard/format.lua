@@ -150,7 +150,7 @@ local function do_fmt(buf)
       if config.fn then
         return config.fn(buf, range, acc)
       else
-        local result = spawn.transform(util.get_cmd(config, fname, buf), cwd, config, acc)
+        local result = spawn.transform(util.get_cmd(config, fname), cwd, config, acc)
         if type(result) == 'table' then
           -- indicates error
           errno = result
@@ -193,36 +193,36 @@ local function do_fmt(buf)
     -- wait until substitution is finished
     coroutine.yield()
 
-    impure:each(function(config)
+    if impure and #impure:totable() > 0 then
+      impure:each(function(config)
+        if errno then
+          return
+        end
+
+        vim.system(util.get_cmd(config, fname), {
+          text = true,
+          cwd = cwd,
+          env = config.env or {},
+        }, function(result)
+          if result.code ~= 0 and #result.stderr > 0 then
+            errno = result
+            ---@diagnostic disable-next-line: inject-field
+            errno.cmd = config.cmd
+            coroutine.resume(co)
+          else
+            coroutine.resume(co)
+          end
+        end)
+
+        coroutine.yield()
+      end)
+
       if errno then
+        fail(('%s exited with code %d\n%s'):format(errno.cmd, errno.code, errno.stderr))
         return
       end
 
-      vim.system(util.get_cmd(config, fname, buf), {
-        text = true,
-        cwd = cwd,
-        env = config.env or {},
-      }, function(result)
-        if result.code ~= 0 and #result.stderr > 0 then
-          errno = result
-          ---@diagnostic disable-next-line: inject-field
-          errno.cmd = config.cmd
-          coroutine.resume(co)
-        else
-          coroutine.resume(co)
-        end
-      end)
-
-      coroutine.yield()
-    end)
-
-    if errno then
-      fail(('%s exited with code %d\n%s'):format(errno.cmd, errno.code, errno.stderr))
-      return
-    end
-
-    -- refresh buffer
-    if impure and #impure:totable() > 0 then
+      -- refresh buffer
       vim.schedule(function()
         api.nvim_buf_call(buf, function()
           local views = save_views(buf)
