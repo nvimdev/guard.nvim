@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.1](https://github.com/nvimdev/guard.nvim/compare/v2.4.0...v2.4.1) (2025-10-11)
+
+
+### Bug Fixes
+
+* impure config reloading ([#223](https://github.com/nvimdev/guard.nvim/issues/223)) ([b185576](https://github.com/nvimdev/guard.nvim/commit/b1855762e97a51b54646c3ea0ddc2b5fc95d1ddf))
+
 ## [2.4.0](https://github.com/nvimdev/guard.nvim/compare/v2.3.2...v2.4.0) (2025-08-24)
 
 
