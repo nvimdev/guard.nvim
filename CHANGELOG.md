@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.2](https://github.com/nvimdev/guard.nvim/compare/v2.4.1...v2.4.2) (2025-11-07)
+
+
+### Bug Fixes
+
+* auto lint not attached ([#226](https://github.com/nvimdev/guard.nvim/issues/226)) ([5055978](https://github.com/nvimdev/guard.nvim/commit/50559788c78f7c7e0dd8142000507d717f5774f9))
+
 ## [2.4.1](https://github.com/nvimdev/guard.nvim/compare/v2.4.0...v2.4.1) (2025-10-11)
 
 
