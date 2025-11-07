@@ -101,7 +101,6 @@ local function box(ft)
       if it ~= ft then
         if not getmetatable(M[it]) then
           M[it] = box(it)
-          vim.print('init ' .. it)
         end
         M[it].linter = self.linter
       end

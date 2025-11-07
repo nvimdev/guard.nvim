@@ -77,6 +77,8 @@ function M.get_cmd(config, fname, buf)
   if type(config.args) == 'function' then
     args = config.args(buf)
   elseif type(config.args) == 'table' then
+    ---@type FmtConfigTable|LintConfigTable
+    ---@diagnostic disable-next-line: param-type-mismatch
     args = vim.deepcopy(config.args)
   end
 
