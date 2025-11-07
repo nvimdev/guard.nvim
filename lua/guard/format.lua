@@ -150,7 +150,7 @@ local function do_fmt(buf)
       if config.fn then
         return config.fn(buf, range, acc)
       else
-        local result = spawn.transform(util.get_cmd(config, fname), cwd, config, acc)
+        local result = spawn.transform(util.get_cmd(config, fname, buf), cwd, config, acc)
         if type(result) == 'table' then
           -- indicates error
           errno = result
@@ -199,7 +199,7 @@ local function do_fmt(buf)
           return
         end
 
-        vim.system(util.get_cmd(config, fname), {
+        vim.system(util.get_cmd(config, fname, buf), {
           text = true,
           cwd = cwd,
           env = config.env or {},

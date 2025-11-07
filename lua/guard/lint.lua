@@ -59,7 +59,7 @@ function M.do_lint_single(buf, config)
   local data
 
   if lint.cmd then
-    local out = spawn.transform(util.get_cmd(lint, fname), cwd, lint, prev_lines)
+    local out = spawn.transform(util.get_cmd(lint, fname, buf), cwd, lint, prev_lines)
 
     -- TODO: unify this error handling logic with formatter
     if type(out) == 'table' then

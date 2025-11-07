@@ -115,7 +115,7 @@ function M.check_lint_should_attach(buf, ft)
     :filter(ft == '*' and function(it)
       return it.pattern == '*'
     end or function(it)
-      return it.pattern ~= '*'
+      return it.pattern ~= '*' and it.pattern ~= 'GuardFmt'
     end)
     :totable() == 0
 end
