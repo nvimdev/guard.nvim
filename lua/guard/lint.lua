@@ -1,6 +1,6 @@
+local async = require('guard._async')
 local api = vim.api
 local util = require('guard.util')
-local spawn = require('guard.spawn')
 local vd = vim.diagnostic
 local ft = require('guard.filetype')
 
@@ -8,10 +8,43 @@ local M = {}
 local ns = api.nvim_create_namespace('Guard')
 local custom_ns = {}
 
+---Execute command with stdin for linting
+---@async
+---@param cmd string[]
+---@param cwd string
+---@param config {env: table?, timeout: integer?}
+---@param input string|string[]
+---@return string output
+---@return {code: integer, stderr: string, cmd: string}? error
+local function exec_linter(cmd, cwd, config, input)
+  local result = async.await(1, function(callback)
+    local handle = vim.system(cmd, {
+      stdin = true,
+      cwd = cwd,
+      env = config.env,
+      timeout = config.timeout,
+    }, callback)
+    if type(input) == 'table' then
+      input = table.concat(input, '\n')
+    end
+    handle:write(input)
+    handle:write(nil)
+  end)
+
+  if result.code ~= 0 and #result.stderr > 0 then
+    return '', {
+      code = result.code,
+      stderr = result.stderr,
+      cmd = cmd[1],
+    }
+  end
+
+  return result.stdout, nil
+end
+
 ---@param buf number?
 function M.do_lint(buf)
   buf = buf or api.nvim_get_current_buf()
-  ---@type LintConfig[]
 
   local linters = util.eval(
     vim.tbl_map(
@@ -24,12 +57,12 @@ function M.do_lint(buf)
     return util.should_run(config, buf)
   end, linters)
 
-  coroutine.resume(coroutine.create(function()
+  async.run(function()
     vd.reset(ns, buf)
-    vim.iter(linters):each(function(linter)
+    for _, linter in ipairs(linters) do
       M.do_lint_single(buf, linter)
-    end)
-  end))
+    end
+  end)
 end
 
 ---@param buf number
@@ -38,7 +71,6 @@ function M.do_lint_single(buf, config)
   local lint = util.eval1(config)
   local custom = config.events ~= nil
 
-  -- check run condition
   local fname, cwd = util.buf_get_info(buf)
   if not util.should_run(lint, buf) then
     return
@@ -55,39 +87,50 @@ function M.do_lint_single(buf, config)
   end
 
   local results = {}
-  ---@type string
-  local data
+  local data = ''
 
   if lint.cmd then
-    local out = spawn.transform(util.get_cmd(lint, fname, buf), cwd, lint, prev_lines)
+    async.run(function()
+      local out, err = exec_linter(util.get_cmd(lint, fname, buf), cwd, lint, prev_lines)
 
-    -- TODO: unify this error handling logic with formatter
-    if type(out) == 'table' then
-      -- indicates error
-      vim.notify(
-        '[Guard]: ' .. ('%s exited with code %d\n%s'):format(out.cmd, out.code, out.stderr),
-        vim.log.levels.WARN
-      )
-      data = ''
-    else
-      data = out
-    end
+      if err then
+        vim.notify(
+          '[Guard]: ' .. ('%s exited with code %d\n%s'):format(err.cmd, err.code, err.stderr),
+          vim.log.levels.WARN
+        )
+        data = ''
+      else
+        data = out
+      end
+
+      if #data > 0 then
+        results = lint.parse(data, buf)
+      end
+
+      vim.schedule(function()
+        if api.nvim_buf_is_valid(buf) and #results ~= 0 then
+          if not custom then
+            vim.list_extend(results, vd.get(buf))
+          end
+          vd.set(cns, buf, results)
+        end
+      end)
+    end)
   else
     data = lint.fn(prev_lines)
-  end
-
-  if #data > 0 then
-    results = lint.parse(data, buf)
-  end
-
-  vim.schedule(function()
-    if api.nvim_buf_is_valid(buf) and #results ~= 0 then
-      if not custom then
-        vim.list_extend(results, vd.get(buf))
-      end
-      vd.set(cns, buf, results)
+    if #data > 0 then
+      results = lint.parse(data, buf)
     end
-  end)
+
+    vim.schedule(function()
+      if api.nvim_buf_is_valid(buf) and #results ~= 0 then
+        if not custom then
+          vim.list_extend(results, vd.get(buf))
+        end
+        vd.set(cns, buf, results)
+      end
+    end)
+  end
 end
 
 ---@param buf number
@@ -175,7 +218,6 @@ function M.from_json(opts)
     local diags, offences = {}, {}
 
     if opts.lines then
-      -- \r\n for windows compatibility
       vim.tbl_map(function(line)
         local offence = opts.get_diagnostics(line)
         if offence then
@@ -216,7 +258,6 @@ function M.from_regex(opts)
 
   return function(result, buf)
     local diags, offences = {}, {}
-    -- \r\n for windows compatibility
     local lines = vim.split(result, '\r?\n', { trimempty = true })
 
     for _, line in ipairs(lines) do
@@ -224,7 +265,6 @@ function M.from_regex(opts)
 
       local matches = { line:match(opts.regex) }
 
-      -- regex matched
       if #matches == #opts.groups then
         for i = 1, #opts.groups do
           offence[opts.groups[i]] = matches[i]

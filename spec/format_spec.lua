@@ -111,12 +111,12 @@ describe('format module', function()
 
   it('can format with dynamic arguments', function()
     ft('lua'):fmt({
-      cmd = 'cat',
+      cmd = 'sed',
       args = function(_)
         if vim.g.blah then
-          return { '-E' }
+          return { '1s/$/\\$/' }
         else
-          return nil
+          return { 's/^//' }
         end
       end,
       stdin = true,
