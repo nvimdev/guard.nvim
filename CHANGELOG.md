@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.0](https://github.com/nvimdev/guard.nvim/compare/v2.4.2...v2.5.0) (2025-11-08)
+
+
+### Features
+
+* migrate to _async ([#228](https://github.com/nvimdev/guard.nvim/issues/228)) ([92ff217](https://github.com/nvimdev/guard.nvim/commit/92ff21771c3ffcf63d3cf7eac3d533e40fc57eed))
+
 ## [2.4.2](https://github.com/nvimdev/guard.nvim/compare/v2.4.1...v2.4.2) (2025-11-07)
 
 
