@@ -111,6 +111,7 @@ local function apply_impure_formatter(buf, config, fname, cwd)
       text = true,
       cwd = cwd,
       env = cfg.env or {},
+      timeout = cfg.timeout,
     }, callback)
   end)
 
