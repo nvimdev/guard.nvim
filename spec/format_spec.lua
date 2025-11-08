@@ -116,7 +116,7 @@ describe('format module', function()
         if vim.g.blah then
           return { '1s/$/\\$/' }
         else
-          return { '' }
+          return { 's/^//' }
         end
       end,
       stdin = true,
