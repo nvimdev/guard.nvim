@@ -32,15 +32,18 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow, erow, old_inden
     new_lines[#new_lines] = nil
   end
 
+  local need_write = false
   if not vim.deep_equal(new_lines, prev_lines) then
+    need_write = true
     api.nvim_buf_set_lines(bufnr, srow, erow, false, new_lines)
-    if util.getopt('save_on_fmt') then
-      api.nvim_command('silent! noautocmd write!')
-    end
     if old_indent then
       vim.cmd(('silent %d,%dleft'):format(srow + 1, erow))
     end
     restore_views(views)
+  end
+
+  if need_write or util.getopt('save_on_fmt') then
+    api.nvim_command('silent! noautocmd write!')
   end
 end
 
