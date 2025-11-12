@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.1](https://github.com/nvimdev/guard.nvim/compare/v2.5.0...v2.5.1) (2025-11-12)
+
+
+### Bug Fixes
+
+* respect save_on_fmt configuration ([#232](https://github.com/nvimdev/guard.nvim/issues/232)) ([32ae843](https://github.com/nvimdev/guard.nvim/commit/32ae8432343081f89c36d00a278ca8dfd0a2ea30))
+
 ## [2.5.0](https://github.com/nvimdev/guard.nvim/compare/v2.4.2...v2.5.0) (2025-11-08)
 
 
