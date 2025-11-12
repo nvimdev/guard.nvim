@@ -42,7 +42,7 @@ local function update_buffer(bufnr, prev_lines, new_lines, srow, erow, old_inden
     restore_views(views)
   end
 
-  if need_write or util.getopt('save_on_fmt') then
+  if util.getopt('save_on_fmt') and need_write then
     api.nvim_command('silent! noautocmd write!')
   end
 end
