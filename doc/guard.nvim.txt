@@ -1,4 +1,4 @@
-*guard.nvim.txt*         For NVIM v0.8.0         Last change: 2025 November 12
+*guard.nvim.txt*         For NVIM v0.8.0         Last change: 2025 November 13
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -125,6 +125,8 @@ Some presets can be configured via `vim.g.guard_config`
         lint_interval = 500
         -- show diagnostic after format done
         refresh_diagnostic = true,
+        -- always save file after call Guard fmt
+        always_save = false,
     }
 <
 
