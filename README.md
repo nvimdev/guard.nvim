@@ -104,6 +104,8 @@ vim.g.guard_config = {
     lint_interval = 500
     -- show diagnostic after format done
     refresh_diagnostic = true,
+    -- always save file after call Guard fmt
+    always_save = false,
 }
 ```
 
