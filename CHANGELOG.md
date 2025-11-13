@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.0](https://github.com/nvimdev/guard.nvim/compare/v2.5.1...v2.6.0) (2025-11-13)
+
+
+### Features
+
+* add field always_save ([82b8d97](https://github.com/nvimdev/guard.nvim/commit/82b8d9743ebd355217391fb4b79f850d44040011))
+
 ## [2.5.1](https://github.com/nvimdev/guard.nvim/compare/v2.5.0...v2.5.1) (2025-11-12)
 
 
