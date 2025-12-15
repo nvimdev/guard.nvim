@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.1](https://github.com/nvimdev/guard.nvim/compare/v2.6.0...v2.6.1) (2025-12-15)
+
+
+### Bug Fixes
+
+* lsp formatting ([#236](https://github.com/nvimdev/guard.nvim/issues/236)) ([047555e](https://github.com/nvimdev/guard.nvim/commit/047555e4e319efb6064a014ae5b98c80280a00d0))
+
 ## [2.6.0](https://github.com/nvimdev/guard.nvim/compare/v2.5.1...v2.6.0) (2025-11-13)
 
 
