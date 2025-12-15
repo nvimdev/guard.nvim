@@ -227,9 +227,11 @@ function M.create_lspattach_autocmd()
   au('LspAttach', {
     group = M.group,
     callback = function(args)
+      vim.print('create_lspattach_autocmd body')
       if not getopt('lsp_as_default_formatter') then
         return
       end
+      vim.print('create_lspattach_autocmd body 2')
       local client = vim.lsp.get_client_by_id(args.data.client_id)
       if not client or not client:supports_method('textDocument/formatting', args.data.buf) then
         return

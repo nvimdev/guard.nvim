@@ -46,7 +46,7 @@ function M.run(func, on_finish)
   return {
     --- @param timeout? integer
     --- @return any ... return values of `func`
-    wait = function(_self, timeout)
+    wait = function(_, timeout)
       vim.wait(timeout or max_timeout, function()
         return res ~= nil
       end)
