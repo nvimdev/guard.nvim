@@ -201,7 +201,7 @@ local function do_fmt(buf)
         fail(err)
         return
       end
-      new_lines = output
+      new_lines = assert(output)
     end
 
     async.await(1, function(callback)

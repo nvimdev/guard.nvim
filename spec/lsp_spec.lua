@@ -1,0 +1,61 @@
+-- ---@diagnostic disable: undefined-field, undefined-global
+-- require('plugin.guard')
+-- local api = vim.api
+-- local same = assert.are.same
+-- local ft = require('guard.filetype')
+-- local gapi = require('guard.api')
+--
+-- describe('format module', function()
+--   local bufnr
+--   local ill_c = {
+--     'int main(     void ) {return 0;}',
+--   }
+--
+--   before_each(function()
+--     for k, _ in pairs(ft) do
+--       ft[k] = nil
+--     end
+--     vim.g.guard_config = {
+--       lsp_as_default_formatter = true,
+--     }
+--
+--     vim.lsp.config('clangd', {
+--       cmd = { 'clangd' },
+--       filetypes = { 'c' },
+--       capabilities = {
+--         textDocument = {
+--           formatting = {
+--             dynamicRegistration = true,
+--           },
+--         },
+--       },
+--     })
+--     vim.lsp.enable('clangd')
+--
+--     bufnr = api.nvim_create_buf(true, false)
+--
+--     vim.bo[bufnr].filetype = 'c'
+--     api.nvim_set_current_buf(bufnr)
+--     vim.cmd('silent! write! /tmp/lsp_spec_test.c')
+--   end)
+--
+--   after_each(function()
+--     vim.lsp.enable('clangd', false)
+--   end)
+--
+--   local function getlines()
+--     return api.nvim_buf_get_lines(bufnr, 0, -1, false)
+--   end
+--
+--   local function setlines(lines)
+--     api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+--   end
+--
+--   it('lsp default formatter works', function()
+--     vim.wait(500)
+--     setlines(ill_c)
+--     gapi.fmt(bufnr)
+--     vim.wait(500)
+--     same({ 'int main(void) { return 0; }' }, getlines())
+--   end)
+-- end)
