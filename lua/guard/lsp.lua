@@ -37,7 +37,6 @@ function M.format(buf, range, acc)
       else
         apply(...)
       end
-    end
 
     vim.lsp.buf.format({
       bufnr = buf,
