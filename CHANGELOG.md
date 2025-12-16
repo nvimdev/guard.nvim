@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.2](https://github.com/nvimdev/guard.nvim/compare/v2.6.1...v2.6.2) (2025-12-16)
+
+
+### Bug Fixes
+
+* muiti client use case ([#238](https://github.com/nvimdev/guard.nvim/issues/238)) ([79209ee](https://github.com/nvimdev/guard.nvim/commit/79209ee9710920f1cb900e3f7a59e76be582b498))
+
 ## [2.6.1](https://github.com/nvimdev/guard.nvim/compare/v2.6.0...v2.6.1) (2025-12-15)
 
 
