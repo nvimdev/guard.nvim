@@ -45,9 +45,9 @@ function M.format(buf, range, acc)
         id = c.id,
       })
     end)
-
-    return acc
   end
+
+  return acc
 end
 
 return M
