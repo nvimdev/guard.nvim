@@ -150,7 +150,7 @@ describe('settings', function()
     same(true, util.getopt('auto_lint'))
     vim.cmd('silent! write!')
     vim.wait(500)
-    same('Very important error message[error code 114514]', vd.get()[1].message)
+    same('Very important error message', vd.get()[1].message)
 
     vim.g.guard_config = { auto_lint = false }
     same(false, util.getopt('auto_lint'))
