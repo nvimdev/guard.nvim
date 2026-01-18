@@ -141,7 +141,8 @@ end
 ---@param message string?
 ---@param severity number?
 ---@param source string?
-function M.diag_fmt(buf, lnum_start, col_start, message, severity, source, lnum_end, col_end)
+---@param code string?
+function M.diag_fmt(buf, lnum_start, col_start, message, severity, source, lnum_end, col_end, code)
   return {
     bufnr = buf,
     col = col_start,
@@ -152,6 +153,7 @@ function M.diag_fmt(buf, lnum_start, col_start, message, severity, source, lnum_
     namespace = ns,
     severity = severity or vim.diagnostic.severity.HINT,
     source = source or 'Guard',
+    code = code,
   }
 end
 
@@ -187,10 +189,6 @@ local json_opts = {
   },
   lines = nil,
 }
-
-local function formulate_msg(msg, code)
-  return (msg or '') .. (code and ('[%s]'):format(code) or '')
-end
 
 local function attr_value(mes, attribute)
   return type(attribute) == 'function' and attribute(mes) or mes[attribute]
@@ -239,11 +237,12 @@ function M.from_json(opts)
           buf,
           json_get_offset(mes, attr.lnum, off),
           json_get_offset(mes, attr.col, off),
-          formulate_msg(message, code),
+          message,
           opts.severities[attr_value(mes, attr.severity)],
           opts.source,
           json_get_offset(mes, attr.lnum_end or attr.lnum, off),
-          json_get_offset(mes, attr.col_end or attr.col, off)
+          json_get_offset(mes, attr.col_end or attr.col, off),
+          code
         )
       )
     end, offences or {})
@@ -282,11 +281,12 @@ function M.from_regex(opts)
           buf,
           normalize(mes.lnum, off),
           normalize(mes.col, off),
-          formulate_msg(mes.message, mes.code),
+          mes.message,
           opts.severities[mes.severity],
           opts.source,
           normalize(mes.lnum_end or mes.lnum, off),
-          normalize(mes.col_end or mes.lnum, off)
+          normalize(mes.col_end or mes.lnum, off),
+          mes.code
         )
       )
     end, offences)
