@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.0](https://github.com/nvimdev/guard.nvim/compare/v2.6.2...v2.7.0) (2026-01-18)
+
+
+### Features
+
+* expose diagnostic.code in from_json & from_regex ([#244](https://github.com/nvimdev/guard.nvim/issues/244)) ([e09a8c6](https://github.com/nvimdev/guard.nvim/commit/e09a8c63abc324d86030b060589a82201e39d8d8))
+
 ## [2.6.2](https://github.com/nvimdev/guard.nvim/compare/v2.6.1...v2.6.2) (2025-12-16)
 
 
