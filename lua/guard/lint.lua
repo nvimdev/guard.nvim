@@ -104,7 +104,7 @@ function M.do_lint_single(buf, config)
       end
 
       if #data > 0 then
-        results = lint.parse(data, buf)
+        results = lint.parse(data, buf, fname, cwd)
       end
 
       vim.schedule(function()
@@ -119,7 +119,7 @@ function M.do_lint_single(buf, config)
   else
     data = lint.fn(prev_lines)
     if #data > 0 then
-      results = lint.parse(data, buf)
+      results = lint.parse(data, buf, fname, cwd)
     end
 
     vim.schedule(function()
