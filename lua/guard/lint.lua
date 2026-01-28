@@ -117,7 +117,7 @@ function M.do_lint_single(buf, config)
       end)
     end)
   else
-    data = lint.fn(prev_lines)
+    data = lint.fn(prev_lines, fname, cwd)
     if #data > 0 then
       results = lint.parse(data, buf, fname, cwd)
     end
