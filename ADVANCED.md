@@ -180,6 +180,41 @@ Et voilà!
 
 ![image](https://github.com/xiaoshihou514/guard.nvim/assets/108414369/f9137b5a-ae69-494f-9f5b-b6044ae63c86)
 
+### Signatures for custom linter functions
+
+When writing custom lint logic, `fn` and `parse` receive buffer context:
+
+```lua
+lint.fn(prev_lines, fname, cwd)
+lint.parse(result, bufnr, fname, cwd)
+```
+
+**Parameters:**
+
+- `prev_lines` — buffer content (string)
+- `result` — linter output (string)  
+- `bufnr` — target buffer number
+- `fname` — absolute file path
+- `cwd` — working directory
+
+Use `fname` and `cwd` when linters output relative paths (e.g., `terraform validate` on a directory returns diagnostics for all files).
+
+**Example** — filtering `terraform validate` by current file:
+
+```lua
+parse = function(result, bufnr, fname, cwd)
+    local current = fname:sub(#cwd + 2) -- +2 to include '/'
+    local decoded = vim.json.decode(result)
+
+    for _, d in ipairs(decoded.diagnostics or {}) do
+        -- terraform returns relative filenames; match against current
+        if d.range and d.range.filename == current then
+            -- add to diagnostics...
+        end
+    end
+end
+```
+
 ## Take advantage of autocmd events
 
 Guard exposes a `GuardFmt` user event that you can use. It is called both before formatting starts and after it is completely done. To differentiate between pre-format and post-format calls, a `data` table is passed.
