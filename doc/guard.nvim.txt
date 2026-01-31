@@ -1,4 +1,4 @@
-*guard.nvim.txt*          For NVIM v0.8.0         Last change: 2026 January 18
+*guard.nvim.txt*          For NVIM v0.8.0         Last change: 2026 January 31
 
 ==============================================================================
 Table of Contents                               *guard.nvim-table-of-contents*
@@ -635,6 +635,43 @@ That’s what the attributes field does, it extracts them from the json table:
 <
 
 Et voilà!
+
+
+SIGNATURES FOR CUSTOM LINTER FUNCTIONS ~
+
+When writing custom lint logic, `fn` and `parse` receive buffer context:
+
+>lua
+    lint.fn(prev_lines, fname, cwd)
+    lint.parse(result, bufnr, fname, cwd)
+<
+
+**Parameters:**
+
+- `prev_lines` — buffer content (string)
+- `result` — linter output (string)
+- `bufnr` — target buffer number
+- `fname` — absolute file path
+- `cwd` — working directory
+
+Use `fname` and `cwd` when linters output relative paths (e.g., `terraform
+validate` on a directory returns diagnostics for all files).
+
+**Example** — filtering `terraform validate` by current file:
+
+>lua
+    parse = function(result, bufnr, fname, cwd)
+        local current = fname:sub(#cwd + 2) -- +2 to include '/'
+        local decoded = vim.json.decode(result)
+    
+        for _, d in ipairs(decoded.diagnostics or {}) do
+            -- terraform returns relative filenames; match against current
+            if d.range and d.range.filename == current then
+                -- add to diagnostics...
+            end
+        end
+    end
+<
 
 
 TAKE ADVANTAGE OF AUTOCMD EVENTS*guard.nvim-advanced-tips-take-advantage-of-autocmd-events*
