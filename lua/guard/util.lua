@@ -176,6 +176,8 @@ function M.toolcopy(c)
     timeout = c.timeout,
     parse = c.parse,
     health = c.health,
+    stderr = c.stderr,
+    ignore_exit_code = c.ignore_exit_code,
   }
 end
 

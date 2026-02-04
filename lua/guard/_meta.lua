@@ -28,6 +28,8 @@
 ---@field env table<string, string>?
 ---@field timeout integer?
 ---@field health function?
+---@field stderr boolean?
+---@field ignore_exit_code boolean?
 
 ---@alias LintConfig LintConfigTable|fun(): LintConfigTable
 

@@ -12,7 +12,7 @@ local custom_ns = {}
 ---@async
 ---@param cmd string[]
 ---@param cwd string
----@param config {env: table?, timeout: integer?}
+---@param config {env: table?, timeout: integer?, stderr: boolean?, ignore_exit_code: boolean?}
 ---@param input string|string[]
 ---@return string output
 ---@return {code: integer, stderr: string, cmd: string}? error
@@ -31,7 +31,7 @@ local function exec_linter(cmd, cwd, config, input)
     handle:write(nil)
   end)
 
-  if result.code ~= 0 and #result.stderr > 0 then
+  if not config.ignore_exit_code and result.code ~= 0 and #result.stderr > 0 then
     return '', {
       code = result.code,
       stderr = result.stderr,
@@ -39,7 +39,7 @@ local function exec_linter(cmd, cwd, config, input)
     }
   end
 
-  return result.stdout, nil
+  return config.stderr and result.stderr or result.stdout, nil
 end
 
 ---@param buf number?
